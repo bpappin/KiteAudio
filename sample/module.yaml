@@ -1,0 +1,21 @@
+# The viewer and the decode benchmark. Not published.
+# `./kotlin run -m sample -- song.flac` opens the viewer on a file. CONTRIBUTING.md shows how to run the benchmark.
+product: jvm/app
+
+dependencies:
+  - //audiokodec
+  # Seekable file input, so that the viewer never holds a whole file in memory.
+  - //audiokodec-io
+
+settings:
+  kotlin:
+    version: 2.4.21
+  jvm:
+    jdk:
+      version: 21
+    mainClass: io.github.yuroyami.audiokodec.sample.ViewerKt
+    test:
+      systemProperties:
+        # The tests paint the viewer off screen, which needs no display.
+        java.awt.headless: "true"
+  junit: junit-4

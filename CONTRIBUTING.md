@@ -31,7 +31,8 @@ C.
 5. An entry in [docs/support.md](docs/support.md) and [docs/formats.md](docs/formats.md),
    and a README update if the README's claims change.
 6. A page in `docs/` for anything a caller would have to guess at.
-7. `./gradlew updateKotlinAbi` run and the result committed.
+7. `./kotlin do updateAbi` and `./kotlin do updateKlibAbi` run, and the result committed.
+   The klib dump needs a macOS build of every platform first (`./kotlin build`).
 
 A decoder ships before its encoder, always. The decoder is the encoder's first
 test harness, and an encoder whose output nothing can read is untestable.
@@ -59,18 +60,25 @@ that the committed code does not support. The documentation uses American
 spelling.
 
 A code sample added to `docs/` is not typed into the page. It lives in a test under
-`sample/src/docs/kotlin/io/github/yuroyami/audiokodec/docs/`, a source set
+`docs-samples/test/io/github/yuroyami/audiokodec/docs/`, a module
 that sees only the published modules, between `// --8<-- [start:name]` and
 `// --8<-- [end:name]` markers, and the page includes it with
 `--8<-- "File.kt:name"`. The test must run the sample on input it makes itself
-and assert what the page says it does. `./gradlew :sample:docsTest` runs the
+and assert what the page says it does. `./kotlin test -m docs-samples` runs the
 samples, and `mkdocs build --strict` fails on a missing file or marker. The
 Web Audio sample is the one exception to the location: it is Kotlin/JS, so it
-lives in `audiokodec/src/jsTest` and runs with `:audiokodec:jsNodeTest`.
+lives in `audiokodec/test@js` and runs with
+`python3 .github/scripts/web-tests/run.py --platform js`.
 
 Code follows the official Kotlin style.
 
 ## Running the tests
+
+The project builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain).
+The `./kotlin` script in the root downloads the toolchain on its first run, and the
+toolchain downloads its own JDK, Kotlin/Native, Node.js and Chrome. `./kotlin build`
+builds every module, and `./kotlin test` runs the tests. Android steps need the
+Android SDK in `ANDROID_HOME`.
 
 To regenerate every JVM fixture and record the exact tool versions, executable
 SHA-256, argument arrays, caller recipes and input/output hashes, run:
@@ -84,7 +92,7 @@ Prepare the executable oracles first using the instructions below and
 `.github/scripts/prepare-codec-oracles.sh`. The generator uses Python 3.11 or
 later, downloads the pinned FLAC corpus, gives the test JVM a fresh temporary
 directory, and forces both JVM suites to execute. Recording directories must
-be empty. `--tests '*VorbisOracleTest*'` selects a smaller recipe; repeat the
+be empty. `--tests '*VorbisOracleTest'` selects a smaller recipe; repeat the
 option for several suites. Matching versions and build identities are required
 for a byte-for-byte comparison. A mismatch saves both normalized manifests
 for inspection rather than overwriting an earlier recording.
@@ -112,15 +120,27 @@ executables only and their implementation source stays unopened.
 For tests without provenance recording:
 
 ```
-./gradlew :audiokodec:jvmTest
-./gradlew :audiokodec:jsNodeTest :audiokodec:wasmJsNodeTest :audiokodec:wasmWasiNodeTest
-./gradlew :audiokodec:macosArm64Test
+./kotlin test -m audiokodec -p jvm
+./kotlin test -m audiokodec -p macosArm64
+python3 .github/scripts/web-tests/run.py
 ```
 
-`./gradlew :sample:benchmark` measures decode speed against the floors recorded
-in [docs/support.md](docs/support.md#decode-speed). A change to a decoder's
-inner loops should be measured before and after. `./gradlew :sample:run` opens
-the sample viewer. `./gradlew :sample:test` checks the benchmark's helpers and
+`./kotlin test` cannot run the JS and wasmWasi tests. It runs the wasmJs tests
+only in a browser, with a 30-second limit that the malformed-input sweeps
+exceed. The script links the JS, wasmJs and wasmWasi tests with the toolchain
+and runs them in Node. Add `--module` or `--platform` to run only part of them,
+for example `--module audiokodec-io --platform js`.
+
+This command measures decode speed against the floors recorded in
+[docs/support.md](docs/support.md#decode-speed):
+
+```sh
+./kotlin run -m sample --main-class=io.github.yuroyami.audiokodec.sample.BenchmarkKt --jvm-args=-Xmx2g
+```
+
+A change to a decoder's inner loops should be measured before and after.
+`./kotlin run -m sample` opens the sample viewer.
+`./kotlin test -m sample` checks the benchmark's helpers and
 the viewer: its summary of a file of every decodable container, its waveform
 and playback conversion, and its panel painted off screen. Set
 `AUDIOKODEC_SAMPLE_SCREENS` to a directory to keep those pictures; they go to
@@ -141,7 +161,7 @@ vectors run without a download; prepare all 86 licensed vectors with:
 
 ```sh
 python3 .github/scripts/prepare-flac-conformance.py
-./gradlew :audiokodec:jvmTest --tests '*FlacConformanceTest*'
+./kotlin test -m audiokodec -p jvm --include-classes='*FlacConformanceTest'
 ```
 
 The complete corpus occupies about 310 MB in the ignored build cache. Use
@@ -157,7 +177,7 @@ test skip when the module is unavailable. Use an isolated interpreter:
 ```sh
 python3 -m venv /tmp/audiokodec-tag-oracle
 /tmp/audiokodec-tag-oracle/bin/python -m pip install mutagen==1.47.0
-AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./gradlew :audiokodec:jvmTest
+AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./kotlin test -m audiokodec -p jvm
 ```
 
 Mutagen is a test executable only. Its implementation source must stay
@@ -176,7 +196,7 @@ that cannot load fails the test. On macOS:
 ```sh
 brew install opusfile
 AUDIOKODEC_OPUSFILE_LIBRARY="$(brew --prefix opusfile)/lib/libopusfile.0.dylib" \
-AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./gradlew :audiokodec:jvmTest
+AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./kotlin test -m audiokodec -p jvm
 ```
 
 Only its public API is used. No implementation source is read.

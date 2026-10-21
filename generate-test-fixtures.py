@@ -28,19 +28,21 @@ def save(path, value):
 
 def source_files():
     """Owned recipes only. Never traverse external implementation source trees."""
-    files = [ROOT / "generate-test-fixtures.py", ROOT / "gradlew", ROOT / "gradlew.bat",
-             ROOT / "gradle.properties", ROOT / "settings.gradle.kts", ROOT / "build.gradle.kts",
-             ROOT / "reference/REFERENCES.md"]
-    for directory in ("audiokodec/src", "audiokodec-io/src", ".github/scripts", "gradle", "test-data"):
-        files.extend(path for path in (ROOT / directory).rglob("*") if path.is_file() and "__pycache__" not in path.parts)
-    files.extend(ROOT.glob("*/build.gradle.kts"))
+    files = [ROOT / "generate-test-fixtures.py", ROOT / "kotlin", ROOT / "kotlin.bat", ROOT / "project.yaml",
+             ROOT / "library.module-template.yaml", ROOT / "libs.versions.toml", ROOT / "reference/REFERENCES.md"]
+    # The source folders of both libraries: src, test and their @platform variants.
+    directories = [path for module in ("audiokodec", "audiokodec-io") for path in (ROOT / module).iterdir()
+                   if path.is_dir() and path.name.split("@")[0] in ("src", "test", "testResources")]
+    for directory in directories + [ROOT / ".github/scripts", ROOT / "test-data"]:
+        files.extend(path for path in directory.rglob("*") if path.is_file() and "__pycache__" not in path.parts)
+    files.extend(ROOT.glob("*/module.yaml"))
     return {str(path.relative_to(ROOT)): {"bytes": path.stat().st_size, "sha256": checksum(path)}
             for path in sorted(set(files)) if path.is_file()}
 
 
 def check_process_coverage():
     unrecorded = []
-    for source in (ROOT / "audiokodec/src/jvmTest").rglob("*.kt"):
+    for source in (ROOT / "audiokodec/test@jvm").rglob("*.kt"):
         if source.name != "OracleProcess.kt" and re.search(r"\.start\s*\(\s*\)", source.read_text()):
             unrecorded.append(str(source.relative_to(ROOT)))
     if unrecorded:
@@ -112,10 +114,15 @@ def summarise(output):
     save(output / "tools.json", sorted(tools.values(), key=lambda tool: tool["path"]))
     reports = []
     for module in ("audiokodec", "audiokodec-io"):
+        # The toolchain writes one report per test engine, so group the cases by class.
+        cases = {}
         for file in sorted((output / "test-results" / module).glob("TEST-*.xml")):
-            suite = ET.parse(file).getroot()
-            reports.append({"suite": suite.attrib["name"], **{key: int(suite.get(key, "0"))
-                            for key in ("tests", "failures", "errors", "skipped")}})
+            for case in ET.parse(file).getroot().iter("testcase"):
+                cases.setdefault(case.attrib["classname"], []).append(case)
+        for suite, entries in sorted(cases.items()):
+            reports.append({"suite": suite, "tests": len(entries),
+                            **{key: sum(case.find(outcome) is not None for case in entries)
+                               for key, outcome in (("failures", "failure"), ("errors", "error"), ("skipped", "skipped"))}})
     if not reports or not any(report["tests"] > report["skipped"] for report in reports):
         raise ValueError("no completed test cases were reported")
     result = {"invocations": len(invocations), "tools": len(tools), "testReports": reports,
@@ -168,7 +175,7 @@ def normalise_calls(calls, run):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--output", type=Path, default=ROOT / "audiokodec/build/fixture-provenance")
-    parser.add_argument("--tests", action="append", help="JVM test filter, repeatable; default runs both full JVM suites")
+    parser.add_argument("--tests", action="append", help="JVM test class pattern, repeatable; default runs both full JVM suites")
     parser.add_argument("--summarise-only", action="store_true", help="validate and summarise an existing recording")
     parser.add_argument("--compare", type=Path, help="require the same tool identities, commands and generated audio hashes as another recording")
     parser.add_argument("--write-tool-lock", type=Path, help="save the versions and binary hashes checked in this run")
@@ -187,14 +194,13 @@ def main():
         environment["AUDIOKODEC_FLAC_CONFORMANCE_DIR"] = str(flac_directory)
         subprocess.run([sys.executable, str(ROOT / ".github/scripts/prepare-flac-conformance.py"),
                         "--destination", str(flac_directory)], cwd=ROOT, check=True)
-        argv = [str(ROOT / ("gradlew.bat" if os.name == "nt" else "gradlew")), ":audiokodec:jvmTest", "--rerun"]
+        argv = [str(ROOT / ("kotlin.bat" if os.name == "nt" else "kotlin")), "test", "-p", "jvm", "-m", "audiokodec"]
         for pattern in args.tests or []:
-            argv.extend(["--tests", pattern])
+            argv.append(f"--include-classes={pattern}")
         if not args.tests:
-            argv.extend([":audiokodec-io:jvmTest", "--rerun"])
-        # Test JVMs need their own tmpdir; Gradle's launcher property alone
-        # does not configure forked Test workers.
-        argv.extend([f"-PaudiokodecFixtureTmp={temporary}", "--stacktrace"])
+            argv.extend(["-m", "audiokodec-io"])
+        # The test JVM gets its own tmpdir, so the recording holds every temporary file.
+        argv.append(f"--jvm-args=-Djava.io.tmpdir={temporary}")
         run = {"schema": 1, "gitCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
                "platform": platform.platform(), "python": sys.version, "sourceFiles": source_files(),
                "argv": argv, "temporaryDirectory": str(temporary), "flacDirectory": str(flac_directory),
@@ -210,12 +216,12 @@ def main():
             run["macOSBuild"] = subprocess.check_output(["sw_vers", "-buildVersion"], text=True).strip()
         save(output / "run.json", run)
         completed = subprocess.run(argv, cwd=ROOT, env=environment)
-        run["gradleExitCode"] = completed.returncode
+        run["testExitCode"] = completed.returncode
         run["finishedAt"] = datetime.now(timezone.utc).isoformat()
         for module in (["audiokodec"] if args.tests else ["audiokodec", "audiokodec-io"]):
             destination = output / "test-results" / module
             destination.mkdir(parents=True)
-            for report in (ROOT / module / "build/test-results/jvmTest").glob("TEST-*.xml"):
+            for report in (ROOT / "build/reports" / module / "jvm").glob("TEST-*.xml"):
                 shutil.copyfile(report, destination / report.name)
         if not args.tests:
             run["coverageExitCode"] = subprocess.run([sys.executable, str(ROOT / ".github/scripts/check-oracle-results.py")], cwd=ROOT).returncode
@@ -223,7 +229,8 @@ def main():
     else:
         run = json.loads((output / "run.json").read_text())
     calls, tools, summary = summarise(output)
-    if run["gradleExitCode"] != 0 or run.get("coverageExitCode", 0) != 0 or any(report["failures"] + report["errors"] for report in summary["testReports"]):
+    # Recordings made before the move to the Kotlin Toolchain name the exit code gradleExitCode.
+    if run.get("testExitCode", run.get("gradleExitCode")) != 0 or run.get("coverageExitCode", 0) != 0 or any(report["failures"] + report["errors"] for report in summary["testReports"]):
         raise SystemExit("Fixture qualification failed; see the recorded commands and test reports")
     if args.compare:
         prior = args.compare.resolve()

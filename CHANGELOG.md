@@ -208,3 +208,8 @@ audio and Ogg.
   durations for constant and variable bitrate files alike. Layers I, II and
   III all decode, with sample-accurate seeking.
 - `audiokodec-io`, the optional kotlinx-io bridge.
+
+### Build
+
+- The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle,
+  on Kotlin 2.4.21.

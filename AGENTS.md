@@ -41,6 +41,15 @@ next person does not pay for them twice.
   `Mp3Granule.nonZero` is a count of coded values, including zeros; it cannot
   substitute for inspecting the actual spectrum. The mixed long-scalefactor
   region still uses a coupled boundary, including at 8 kHz. See #79.
+- On the JVM, the Kotlin Toolchain only runs test classes whose names start
+  with `Test` or end with `Test` or `Tests`. A test class with another name
+  compiles and never runs. `./kotlin test` fails only when a whole module has
+  no matching class.
+- Kotlin 2.4.21 for Wasm compiles one shape of subject-less `when` incorrectly.
+  In that shape, three or more branches compare `Int` local values to
+  constants, and the branches do not all test the same value. The compiled
+  code then tests the first value in each of those branches. Give such a
+  `when` a subject, as `MpegTest.frame()` does. Class properties are safe.
 
 ## Working rules for agents
 

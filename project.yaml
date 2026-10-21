@@ -1,0 +1,13 @@
+modules:
+  - audiokodec
+  - audiokodec-io
+  - build-plugins/abi-check
+  - build-plugins/attribution
+  - build-plugins/dokka
+  - docs-samples
+  - sample
+
+plugins:
+  - //build-plugins/abi-check
+  - //build-plugins/attribution
+  - //build-plugins/dokka

@@ -31,11 +31,11 @@ or use File > Open, to see the container and coding, the format and duration, th
 cover art, and the waveform, and to play the file through Java Sound:
 
 ```sh
-./gradlew :sample:run
-./gradlew :sample:run --args="path/to/song.flac"
+./kotlin run -m sample
+./kotlin run -m sample -- path/to/song.flac
 ```
 
-Without a display, it prints the same summary for the file named in `--args`.
+Without a display, it prints the same summary for the file named on the command line.
 
 ## Tasks
 

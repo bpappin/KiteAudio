@@ -1,0 +1,10 @@
+tasks:
+  copy:
+    action: !io.github.yuroyami.buildplugins.attribution.copyAttribution
+      license: ${project.rootDir}/LICENSE
+      notice: ${project.rootDir}/NOTICE
+      outputDir: ${taskOutputDir}/resources
+
+generated:
+  resources:
+    - directory: ${tasks.copy.action.outputDir}

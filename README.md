@@ -7,7 +7,7 @@ Ogg Opus and MP3, and edit tags without touching the audio, with the same code o
 <sub>AI tools wrote much of the code, tests and documentation in this project, under the
 direction and review of its author.</sub>
 
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.10-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 **[Documentation](docs/index.md)**: a guide per task, a page for each format, and the full
@@ -26,12 +26,23 @@ the codec's own reference decoder.
 
 0.1.0 is not published to Maven Central yet. These are the coordinates it will use:
 
+With Gradle:
+
 ```kotlin
 dependencies {
     implementation("io.github.yuroyami:audiokodec:0.1.0")
     // Optional, for files through kotlinx-io:
     implementation("io.github.yuroyami:audiokodec-io:0.1.0")
 }
+```
+
+With the Kotlin Toolchain, in `module.yaml`:
+
+```yaml
+dependencies:
+  - io.github.yuroyami:audiokodec:0.1.0
+  # Optional, for files through kotlinx-io:
+  - io.github.yuroyami:audiokodec-io:0.1.0
 ```
 
 The JVM artifacts need Java 21 or newer.
@@ -133,11 +144,11 @@ see the container and coding, the format and duration, the tags and cover art, a
 waveform, and to play the file through Java Sound:
 
 ```sh
-./gradlew :sample:run
-./gradlew :sample:run --args="path/to/song.flac"
+./kotlin run -m sample
+./kotlin run -m sample -- path/to/song.flac
 ```
 
-Without a display, it prints the same summary for the file named in `--args`.
+Without a display, it prints the same summary for the file named on the command line.
 
 ## Formats
 

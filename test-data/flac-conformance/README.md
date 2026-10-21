@@ -13,7 +13,7 @@ stress file, so the remaining files are downloaded into the ignored build cache:
 
 ```sh
 python3 .github/scripts/prepare-flac-conformance.py
-./gradlew :audiokodec:jvmTest --tests '*FlacConformanceTest*'
+./kotlin test -m audiokodec -p jvm --include-classes='*FlacConformanceTest'
 ```
 
 Use `--destination PATH` and `AUDIOKODEC_FLAC_CONFORMANCE_DIR=PATH` to reuse a

@@ -6,12 +6,15 @@ on:
   pull_request:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 env:
-  GRADLE_OPTS: -Dorg.gradle.jvmargs=-Xmx5g -Dorg.gradle.daemon=false
+  KOTLIN_CLI_NO_WELCOME_BANNER: 1
 
 jobs:
   # The JVM, JS, wasm and Linux native targets. This is the job that runs the
@@ -21,16 +24,20 @@ jobs:
     name: JVM / JS / wasm / native (Linux)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
+
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
 
       # Install executable oracles and build the pinned permissive references.
       # Missing tools are real skips, and the coverage step rejects unexpected ones.
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
 
@@ -40,8 +47,6 @@ jobs:
           sudo apt-get install -y ffmpeg flac lame libopusfile0 libmpg123-dev libimage-exiftool-perl cmake build-essential python3-venv musepack-tools speex libogg-dev
           bash .github/scripts/prepare-codec-oracles.sh
 
-      - uses: gradle/actions/setup-gradle@v4
-
       - name: Core tests (JVM)
         run: python3 generate-test-fixtures.py
 
@@ -49,45 +54,31 @@ jobs:
         if: always()
         run: python3 .github/scripts/check-oracle-results.py
 
-      - name: Core tests (JS + wasm)
-        run: >-
-          ./gradlew
-          :audiokodec:jsNodeTest
-          :audiokodec:wasmJsNodeTest
-          :audiokodec:wasmWasiNodeTest
-          :audiokodec-io:jsNodeTest
-          :audiokodec-io:jsBrowserTest
-          :audiokodec-io:wasmJsNodeTest
-          :audiokodec-io:wasmWasiNodeTest
-          --stacktrace
-
-      - name: Hostile-input sweeps (Chromium)
-        run: ./gradlew :audiokodec:jsBrowserTest --tests '*HostileInputTest*' --stacktrace
+      # `./kotlin test` cannot run the JS and wasmWasi tests, and it runs wasmJs
+      # only in a browser with a 30-second limit. The script links all three and
+      # runs them in Node.
+      - name: Core tests (JS, wasmJs and wasmWasi in Node)
+        run: python3 .github/scripts/web-tests/run.py
 
       - name: Core tests (native)
-        run: ./gradlew :audiokodec:linuxX64Test :audiokodec-io:linuxX64Test --stacktrace
+        run: ./kotlin test -m audiokodec -m audiokodec-io -p linuxX64
 
       - name: Sample module tests and documentation samples
-        run: ./gradlew :sample:test :sample:docsTest --stacktrace
+        run: ./kotlin test -m sample -m docs-samples
 
       - name: Public API check
-        run: ./gradlew checkKotlinAbi --stacktrace
-
-      - name: Check distribution attribution
-        run: |
-          ./gradlew :audiokodec:jvmJar :audiokodec:jvmSourcesJar :audiokodec:jsJar :audiokodec:wasmJsJar :audiokodec:wasmWasiJar :audiokodec:linuxX64Klib :audiokodec:jsNodeProductionLibraryDistribution :audiokodec-io:jvmJar :audiokodec-io:jsJar :audiokodec-io:jsNodeProductionLibraryDistribution :audiokodec-io:wasmJsJar :audiokodec-io:wasmWasiJar :audiokodec-io:linuxX64Klib generateDistributionPoms --stacktrace
-          python3 .github/scripts/check-distribution-notices.py --package audiokodec/build/dist/js/productionLibrary --package audiokodec-io/build/dist/js/productionLibrary
+        run: ./kotlin check abi
 
       - name: Upload test reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-reports-linux
-          path: '**/build/reports/tests/**'
+          path: build/reports/
 
       - name: Upload fixture provenance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fixture-provenance-linux
           path: audiokodec/build/fixture-provenance/*.json*
@@ -99,24 +90,19 @@ jobs:
     name: Kotlin/Native (Windows)
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/AppData/Local/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin.bat', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
 
       - name: MinGW x64 tests
-        run: .\gradlew.bat :audiokodec:mingwX64Test :audiokodec-io:mingwX64Test --stacktrace
-
-      - name: Upload test reports
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-reports-windows
-          path: '**/build/reports/tests/**'
+        run: .\kotlin.bat test -m audiokodec -m audiokodec-io -p mingwX64
 
   # Apple targets can only be built on a Mac, and they are a large part of why
   # this library exists, so they get their own job rather than riding along as
@@ -125,14 +111,18 @@ jobs:
     name: Apple targets (macOS)
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
 
-      - uses: actions/setup-python@v5
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Caches/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
 
@@ -140,8 +130,6 @@ jobs:
         run: |
           brew install ffmpeg flac lame exiftool opusfile mpg123 cmake musepack speex libogg
           bash .github/scripts/prepare-codec-oracles.sh
-
-      - uses: gradle/actions/setup-gradle@v4
 
       - name: Core tests and Apple format comparisons (JVM)
         run: python3 generate-test-fixtures.py
@@ -151,75 +139,84 @@ jobs:
         run: python3 .github/scripts/check-oracle-results.py
 
       - name: Native tests
-        run: >-
-          ./gradlew
-          :audiokodec:macosArm64Test
-          :audiokodec:iosSimulatorArm64Test
-          :audiokodec-io:macosArm64Test
-          :audiokodec-io:iosSimulatorArm64Test
-          --stacktrace
+        run: ./kotlin test -m audiokodec -m audiokodec-io -p macosArm64 -p iosSimulatorArm64
+
+      # The klib check reads the klibs of every native, JS and wasm platform,
+      # and only macOS builds the Apple ones.
+      - name: Public klib API check
+        run: |
+          ./kotlin build -m audiokodec -m audiokodec-io -p js -p wasmJs -p wasmWasi -p iosArm64 -p iosSimulatorArm64 -p iosX64 -p macosArm64 -p tvosArm64 -p tvosSimulatorArm64 -p watchosArm32 -p watchosArm64 -p watchosDeviceArm64 -p watchosSimulatorArm64 -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
+          ./kotlin check klibAbi
+
+      - name: Check framework attribution
+        run: |
+          python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --build-type release --no-xcframework
+          python3 .github/scripts/check-distribution-notices.py --framework audiokodec/build/bin/iosSimulatorArm64/releaseFramework/AudioKodec.framework --framework audiokodec-io/build/bin/iosSimulatorArm64/releaseFramework/AudioKodecIO.framework
 
       - name: Upload test reports
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: test-reports-apple
-          path: '**/build/reports/tests/**'
+          path: build/reports/
 
       - name: Upload fixture provenance
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fixture-provenance-apple
           path: audiokodec/build/fixture-provenance/*.json*
 
-      - name: Check framework attribution
-        run: |
-          ./gradlew :audiokodec:linkReleaseFrameworkIosSimulatorArm64 :audiokodec-io:linkReleaseFrameworkIosSimulatorArm64 generateDistributionPoms --stacktrace
-          python3 .github/scripts/check-distribution-notices.py --framework audiokodec/build/bin/iosSimulatorArm64/releaseFramework/AudioKodec.framework --framework audiokodec-io/build/bin/iosSimulatorArm64/releaseFramework/AudioKodecIO.framework
-
-  # The Android variants build through AGP, which neither job above exercises.
+  # The Android variants, which neither job above exercises.
   android:
     name: Android library
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      - name: Install the Android SDK packages
+        run: sdkmanager 'platforms;android-37.2' 'build-tools;37.0.0'
 
       - name: Android host tests
-        run: ./gradlew :audiokodec:testAndroidHostTest :audiokodec-io:testAndroidHostTest --stacktrace
+        run: ./kotlin test -m audiokodec -m audiokodec-io -p android
 
-      - name: Assemble every target
-        run: ./gradlew :audiokodec:assemble :audiokodec-io:assemble --stacktrace
+      - name: Build every target that Linux can build
+        run: ./kotlin build -m audiokodec -m audiokodec-io -p jvm -p android -p js -p wasmJs -p wasmWasi -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
 
-      - name: Check Android attribution
-        run: |
-          ./gradlew generateDistributionPoms --stacktrace
-          python3 .github/scripts/check-distribution-notices.py
+      - name: Check jar and Android attribution
+        run: python3 .github/scripts/check-distribution-notices.py
 
   docs:
     name: API documentation
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          distribution: temurin
-          java-version: '21'
+          persist-credentials: false
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
 
       - name: Build the Dokka site
-        run: ./gradlew dokkaGenerate --stacktrace
+        run: |
+          # `do` is a command of the kotlin script here, not the shell keyword.
+          # shellcheck disable=SC1010
+          ./kotlin do dokka && ./kotlin do dokkaSite
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.12'
 
@@ -230,7 +227,7 @@ jobs:
           python -m pip install mkdocs-material==9.7.7
           mkdocs build --strict
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: api-docs
           path: build/dokka/html

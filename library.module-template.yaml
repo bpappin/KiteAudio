@@ -1,0 +1,56 @@
+# Settings that the two published libraries share. Each module.yaml applies this file
+# and adds its own platforms, dependencies, Android namespace and POM text.
+
+# `./kotlin publish mavenLocal -m <module>` puts a build into ~/.m2 for tests in other projects.
+repositories:
+  - url: mavenLocal
+    publish: true
+    resolve: false
+
+settings:
+  kotlin:
+    version: 2.4.21
+    explicitApi: strict
+  jvm:
+    jdk:
+      version: 21
+  junit: junit-4
+  android:
+    compileSdk:
+      apiLevel: 37
+      minorApiLevel: 2
+    minSdk: 21
+  publishing:
+    enabled: true
+    group: io.github.yuroyami
+    version: 0.1.0
+    pom:
+      url: https://github.com/yuroyami/AudioKodec
+      licenses:
+        - name: The Apache License, Version 2.0
+          url: https://www.apache.org/licenses/LICENSE-2.0.txt
+        # Parts of the Opus code translate libopus, which uses the BSD 3-Clause License.
+        - name: BSD 3-Clause License (translated libopus components)
+          url: https://opensource.org/license/bsd-3-clause
+      developers:
+        - id: yuroyami
+          name: yuroyami
+          url: https://github.com/yuroyami
+      scm:
+        url: https://github.com/yuroyami/AudioKodec
+        connection: scm:git:git://github.com/yuroyami/AudioKodec.git
+        developerConnection: scm:git:ssh://git@github.com/yuroyami/AudioKodec.git
+    signArtifacts: true
+    publishSources: true
+    mavenCentral:
+      enabled: true
+      publishingMode: auto
+
+# -Xexport-kdoc keeps the KDoc in the native klibs, so Apple framework headers keep the docs.
+settings@native:
+  kotlin:
+    freeCompilerArgs: [ -Xexport-kdoc ]
+
+plugins:
+  attribution:
+    enabled: true

@@ -212,7 +212,7 @@ loses nothing, and an unusual entry is still reachable.
 
 ## Decode speed
 
-`./gradlew :sample:benchmark` decodes thirty seconds of a fixed stereo test signal in each
+The benchmark in the sample module decodes thirty seconds of a fixed stereo test signal in each
 coding. It uses the streaming decoder with buffer reuse, discards three runs, and reports the
 median of seven as a multiple of real time. AudioKodec encodes the FLAC, ALAC and WAV inputs,
 and ffmpeg encodes the others, so a machine without ffmpeg measures fewer codings. `--enforce`

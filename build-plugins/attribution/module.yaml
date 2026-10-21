@@ -1,0 +1,3 @@
+product: jvm/amper-plugin
+
+description: Copies the LICENSE and NOTICE files at the project root into the META-INF folder of the library jar.

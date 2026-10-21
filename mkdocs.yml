@@ -56,12 +56,12 @@ markdown_extensions:
   - pymdownx.superfences
   - pymdownx.inlinehilite
   # Code samples are included from source files that compile and run as tests
-  # (./gradlew :sample:docsTest, and :audiokodec:jsNodeTest for the Web Audio
-  # one), between `// --8<-- [start:name]` and `// --8<-- [end:name]` markers.
+  # (./kotlin test -m docs-samples, and .github/scripts/web-tests/run.py for the
+  # Web Audio one), between `// --8<-- [start:name]` and `// --8<-- [end:name]` markers.
   - pymdownx.snippets:
       base_path:
-        - sample/src/docs/kotlin/io/github/yuroyami/audiokodec/docs
-        - audiokodec/src/jsTest/kotlin/io/github/yuroyami/audiokodec/docs
+        - docs-samples/test/io/github/yuroyami/audiokodec/docs
+        - audiokodec/test@js/io/github/yuroyami/audiokodec/docs
       check_paths: true
       dedent_subsections: true
   - pymdownx.tabbed:

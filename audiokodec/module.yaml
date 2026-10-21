@@ -1,0 +1,230 @@
+product:
+  type: kmp/lib
+  platforms:
+    - jvm
+    - android
+    - js
+    - wasmJs
+    - wasmWasi
+    - iosArm64
+    - iosSimulatorArm64
+    - iosX64
+    - macosArm64
+    - tvosArm64
+    - tvosSimulatorArm64
+    - watchosArm32
+    - watchosArm64
+    - watchosDeviceArm64
+    - watchosSimulatorArm64
+    - linuxX64
+    - linuxArm64
+    - mingwX64
+    - androidNativeArm32
+    - androidNativeArm64
+    - androidNativeX86
+    - androidNativeX64
+
+apply:
+  - ../library.module-template.yaml
+
+# Intentionally no dependencies. The AudioKodec core depends on kotlin-stdlib only.
+
+settings:
+  jvm:
+    test:
+      # The allocation guard allows 1 GiB of decoded PCM, and the fuzz suite drives malformed
+      # headers up to it. The heap must be large enough that the guard rejects the input first.
+      freeJvmArgs: [ -Xmx3g ]
+  android:
+    namespace: io.github.yuroyami.audiokodec
+  publishing:
+    pom:
+      name: AudioKodec
+      description: >-
+        Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform. Decodes 22 containers to Float32 PCM,
+        among them FLAC, WAV, AIFF, MP3, Ogg Vorbis and Opus, AAC, ALAC, AC-3, Matroska, WavPack and Monkey's Audio.
+        Encodes FLAC, WAV, AIFF, AU and ALAC. Reads and edits ID3, APE, Vorbis comment, MP4 and RIFF tags with the audio
+        left byte-identical. Names 30 formats by sniffing. Depends on kotlin-stdlib only and builds for 22 targets.
+
+# Gradle named the klib "io.github.yuroyami:audiokodec". Keep that name, or libraries built against
+# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
+# renames the klibs of shared native code, which must keep their own names.
+settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:audiokodec ]
+
+settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:audiokodec ]
+
+settings@wasmWasi:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:audiokodec ]
+
+settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@tvosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@tvosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@watchosArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@watchosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@watchosDeviceArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@watchosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@androidNativeArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@androidNativeArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@androidNativeX86:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+settings@androidNativeX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:audiokodec, -Xshort-module-name=audiokodec ]
+
+# Tests compile into their own klib, which needs a different name. The test blocks name the
+# same platforms as the blocks above, so the toolchain applies them last.
+test-settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=audiokodec_test ]
+
+test-settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=audiokodec_test ]
+
+test-settings@wasmWasi:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=audiokodec_test ]
+
+test-settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@tvosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@tvosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@watchosArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@watchosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@watchosDeviceArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@watchosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@androidNativeArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@androidNativeArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@androidNativeX86:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+test-settings@androidNativeX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=audiokodec_test, -Xshort-module-name=audiokodec_test ]
+
+plugins:
+  abi-check:
+    enabled: true
+    # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
+    klibPlatforms: [ androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, mingwX64, tvosArm64, tvosSimulatorArm64, wasmJs, wasmWasi, watchosArm32, watchosArm64, watchosDeviceArm64, watchosSimulatorArm64 ]
+  dokka:
+    enabled: true
+    moduleName: audiokodec
+    includes: [ Module.md ]
+    customStyleSheets: [ ../docs/api-theme/kite.css ]
+    templatesDir: ../dokka-templates
+    footerMessage: Apache-2.0 · AudioKodec is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/AudioKodec/blob/main/audiokodec/src
+    # `./kotlin do dokkaSite` merges the pages of these modules into build/dokka/html.
+    siteName: AudioKodec
+    siteModules: [ audiokodec, audiokodec-io ]
+    siteIncludes: [ ../audiokodec-io/Module.md ]

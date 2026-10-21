@@ -1,12 +1,15 @@
-"""Verify attribution in built distributions, including source archives and POMs."""
+"""Verify attribution in the built jars, Android libraries and Apple frameworks, and the POM licences.
+
+The Kotlin Toolchain puts the generated META-INF/LICENSE and META-INF/NOTICE into the JVM jar and the
+jar inside the Android AAR. Klibs and sources jars cannot carry them.
+"""
 import argparse
+import io
 from pathlib import Path
-import xml.etree.ElementTree as ET
 import zipfile
 
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--framework", action="append", default=[], type=Path)
-parser.add_argument("--package", action="append", default=[], type=Path)
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[2]
 canonical = {name: (root / name).read_bytes() for name in ("LICENSE", "NOTICE")}
@@ -29,31 +32,34 @@ def verify(path, read):
     checked += 1
 
 
+tasks = root / "build" / "tasks"
 for module in ("audiokodec", "audiokodec-io"):
-    build = root / module / "build"
-    archives = sorted((build / "libs").glob("*.jar")) + sorted((build / "libs").glob("*.klib"))
-    archives += sorted((build / "outputs" / "aar").glob("*.aar"))
-    if not archives:
-        failures.append(f"{module}: no built archives to verify")
-    for path in archives:
+    jars = sorted(tasks.glob(f"_{module}_jarJvm/*.jar"))
+    aars = sorted(tasks.glob(f"_{module}_aarAndroid*/*.aar"))
+    if not jars or not aars:
+        failures.append(f"{module}: no built jar or AAR to verify; run ./kotlin build -p jvm -p android first")
+    for path in jars:
         with zipfile.ZipFile(path) as archive:
             verify(path, lambda name: archive.read(f"META-INF/{name}"))
-    poms = sorted((build / "publications").glob("*/pom-default.xml"))
-    if not poms:
-        failures.append(f"{module}: no generated POMs to verify")
-    for path in poms:
-        pom = ET.parse(path).getroot()
-        urls = [element.text for element in pom.findall("{*}licenses/{*}license/{*}url")]
-        if not any("apache.org/licenses/LICENSE-2.0" in (url or "") for url in urls):
-            failures.append(f"{path}: missing the Apache-2.0 licence")
-        if not any("bsd-3-clause" in (url or "").lower() for url in urls):
-            failures.append(f"{path}: missing the libopus BSD-3-Clause licence")
-        checked += 1
+    for path in aars:
+        with zipfile.ZipFile(path) as aar:
+            inner = [name for name in aar.namelist() if name.startswith("libs/") and name.endswith(".jar")]
+            if not inner:
+                failures.append(f"{path}: no jar under libs/")
+            for name in inner:
+                with zipfile.ZipFile(io.BytesIO(aar.read(name))) as archive:
+                    verify(f"{path}!{name}", lambda entry: archive.read(f"META-INF/{entry}"))
+
+# The toolchain writes the POM only when it publishes, so check the settings that it reads.
+template = (root / "library.module-template.yaml").read_text()
+if "apache.org/licenses/LICENSE-2.0" not in template:
+    failures.append("library.module-template.yaml: missing the Apache-2.0 licence")
+if "bsd-3-clause" not in template.lower():
+    failures.append("library.module-template.yaml: missing the libopus BSD-3-Clause licence")
+checked += 1
 
 for path in args.framework:
     verify(path, lambda name: (path / "Resources" / name).read_bytes())
-for path in args.package:
-    verify(path, lambda name: (path / name).read_bytes())
 if failures:
     raise SystemExit("Distribution attribution failed:\n" + "\n".join(failures))
-print(f"Distribution attribution verified in {checked} archives, packages, frameworks and POMs")
+print(f"Distribution attribution verified in {checked} archives, frameworks and POM settings")
