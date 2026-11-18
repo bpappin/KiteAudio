@@ -1,6 +1,6 @@
 [versions]
 # Used by :audiokodec-io only. The :audiokodec core depends on kotlin-stdlib only.
-kotlinx-io = "0.9.1"
+kotlinx-io = "0.9.3"
 
 [libraries]
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
