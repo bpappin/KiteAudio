@@ -5,6 +5,11 @@ modules:
   - build-plugins/attribution
   - build-plugins/dokka
   - docs-samples
+  - kitemidi
+  - kitemidi-io
+  - kitemidi-io-coremidi
+  - kitert
+  - kitesynth
   - sample
 
 plugins:

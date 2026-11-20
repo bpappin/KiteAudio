@@ -51,11 +51,12 @@ for module in ("audiokodec", "audiokodec-io"):
                     verify(f"{path}!{name}", lambda entry: archive.read(f"META-INF/{entry}"))
 
 # The toolchain writes the POM only when it publishes, so check the settings that it reads.
-template = (root / "library.module-template.yaml").read_text()
-if "apache.org/licenses/LICENSE-2.0" not in template:
+# Every library applies the Apache-2.0 entry of the library template, and the codec modules
+# also apply the BSD-3-Clause entry of the codec template.
+if "apache.org/licenses/LICENSE-2.0" not in (root / "library.module-template.yaml").read_text():
     failures.append("library.module-template.yaml: missing the Apache-2.0 licence")
-if "bsd-3-clause" not in template.lower():
-    failures.append("library.module-template.yaml: missing the libopus BSD-3-Clause licence")
+if "bsd-3-clause" not in (root / "codec.module-template.yaml").read_text().lower():
+    failures.append("codec.module-template.yaml: missing the libopus BSD-3-Clause licence")
 checked += 1
 
 for path in args.framework:

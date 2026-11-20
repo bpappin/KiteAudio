@@ -1,6 +1,10 @@
 [versions]
 # Used by :audiokodec-io only. The :audiokodec core depends on kotlin-stdlib only.
 kotlinx-io = "0.9.3"
+# Used by :kitemidi-io and :kitemidi-io-coremidi only. The :kitemidi core depends on kotlin-stdlib only.
+coroutines = "1.11.0"
 
 [libraries]
 kotlinx-io-core = { module = "org.jetbrains.kotlinx:kotlinx-io-core", version.ref = "kotlinx-io" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }

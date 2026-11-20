@@ -1,0 +1,17 @@
+# Settings that the two codec modules share, on top of library.module-template.yaml and
+# kmp.module-template.yaml.
+
+settings:
+  junit: junit-4
+  android:
+    minSdk: 21
+  publishing:
+    pom:
+      licenses:
+        # Parts of the Opus code translate libopus, which uses the BSD 3-Clause License.
+        - name: BSD 3-Clause License (translated libopus components)
+          url: https://opensource.org/license/bsd-3-clause
+
+plugins:
+  attribution:
+    enabled: true

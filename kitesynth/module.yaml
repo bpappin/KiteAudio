@@ -10,59 +10,21 @@ product:
     - iosX64
     - macosArm64
 
-# `./kotlin publish mavenLocal -m kitesynth` puts a build into ~/.m2 for tests in other projects.
-repositories:
-  - url: mavenLocal
-    publish: true
-    resolve: false
+apply:
+  - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
 
 settings:
-  kotlin:
-    # Keep abi-tools in build-plugins/abi-check/module.yaml at the same version.
-    version: 2.4.21
-    explicitApi: strict
-  jvm:
-    jdk:
-      version: 21
   android:
     namespace: io.github.yuroyami.kitesynth
-    compileSdk:
-      apiLevel: 37
-      minorApiLevel: 2
     minSdk: 23
   publishing:
-    enabled: true
-    group: io.github.yuroyami
-    version: 0.2.0
     pom:
       name: KiteSynth
       description: >-
         SoundFont reading, writing and sample-based synthesis for Kotlin Multiplatform. Renders stereo Float32 PCM
         with envelopes, modulation, filtering, reverb and chorus. Retains SF3 samples for an application-provided
         decoder. The common core depends only on kotlin-stdlib.
-      url: https://github.com/yuroyami/KiteSynth
-      licenses:
-        - name: The Apache License, Version 2.0
-          url: https://www.apache.org/licenses/LICENSE-2.0.txt
-      developers:
-        - id: yuroyami
-          name: yuroyami
-          url: https://github.com/yuroyami
-      scm:
-        url: https://github.com/yuroyami/KiteSynth
-        connection: scm:git:git://github.com/yuroyami/KiteSynth.git
-        developerConnection: scm:git:ssh://git@github.com/yuroyami/KiteSynth.git
-    signArtifacts: true
-    publishSources: true
-    mavenCentral:
-      enabled: true
-      publishingMode: auto
-
-# -Xexport-kdoc keeps the KDoc in the native klibs. If the module already has a
-# settings@native block, add the flag to that block instead.
-settings@native:
-  kotlin:
-    freeCompilerArgs: [ -Xexport-kdoc ]
 
 # Gradle named the klib "io.github.yuroyami:kitesynth". Keep that name, or libraries built against
 # earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also

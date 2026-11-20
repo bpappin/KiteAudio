@@ -26,6 +26,8 @@ product:
 
 apply:
   - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+  - ../codec.module-template.yaml
 
 # Intentionally no dependencies. The AudioKodec core depends on kotlin-stdlib only.
 

@@ -29,7 +29,8 @@ def save(path, value):
 def source_files():
     """Owned recipes only. Never traverse external implementation source trees."""
     files = [ROOT / "generate-test-fixtures.py", ROOT / "kotlin", ROOT / "kotlin.bat", ROOT / "project.yaml",
-             ROOT / "library.module-template.yaml", ROOT / "libs.versions.toml", ROOT / "reference/REFERENCES.md"]
+             ROOT / "library.module-template.yaml", ROOT / "kmp.module-template.yaml",
+             ROOT / "codec.module-template.yaml", ROOT / "libs.versions.toml", ROOT / "reference/REFERENCES.md"]
     # The source folders of both libraries: src, test and their @platform variants.
     directories = [path for module in ("audiokodec", "audiokodec-io") for path in (ROOT / module).iterdir()
                    if path.is_dir() and path.name.split("@")[0] in ("src", "test", "testResources")]

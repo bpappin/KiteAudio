@@ -1,0 +1,12 @@
+# Settings that every multiplatform library shares, on top of library.module-template.yaml.
+
+settings:
+  android:
+    compileSdk:
+      apiLevel: 37
+      minorApiLevel: 2
+
+# -Xexport-kdoc keeps the KDoc in the native klibs, so Apple framework headers keep the docs.
+settings@native:
+  kotlin:
+    freeCompilerArgs: [ -Xexport-kdoc ]

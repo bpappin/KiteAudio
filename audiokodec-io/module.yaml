@@ -26,6 +26,8 @@ product:
 
 apply:
   - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+  - ../codec.module-template.yaml
 
 # The JVM and Android file code in src@jvmShared.
 aliases:

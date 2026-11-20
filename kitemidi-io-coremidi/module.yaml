@@ -10,16 +10,11 @@ dependencies:
 test-dependencies:
   - $libs.coroutines.test
 
-# `./kotlin publish mavenLocal -m kitemidi-io-coremidi` puts a build into ~/.m2 for tests in other projects.
-repositories:
-  - url: mavenLocal
-    publish: true
-    resolve: false
+apply:
+  - ../library.module-template.yaml
 
 settings:
   kotlin:
-    version: 2.4.21
-    explicitApi: strict
     # Emit Java 21 bytecode, so a Java 21 desktop build can depend on this module.
     freeCompilerArgs: [ -jvm-target, "21" ]
   jvm:
@@ -32,31 +27,11 @@ settings:
       # Linker.nativeLinker is a restricted method. Without this flag the JDK warns, and later refuses.
       freeJvmArgs: [ --enable-native-access=ALL-UNNAMED ]
   publishing:
-    enabled: true
-    group: io.github.yuroyami
-    version: 0.2.0
     pom:
       name: KiteMIDI CoreMIDI for JVM
       description: >-
         CoreMIDI device input and output on macOS through the Java Foreign Function and Memory API. Provides native
         MIDI ports for desktop JVM applications, with JDK 22 or later required at runtime.
-      url: https://github.com/yuroyami/KiteMIDI
-      licenses:
-        - name: The Apache License, Version 2.0
-          url: https://www.apache.org/licenses/LICENSE-2.0.txt
-      developers:
-        - id: yuroyami
-          name: yuroyami
-          url: https://github.com/yuroyami
-      scm:
-        url: https://github.com/yuroyami/KiteMIDI
-        connection: scm:git:git://github.com/yuroyami/KiteMIDI.git
-        developerConnection: scm:git:ssh://git@github.com/yuroyami/KiteMIDI.git
-    signArtifacts: true
-    publishSources: true
-    mavenCentral:
-      enabled: true
-      publishingMode: auto
 
 plugins:
   dokka:
