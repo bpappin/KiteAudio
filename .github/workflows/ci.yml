@@ -183,8 +183,9 @@ jobs:
           key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
-      - name: Install the Android SDK packages
-        run: sdkmanager 'platforms;android-37.2' 'build-tools;37.0.0'
+      # sdkmanager is not on PATH on the runner, so call it by its full path, as ArchiveKodec does.
+      - name: Install the required Android SDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"'
 
       - name: Android host tests
         run: ./kotlin test -m audiokodec -m audiokodec-io -p android
