@@ -131,7 +131,13 @@ PY
 if [[ ! -x reference/tta/libtta/build/console/tta ]]; then
     tar -xzf "$tta_source" -C reference/tta/libtta
     mkdir -p reference/tta/libtta/build
-    (cd reference/tta/libtta/build && ../libtta-c-2.3/configure --disable-shared && make -j4)
+    # libtta is older than C23, where bool became a keyword, so it is compiled as C17.
+    # It has no 64-bit ARM build. On Apple silicon it is built as an x86_64 program, which Rosetta runs.
+    tta_cc="cc -std=gnu17"
+    if [[ "$(uname -sm)" == "Darwin arm64" ]]; then
+        tta_cc="$tta_cc -arch x86_64"
+    fi
+    (cd reference/tta/libtta/build && ../libtta-c-2.3/configure --disable-shared CC="$tta_cc" && make -j4)
 fi
 
 # libmpcdec r495 is BSD; the oracle harness is compiled against these sources.
