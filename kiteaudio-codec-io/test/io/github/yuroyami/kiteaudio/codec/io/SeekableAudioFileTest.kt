@@ -11,7 +11,6 @@ import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
-import kotlinx.io.files.SystemPathSeparator
 import kotlinx.io.readByteArray
 import kotlin.random.Random
 import kotlin.test.Test
@@ -127,10 +126,15 @@ class SeekableAudioFileTest {
     }
     private fun read(path: Path): ByteArray = SystemFileSystem.source(path).buffered().use { it.readByteArray() }
 
+    // kotlinx-io gives '/' as the path separator on every native target, so the separator does not
+    // show Windows. An absolute Windows path has a drive letter, or it starts with two backslashes.
+    private val onWindows: Boolean = runCatching { SystemFileSystem.resolve(Path(".")).toString() }
+        .getOrDefault("").let { it.getOrNull(1) == ':' || it.startsWith("\\\\") }
+
     private inline fun withFile(block: (Path) -> Unit) {
         // kotlinx-io 0.9.3 creates files through the ANSI calls on Windows, so it cannot make a path
         // outside the ANSI code page there. The reader under test uses the wide calls.
-        val script = if (SystemPathSeparator == '\\') "tokyo" else "東京"
+        val script = if (onWindows) "tokyo" else "東京"
         val directory = Path(".kiteaudio-codec-seekable-$script-${Random.nextLong().toULong().toString(16)}")
         SystemFileSystem.createDirectories(directory, mustCreate = true)
         val path = Path(directory, "recording.wav")
