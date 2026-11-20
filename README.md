@@ -25,7 +25,7 @@ Every artifact has the group `io.github.yuroyami` and the version 0.3.0.
 | [`kiteaudio-output`](kiteaudio-output/README.md) | Callback-based mono and stereo audio output through Java Sound, AudioTrack and AudioQueue. | JVM, Android, iOS, macOS |
 
 The README of each MIDI, synth and output module describes that module. The rest of this page
-describes the two codec modules. Their code calls the codec AudioKodec.
+describes the two codec modules. The code and the docs name the codec AudioKodec.
 
 ## The codec
 
