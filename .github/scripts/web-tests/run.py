@@ -17,7 +17,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
-MODULES = ("audiokodec", "audiokodec-io")
+MODULES = ("kiteaudio-codec", "kiteaudio-codec-io")
 PLATFORMS = ("js", "wasmJs", "wasmWasi")
 ARTIFACTS = ROOT / "build/artifacts/CompiledWebArtifact"
 CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "darwin" else ".cache/JetBrains/Kotlin")
@@ -57,12 +57,12 @@ def wasm_tests(module, platform, executable):
     entry = ARTIFACTS / f"{module}{platform}Testdebug/kotlin-output/{module}_test.mjs"
     script = f"const tests = await import({entry.as_uri()!r}); tests.startUnitTests();"
     preload, env = [], None
-    if module == "audiokodec-io" and platform == "wasmWasi":
+    if module == "kiteaudio-codec-io" and platform == "wasmWasi":
         # The file tests need a preopened directory, which the Kotlin WASI launcher does not give.
         directory = ROOT / "build/wasi-test-files"
         directory.mkdir(parents=True, exist_ok=True)
         env = {**os.environ, "AUDIOKODEC_WASI_TEST_DIRECTORY": str(directory)}
-        preload = ["--require", ROOT / "audiokodec-io/test-tools/wasi-filesystem.cjs"]
+        preload = ["--require", ROOT / "kiteaudio-codec-io/test-tools/wasi-filesystem.cjs"]
     result = run(executable, *preload, "--input-type=module", "-e", script, capture=True, env=env)
     # kotlin-test for Wasm reports in the TeamCity service message format.
     output = result.stdout

@@ -79,7 +79,7 @@ def prepare(entry, destination, verify_only):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--destination", type=Path, default=ROOT / "audiokodec/build/flac-conformance")
+    parser.add_argument("--destination", type=Path, default=ROOT / "kiteaudio-codec/build/flac-conformance")
     parser.add_argument("--verify-only", action="store_true")
     parser.add_argument("--jobs", type=int, default=6)
     args = parser.parse_args()

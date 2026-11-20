@@ -1,0 +1,14 @@
+// Klib ABI Dump
+// Targets: [androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, mingwX64, tvosArm64, tvosSimulatorArm64, wasmJs, wasmWasi, watchosArm32, watchosArm64, watchosDeviceArm64, watchosSimulatorArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yuroyami:kiteaudio-codec-io>
+final fun (kotlinx.io.files/Path).io.github.yuroyami.kiteaudio.codec.io/asAudioSink(): io.github.yuroyami.kiteaudio.codec/AudioSink // io.github.yuroyami.kiteaudio.codec.io/asAudioSink|asAudioSink@kotlinx.io.files.Path(){}[0]
+final fun (kotlinx.io.files/Path).io.github.yuroyami.kiteaudio.codec.io/openAudioSource(): io.github.yuroyami.kiteaudio.codec/AudioSource // io.github.yuroyami.kiteaudio.codec.io/openAudioSource|openAudioSource@kotlinx.io.files.Path(){}[0]
+final fun (kotlinx.io.files/Path).io.github.yuroyami.kiteaudio.codec.io/readAudioSource(kotlin/Long = ...): io.github.yuroyami.kiteaudio.codec/AudioSource // io.github.yuroyami.kiteaudio.codec.io/readAudioSource|readAudioSource@kotlinx.io.files.Path(kotlin.Long){}[0]
+final fun (kotlinx.io.files/Path).io.github.yuroyami.kiteaudio.codec.io/writeAudioAtomically(kotlin/Function1<io.github.yuroyami.kiteaudio.codec/AudioSink, kotlin/Unit>) // io.github.yuroyami.kiteaudio.codec.io/writeAudioAtomically|writeAudioAtomically@kotlinx.io.files.Path(kotlin.Function1<io.github.yuroyami.kiteaudio.codec.AudioSink,kotlin.Unit>){}[0]
+final fun (kotlinx.io/RawSink).io.github.yuroyami.kiteaudio.codec.io/asAudioSink(): io.github.yuroyami.kiteaudio.codec/AudioSink // io.github.yuroyami.kiteaudio.codec.io/asAudioSink|asAudioSink@kotlinx.io.RawSink(){}[0]
+final fun (kotlinx.io/RawSource).io.github.yuroyami.kiteaudio.codec.io/readAudioSource(kotlin/Long = ...): io.github.yuroyami.kiteaudio.codec/AudioSource // io.github.yuroyami.kiteaudio.codec.io/readAudioSource|readAudioSource@kotlinx.io.RawSource(kotlin.Long){}[0]

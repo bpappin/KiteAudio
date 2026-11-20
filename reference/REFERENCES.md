@@ -555,9 +555,9 @@ applies to them.
 The test oracles for this work are the reference programs built from the same
 commit and run: `opus_demo`, `opus_compare`, and a small command line over the
 multistream and projection API written for these tests
-(`audiokodec/src/jvmTest/resources/opus_multistream_oracle.c`).
+(`kiteaudio-codec/src/jvmTest/resources/opus_multistream_oracle.c`).
 
-The encoder's oracle is `audiokodec/src/jvmTest/resources/opus_encode_oracle.c`,
+The encoder's oracle is `kiteaudio-codec/src/jvmTest/resources/opus_encode_oracle.c`,
 compiled against the same build and against libogg 1.3.5:
 
 | Field | Value |
@@ -701,7 +701,7 @@ and which is also what Kotlin's shifts do.
 The test oracle is `alacconvert`, built from the same commit and run, which
 encodes WAV to ALAC in CAF and decodes it back.
 
-For 20-bit audio, `audiokodec/src/jvmTest/resources/alac_20bit_oracle.cpp`
+For 20-bit audio, `kiteaudio-codec/src/jvmTest/resources/alac_20bit_oracle.cpp`
 links the same pinned `libalac.a` and calls its public `ALACEncoder` API.
 It supplies high-aligned 20-bit PCM in 24-bit slots and wraps the returned
 packets and opaque magic cookie in CAF, bypassing `alacconvert`'s faulty

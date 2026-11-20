@@ -3,9 +3,9 @@
 product: jvm/app
 
 dependencies:
-  - //audiokodec
+  - //kiteaudio-codec
   # Seekable file input, so that the viewer never holds a whole file in memory.
-  - //audiokodec-io
+  - //kiteaudio-codec-io
 
 settings:
   kotlin:
@@ -13,7 +13,7 @@ settings:
   jvm:
     jdk:
       version: 21
-    mainClass: io.github.yuroyami.audiokodec.sample.ViewerKt
+    mainClass: io.github.yuroyami.kiteaudio.codec.sample.ViewerKt
     test:
       systemProperties:
         # The tests paint the viewer off screen, which needs no display.

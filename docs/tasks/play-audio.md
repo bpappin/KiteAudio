@@ -1,6 +1,6 @@
 # Play decoded audio
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 AudioKodec decodes and does not play. Every platform has its own audio output, and each
 wants the samples in its own shape: interleaved 16-bit integers, interleaved floats, or one

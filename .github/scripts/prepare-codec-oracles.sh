@@ -24,7 +24,7 @@ PY
     export AUDIOKODEC_MPG123_LIBRARY
 fi
 
-oracle_venv=${AUDIOKODEC_ORACLE_VENV:-${RUNNER_TEMP:-/tmp}/audiokodec-tag-oracle}
+oracle_venv=${AUDIOKODEC_ORACLE_VENV:-${RUNNER_TEMP:-/tmp}/kiteaudio-codec-tag-oracle}
 python3 -m venv "$oracle_venv"
 "$oracle_venv/bin/python" -m pip install --disable-pip-version-check mutagen==1.47.0
 export AUDIOKODEC_MUTAGEN_PYTHON="$oracle_venv/bin/python"

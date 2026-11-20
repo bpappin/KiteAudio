@@ -1,0 +1,74 @@
+# Real-time audio: a render callback, a lock-free ring, and one sink per platform.
+# The API keeps KitePlayer's names on purpose, so the two can be merged later rather than translated.
+product:
+  type: kmp/lib
+  platforms:
+    - jvm
+    - android
+    - iosArm64
+    - iosSimulatorArm64
+    - iosX64
+    - macosArm64
+
+apply:
+  - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+
+settings:
+  android:
+    namespace: io.github.yuroyami.kiteaudio.output
+    minSdk: 23
+  publishing:
+    pom:
+      name: KiteRT
+      description: >-
+        Callback-based mono and stereo audio output for Kotlin Multiplatform. Accepts interleaved Float32 samples and
+        outputs 16-bit PCM through Java Sound on the JVM, AudioTrack on Android and AudioQueue on Apple platforms.
+
+# Gradle named the klib "io.github.yuroyami:kiteaudio-output". Keep that name, or libraries built against
+# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
+# renames the klibs of shared native code, which must keep their own names.
+settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
+
+settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
+
+settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
+
+settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
+
+# Tests compile into their own klib, which needs a different name. The test blocks name the
+# same platforms as the blocks above, so the toolchain applies them last.
+test-settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-output_test, -Xshort-module-name=kiteaudio-output_test ]
+
+test-settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-output_test, -Xshort-module-name=kiteaudio-output_test ]
+
+test-settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-output_test, -Xshort-module-name=kiteaudio-output_test ]
+
+test-settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-output_test, -Xshort-module-name=kiteaudio-output_test ]
+
+plugins:
+  abi-check:
+    enabled: true
+    # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
+    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, macosArm64 ]
+  dokka:
+    enabled: true
+    moduleName: kiteaudio-output
+    footerMessage: Apache-2.0 · KiteRT is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteRT/blob/main/kiteaudio-output/src

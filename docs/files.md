@@ -1,11 +1,11 @@
 # Files and kotlinx-io
 
 The core module never touches the filesystem, which lets it build for every Kotlin target.
-`audiokodec-io` adds the bridge to kotlinx-io, with browser and Node variants for JavaScript.
+`kiteaudio-codec-io` adds the bridge to kotlinx-io, with browser and Node variants for JavaScript.
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:audiokodec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
 }
 ```
 

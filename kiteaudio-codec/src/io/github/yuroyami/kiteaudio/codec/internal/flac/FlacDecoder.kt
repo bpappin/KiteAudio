@@ -1,0 +1,599 @@
+package io.github.yuroyami.kiteaudio.codec.internal.flac
+
+import io.github.yuroyami.kiteaudio.codec.AudioChannel
+import io.github.yuroyami.kiteaudio.codec.AudioCodec
+import io.github.yuroyami.kiteaudio.codec.AudioContainer
+import io.github.yuroyami.kiteaudio.codec.AudioDecoder
+import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.codec.AudioFrame
+import io.github.yuroyami.kiteaudio.codec.AudioInfo
+import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
+import io.github.yuroyami.kiteaudio.codec.DecodeOptions
+import io.github.yuroyami.kiteaudio.codec.IntAudioFrame
+import io.github.yuroyami.kiteaudio.codec.IntPcmAccess
+import io.github.yuroyami.kiteaudio.codec.Pcm
+import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
+import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
+import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+
+/**
+ * A decoder over the frames of a FLAC stream.
+ *
+ * FLAC frames vary in size, so a position cannot be turned into a byte offset
+ * by multiplying. Seeking therefore uses the seek table when the file has one
+ * and a binary search over frame headers when the source size is known.
+ * Header CRC-8 checks reject false syncs, and the selected frame's CRC-16 and
+ * sample range are verified before the landing is used. Unknown-size sources
+ * retain a forward frame walk.
+ */
+internal class FlacDecoder(
+    private val reader: SourceReader,
+    private val parsed: FlacMetadata.Parsed,
+    private val options: DecodeOptions,
+) : AudioDecoder, IntPcmAccess {
+
+    private val streamInfo = parsed.streamInfo
+    private val frames = FlacFrameReader(reader, streamInfo, options)
+
+    private val sourceHeader: FlacFrameReader.Position? = try {
+        frames.headerAt(parsed.audioOffset)
+    } catch (_: CorruptStreamException) {
+        null // Frame decoding retains the original typed failure.
+    } catch (_: TruncatedStreamException) {
+        null
+    }
+    private val legacySampleNumbers: Boolean = detectLegacySampleNumbers()
+    private val sourceOrigin: Long = sourceHeader?.let { firstSampleOf(it.sampleNumber, it.frameNumber) } ?: 0L
+    private val codedOrigin: Long = if (options.tolerant) sourceOrigin else 0L
+
+    override val format: AudioFormat = AudioFormat(
+        streamInfo.sampleRate,
+        layoutFor(streamInfo.channels),
+    )
+
+    override val bitDepth: Int = streamInfo.bitsPerSample
+
+    override val durationFrames: Long? = if (codedOrigin > 0) {
+        measureTrimmedDuration()
+    } else {
+        streamInfo.totalSamples.takeIf { it > 0 }
+    }
+
+    override val info: AudioInfo = AudioInfo(
+        container = AudioContainer.FLAC,
+        codec = AudioCodec.FLAC,
+        format = format,
+        durationFrames = durationFrames,
+        bitDepth = streamInfo.bitsPerSample,
+        bitrate = bitrateOf(),
+        isVariableBitrate = true,
+        dataOffset = reader.absoluteOffset(parsed.audioOffset),
+        dataSize = if (reader.size > 0) reader.size - parsed.audioOffset else -1L,
+    )
+
+    override var positionFrames: Long = 0L
+        private set
+
+    /** Byte offset of the next frame to decode. */
+    private var nextFrameOffset: Long = parsed.audioOffset
+
+    /** Frames to drop from the front of the next decoded block after a seek. */
+    private var pendingSkip: Long = 0
+
+    /** The verified landing frame, consumed once after a seek. */
+    private var pendingFrame: FlacFrameReader.Frame? = null
+
+    /** Coded sample position expected from the next frame header. */
+    private var nextCodedPosition: Long = codedOrigin
+
+    private var closed = false
+    private var exhausted = false
+    private var decodedAny = false
+
+    private var floatBuffer: FloatArray? = null
+    private var intBuffer: IntArray? = null
+
+    /** Set when the caller asked for the stored MD5 to be checked as it goes. */
+    private var md5: Md5? = null
+
+    override fun nextFrame(): AudioFrame? {
+        val block = nextBlock() ?: return null
+        val channels = format.channels
+        val usable = block.usableFrames
+        val samples = usable * channels
+        val out = floatBufferOf(samples)
+        val scale = (1.0 / scaleOf(block.frame.bitsPerSample)).toFloat()
+        var index = 0
+        for (frame in block.from until block.from + usable) {
+            for (channel in 0 until channels) {
+                out[index++] = block.frame.channels[channel][frame] * scale
+            }
+        }
+        val start = positionFrames
+        positionFrames += usable
+        return AudioFrame(
+            format = format,
+            samples = if (options.reuseBuffers) out else out.copyOf(samples),
+            frameCount = usable,
+            positionFrames = start,
+        )
+    }
+
+    override fun nextIntFrame(): IntAudioFrame? {
+        val block = nextBlock() ?: return null
+        val channels = format.channels
+        val usable = block.usableFrames
+        val samples = usable * channels
+        val out = intBufferOf(samples)
+        var index = 0
+        for (frame in block.from until block.from + usable) {
+            for (channel in 0 until channels) {
+                out[index++] = block.frame.channels[channel][frame]
+            }
+        }
+        val start = positionFrames
+        positionFrames += usable
+        return IntAudioFrame(
+            format = format,
+            samples = if (options.reuseBuffers) out else out.copyOf(samples),
+            frameCount = usable,
+            positionFrames = start,
+            bitDepth = block.frame.bitsPerSample,
+        )
+    }
+
+    private class Block(val frame: FlacFrameReader.Frame, val from: Int, val usableFrames: Int)
+
+    /**
+     * Decodes the next frame and works out which of it the caller wants.
+     *
+     * A seek lands on a frame boundary at or before the target, so the front of
+     * the first frame after a seek is discarded here.
+     */
+    private fun nextBlock(): Block? {
+        check(!closed) { "this decoder is closed" }
+        requireSupportedOrigin()
+        if (exhausted) return null
+        val total = durationFrames
+        if (total != null && positionFrames >= total) return null
+
+        while (true) {
+            val frame = try {
+                readFrame()
+            } catch (e: TruncatedStreamException) {
+                exhausted = true
+                if (options.tolerant && decodedAny) return null
+                throw e
+            } catch (e: CorruptStreamException) {
+                exhausted = true
+                if (options.tolerant && decodedAny) return null
+                throw e
+            }
+            if (frame == null) {
+                exhausted = true
+                // A stream that states how long it is and then stops early is
+                // truncated, even when it stopped neatly on a frame boundary.
+                // Ending quietly here would report a short file as a whole one.
+                if (total != null && positionFrames < total &&
+                    (!options.tolerant || !decodedAny)
+                ) {
+                    throw TruncatedStreamException(
+                        "the stream declares $total frames and ends after $positionFrames",
+                        nextFrameOffset,
+                    )
+                }
+                return null
+            }
+
+            val skip = minOf(pendingSkip, frame.blockSize.toLong()).toInt()
+            pendingSkip -= skip
+            var usable = frame.blockSize - skip
+            if (total != null) {
+                val left = total - positionFrames
+                if (left < usable) usable = left.toInt()
+            }
+            if (usable <= 0) continue
+
+            md5?.let { hash ->
+                // The stored MD5 is over the unencoded samples in file order,
+                // in as many bytes as the bit depth needs.
+                feedMd5(hash, frame, skip, usable)
+            }
+
+            decodedAny = true
+            return Block(frame, skip, usable)
+        }
+    }
+
+    /** Decodes and validates a whole frame before advancing either coded position. */
+    private fun readFrame(): FlacFrameReader.Frame? {
+        val frame = pendingFrame?.also { pendingFrame = null } ?: frames.decodeAt(nextFrameOffset) ?: return null
+        val statedStart = firstSampleOf(frame)
+        if (statedStart != nextCodedPosition) {
+            throw CorruptStreamException(
+                "a FLAC frame starts at sample $statedStart, expected $nextCodedPosition",
+                nextFrameOffset,
+            )
+        }
+        if (statedStart > Long.MAX_VALUE - frame.blockSize) {
+            throw CorruptStreamException(
+                "a FLAC frame's sample range overflows 64 bits",
+                nextFrameOffset,
+            )
+        }
+        val codedEnd = statedStart + frame.blockSize
+        val total = durationFrames
+        if (total != null && codedEnd - codedOrigin > total) {
+            throw CorruptStreamException(
+                "a FLAC frame ends at sample $codedEnd, past STREAMINFO's total of $total",
+                nextFrameOffset,
+            )
+        }
+        if (nextFrameOffset > Long.MAX_VALUE - frame.byteLength) {
+            throw CorruptStreamException(
+                "a FLAC frame offset overflows 64 bits",
+                nextFrameOffset,
+            )
+        }
+        nextCodedPosition = codedEnd
+        nextFrameOffset += frame.byteLength
+        return frame
+    }
+
+    override fun seek(frameIndex: Long): Long {
+        check(!closed) { "this decoder is closed" }
+        require(frameIndex >= 0) { "frameIndex must not be negative, was $frameIndex" }
+        requireSupportedOrigin()
+        val total = durationFrames
+        val target = if (total != null) frameIndex.coerceAtMost(total) else frameIndex
+
+        // Checking the MD5 only means anything over a whole stream, so a seek
+        // abandons it rather than reporting a failure the seek caused.
+        md5 = null
+        pendingFrame = null
+        exhausted = false
+
+        if (total != null && target == total) {
+            positionFrames = target
+            exhausted = true
+            return target
+        }
+
+        if (target == 0L) {
+            nextFrameOffset = parsed.audioOffset
+            pendingSkip = 0L
+            nextCodedPosition = codedOrigin
+            positionFrames = 0
+            return 0
+        }
+
+        val codedTarget = codedOrigin + target
+        val landing = findFrameAtOrBefore(codedTarget)
+        nextFrameOffset = landing.byteOffset
+        pendingSkip = (codedTarget - landing.firstSample).coerceAtLeast(0L)
+        nextCodedPosition = landing.firstSample
+        positionFrames = target
+        return target
+    }
+
+    private class Landing(val byteOffset: Long, val firstSample: Long)
+
+    /**
+     * Finds a frame that starts at or before [target].
+     *
+     * A useful seek-table point is preferred. Otherwise known-size sources
+     * use header bisection and unknown-size sources use a verified frame walk.
+     * [DecodeOptions.allowSlowSeek] controls these unindexed paths.
+     */
+    private fun findFrameAtOrBefore(target: Long): Landing {
+        var best = Landing(parsed.audioOffset, codedOrigin)
+        // Original offsets in a stream-copy cut no longer address its bytes.
+        for (point in if (codedOrigin == 0L) parsed.seekPoints else emptyList()) {
+            if (point.firstSample <= target && point.firstSample >= best.firstSample) {
+                if (parsed.audioOffset > Long.MAX_VALUE - point.byteOffset) {
+                    throw CorruptStreamException(
+                        "a FLAC seek point overflows the source offset",
+                        parsed.audioOffset,
+                    )
+                }
+                val byteOffset = parsed.audioOffset + point.byteOffset
+                if (reader.size >= 0 && byteOffset >= reader.size) {
+                    if (!options.tolerant) {
+                        throw CorruptStreamException(
+                            "a FLAC seek point lands past the end of the file",
+                            byteOffset,
+                        )
+                    }
+                    continue
+                }
+                best = Landing(byteOffset, point.firstSample)
+            }
+        }
+        // A seek table entry inside the block we want is as close as we need.
+        if (target - best.firstSample < streamInfo.maximumBlockSize) {
+            return best
+        }
+        if (!options.allowSlowSeek) {
+            if (best.firstSample > codedOrigin || target - codedOrigin < streamInfo.maximumBlockSize) return best
+            throw UnsupportedFeatureException(
+                "seeking a FLAC stream without a useful seek table",
+                "this file has no seek point near frame $target, and slow seeking is off",
+            )
+        }
+        return if (reader.size > best.byteOffset) bisectHeaders(best, target) else scanForward(best, target)
+    }
+
+    /** Searches coded positions in byte space, then verifies the actual target frame. */
+    private fun bisectHeaders(from: Landing, target: Long): Landing {
+        var low = from.byteOffset
+        var high = reader.size
+        var candidate = from
+        val lastSample = durationFrames?.let { codedOrigin + it }
+        while (low < high) {
+            val mid = low + (high - low) / 2
+            var header = frames.findHeaderFrom(mid, high)
+            var start = header?.let { firstSampleOf(it.position.sampleNumber, it.position.frameNumber) }
+            // Plausible syncs inside audio can still carry a valid CRC-8.
+            // Ignore positions outside the established coded range.
+            while (header != null && start != null &&
+                (start < candidate.firstSample || (lastSample != null && start >= lastSample))
+            ) {
+                header = frames.findHeaderFrom(header.byteOffset + 1, high)
+                start = header?.let { firstSampleOf(it.position.sampleNumber, it.position.frameNumber) }
+            }
+            if (header == null || start == null || start > target) {
+                high = mid
+                continue
+            }
+            candidate = Landing(header.byteOffset, start)
+            if (target - start < header.position.blockSize) break
+            low = header.byteOffset + 1
+        }
+
+        val frame = try {
+            frames.decodeAt(candidate.byteOffset)
+        } catch (_: CorruptStreamException) {
+            null
+        } catch (_: TruncatedStreamException) {
+            null
+        }
+        if (frame != null && firstSampleOf(frame) == candidate.firstSample &&
+            target - candidate.firstSample in 0 until frame.blockSize.toLong()
+        ) {
+            pendingFrame = frame
+            return candidate
+        }
+
+        // A crafted header can send the search into a real frame's payload,
+        // or put its upper boundary before the target. The fully verified
+        // walk from the original anchor resolves that ambiguity safely.
+        return scanForward(from, target)
+    }
+
+    /**
+     * Walks frames forward from [from] until the one holding [target].
+     *
+     * Used for unknown-size sources and ambiguous header searches. Frames
+     * are fully decoded and verified in this fallback. Fixed-size frame
+     * numbers use STREAMINFO's regular block size, including the short tail.
+     */
+    private fun scanForward(from: Landing, target: Long): Landing {
+        var offset = from.byteOffset
+        var landing = from
+        val size = reader.size
+        while (true) {
+            if (size in 1..offset) break
+            val frame = try {
+                frames.decodeAt(offset)
+            } catch (e: TruncatedStreamException) {
+                if (!options.tolerant) throw e
+                break
+            } catch (e: CorruptStreamException) {
+                if (!options.tolerant) throw e
+                break
+            } ?: break
+
+            val start = when {
+                frame.sampleNumber >= 0 -> frame.sampleNumber
+                // A fixed-size stream states a frame number, and the sample it
+                // starts at is that number times the stream's block size. It
+                // is emphatically not times this frame's block size: the last
+                // frame of a stream is short, and using its own size would
+                // place it thousands of samples too early.
+                frame.frameNumber >= 0 -> firstSampleOf(frame)
+                else -> landing.firstSample
+            }
+            if (start > target) break
+            landing = Landing(offset, start)
+            if (start > Long.MAX_VALUE - frame.blockSize) break
+            if (start + frame.blockSize > target) {
+                pendingFrame = frame
+                break
+            }
+            if (frame.byteLength <= 0 || offset > Long.MAX_VALUE - frame.byteLength) {
+                throw CorruptStreamException("a FLAC frame offset does not advance", offset)
+            }
+            offset += frame.byteLength
+        }
+        return landing
+    }
+
+    /** Interprets the strategy's coded position, including verified legacy sample numbers. */
+    private fun firstSampleOf(frame: FlacFrameReader.Frame): Long = firstSampleOf(frame.sampleNumber, frame.frameNumber)
+
+    private fun firstSampleOf(sampleNumber: Long, frameNumber: Long): Long {
+        if (sampleNumber >= 0) return sampleNumber
+        if (frameNumber < 0) {
+            throw CorruptStreamException("a FLAC frame states neither a frame nor sample number")
+        }
+        if (legacySampleNumbers) return frameNumber
+        val fixedBlockSize = streamInfo.maximumBlockSize.toLong()
+        if (frameNumber > Long.MAX_VALUE / fixedBlockSize) {
+            throw CorruptStreamException("a FLAC frame number overflows its sample position")
+        }
+        return frameNumber * fixedBlockSize
+    }
+
+    /**
+     * Before the blocking-strategy bit was introduced, variable-size streams
+     * used sample numbers with that bit clear. Unequal STREAMINFO bounds alone
+     * do not identify them: modern fixed-size streams can state a short final
+     * block. Verify the first frame and its successor's header, requiring the
+     * coded number to advance by the first block's size rather than by one.
+     */
+    private fun detectLegacySampleNumbers(): Boolean {
+        val first = sourceHeader ?: return false
+        if (first.sampleNumber >= 0 || first.frameNumber < 0 || first.blockSize < 16 ||
+            streamInfo.minimumBlockSize == streamInfo.maximumBlockSize
+        ) return false
+        return try {
+            val frame = frames.decodeAt(parsed.audioOffset) ?: return false
+            if (parsed.audioOffset > Long.MAX_VALUE - frame.byteLength ||
+                first.frameNumber > Long.MAX_VALUE - first.blockSize
+            ) return false
+            val second = frames.headerAt(parsed.audioOffset + frame.byteLength) ?: return false
+            second.sampleNumber < 0 && second.frameNumber == first.frameNumber + first.blockSize
+        } catch (_: CorruptStreamException) {
+            false
+        } catch (_: TruncatedStreamException) {
+            false
+        }
+    }
+
+    private fun requireSupportedOrigin() {
+        if (!options.tolerant && sourceOrigin > 0) {
+            throw CorruptStreamException(
+                "the FLAC stream starts at sample $sourceOrigin, not 0; use tolerant mode to read a stream-copy cut",
+                parsed.audioOffset,
+            )
+        }
+    }
+
+    /** A cut's original STREAMINFO total and MD5 describe audio that is absent. */
+    private fun measureTrimmedDuration(): Long {
+        var offset = parsed.audioOffset
+        var expected = codedOrigin
+        while (true) {
+            val frame = try {
+                frames.decodeAt(offset)
+            } catch (failure: CorruptStreamException) {
+                if (expected == codedOrigin) throw failure
+                break
+            } catch (failure: TruncatedStreamException) {
+                if (expected == codedOrigin) throw failure
+                break
+            } ?: break
+            val start = firstSampleOf(frame)
+            if (start != expected || start > Long.MAX_VALUE - frame.blockSize) break
+            if (frame.byteLength <= 0 || offset > Long.MAX_VALUE - frame.byteLength) break
+            expected = start + frame.blockSize
+            offset += frame.byteLength
+        }
+        return expected - codedOrigin
+    }
+
+    /**
+     * Decodes the whole stream and compares it against the MD5 the encoder
+     * stored.
+     *
+     * This is the strongest check a FLAC decoder can make, because the value
+     * was computed by whichever encoder wrote the file. Returns null when the
+     * file states no MD5.
+     */
+    fun verifyMd5(): Boolean? {
+        if (!streamInfo.hasMd5 || codedOrigin > 0) return null
+        seek(0)
+        val hash = Md5()
+        md5 = hash
+        try {
+            while (nextIntFrame() != null) {
+                // The samples are fed to the hash as they are decoded.
+            }
+        } finally {
+            md5 = null
+        }
+        val digest = hash.digest()
+        return digest.contentEquals(streamInfo.md5)
+    }
+
+    private fun feedMd5(hash: Md5, frame: FlacFrameReader.Frame, from: Int, count: Int) {
+        val bytesPerSample = (frame.bitsPerSample + 7) / 8
+        val channels = format.channels
+        val scratch = ByteArray(count * channels * bytesPerSample)
+        var index = 0
+        for (position in from until from + count) {
+            for (channel in 0 until channels) {
+                val value = frame.channels[channel][position]
+                for (byte in 0 until bytesPerSample) {
+                    scratch[index++] = (value ushr (8 * byte)).toByte()
+                }
+            }
+        }
+        hash.update(scratch)
+    }
+
+    override fun close() {
+        if (closed) return
+        closed = true
+        floatBuffer = null
+        intBuffer = null
+        md5 = null
+        pendingFrame = null
+        reader.source.close()
+    }
+
+    private fun scaleOf(bits: Int): Double = (1L shl (bits - 1)).toDouble()
+
+    private fun bitrateOf(): Int? {
+        val total = durationFrames ?: return null
+        if (total <= 0 || reader.size <= 0) return null
+        val seconds = total.toDouble() / streamInfo.sampleRate
+        if (seconds <= 0) return null
+        return ((reader.size - parsed.audioOffset).toDouble() * 8.0 / seconds)
+            .coerceIn(0.0, Int.MAX_VALUE.toDouble())
+            .toInt()
+    }
+
+    private fun floatBufferOf(samples: Int): FloatArray {
+        val existing = floatBuffer
+        if (existing != null && existing.size >= samples) return existing
+        options.checkAllocation(samples.toLong() * 4, "decoding $samples samples")
+        val fresh = FloatArray(samples)
+        floatBuffer = fresh
+        return fresh
+    }
+
+    private fun intBufferOf(samples: Int): IntArray {
+        val existing = intBuffer
+        if (existing != null && existing.size >= samples) return existing
+        options.checkAllocation(samples.toLong() * 4, "decoding $samples samples")
+        val fresh = IntArray(samples)
+        intBuffer = fresh
+        return fresh
+    }
+
+    companion object {
+        /**
+         * The speaker layout FLAC assigns to a channel count.
+         *
+         * FLAC fixes these in its specification rather than storing a mask, so
+         * a six-channel FLAC file always means the same six speakers.
+         */
+        fun layoutFor(channels: Int): ChannelLayout = when (channels) {
+            1 -> ChannelLayout.MONO
+            2 -> ChannelLayout.STEREO
+            3 -> ChannelLayout.SURROUND_3_0
+            4 -> ChannelLayout.QUAD
+            5 -> ChannelLayout.SURROUND_5_0
+            6 -> ChannelLayout.SURROUND_5_1
+            7 -> ChannelLayout.of(
+                AudioChannel.FRONT_LEFT, AudioChannel.FRONT_RIGHT, AudioChannel.FRONT_CENTER,
+                AudioChannel.LOW_FREQUENCY, AudioChannel.BACK_CENTER,
+                AudioChannel.SIDE_LEFT, AudioChannel.SIDE_RIGHT,
+            )
+            8 -> ChannelLayout.SURROUND_7_1
+            else -> ChannelLayout.unknown(channels)
+        }
+    }
+}

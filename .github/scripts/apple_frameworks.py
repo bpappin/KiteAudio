@@ -25,8 +25,8 @@ CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "dar
 # Framework name -> module and the libraries whose API the framework re-exports to Swift.
 # An export entry is a module name or a Maven artifact name without the platform suffix.
 FRAMEWORKS = {
-    "AudioKodec": {"module": "audiokodec", "export": []},
-    "AudioKodecIO": {"module": "audiokodec-io", "export": []},
+    "AudioKodec": {"module": "kiteaudio-codec", "export": []},
+    "AudioKodecIO": {"module": "kiteaudio-codec-io", "export": []},
 }
 # The file that holds settings.kotlin.version.
 KOTLIN_VERSION_FILE = "library.module-template.yaml"

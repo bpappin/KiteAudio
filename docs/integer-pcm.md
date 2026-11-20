@@ -5,7 +5,7 @@ converting them through Float32. Use them for lossless integer transcodes,
 including 32-bit samples whose low bits Float32 cannot represent.
 
 ```kotlin
-import io.github.yuroyami.audiokodec.*
+import io.github.yuroyami.kiteaudio.codec.*
 
 val samples = intArrayOf(16777217, 1073741825, Int.MAX_VALUE,
     -16777217, -1073741825, Int.MIN_VALUE)

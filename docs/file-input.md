@@ -1,6 +1,6 @@
 # Seekable file input
 
-`audiokodec-io` can open a file through a read-only, seekable handle. It does
+`kiteaudio-codec-io` can open a file through a read-only, seekable handle. It does
 not load the recording into memory and has no whole-file byte ceiling:
 
 ```kotlin

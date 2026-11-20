@@ -1,0 +1,115 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yuroyami:kiteaudio-midi-devices>
+final enum class io.github.yuroyami.kiteaudio.midi.devices/MidiDirection : kotlin/Enum<io.github.yuroyami.kiteaudio.midi.devices/MidiDirection> { // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection|null[0]
+    enum entry INPUT // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.INPUT|null[0]
+    enum entry OUTPUT // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.OUTPUT|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.midi.devices/MidiDirection> // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.midi.devices/MidiDirection // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.midi.devices/MidiDirection> // io.github.yuroyami.kiteaudio.midi.devices/MidiDirection.values|values#static(){}[0]
+}
+
+final enum class io.github.yuroyami.kiteaudio.midi.devices/MidiTransport : kotlin/Enum<io.github.yuroyami.kiteaudio.midi.devices/MidiTransport> { // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport|null[0]
+    enum entry BLUETOOTH // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.BLUETOOTH|null[0]
+    enum entry NETWORK // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.NETWORK|null[0]
+    enum entry UNKNOWN // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.UNKNOWN|null[0]
+    enum entry USB // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.USB|null[0]
+    enum entry VIRTUAL // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.VIRTUAL|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.midi.devices/MidiTransport> // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.midi.devices/MidiTransport // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.midi.devices/MidiTransport> // io.github.yuroyami.kiteaudio.midi.devices/MidiTransport.values|values#static(){}[0]
+}
+
+abstract interface io.github.yuroyami.kiteaudio.midi.devices/MidiDevices { // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices|null[0]
+    abstract val ports // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.ports|{}ports[0]
+        abstract fun <get-ports>(): kotlinx.coroutines.flow/StateFlow<kotlin.collections/List<io.github.yuroyami.kiteaudio.midi.devices/MidiPort>> // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.ports.<get-ports>|<get-ports>(){}[0]
+
+    abstract fun close() // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.close|close(){}[0]
+    abstract fun refresh() // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.refresh|refresh(){}[0]
+    abstract suspend fun openInput(io.github.yuroyami.kiteaudio.midi.devices/MidiPort, kotlin/Function1<io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage, kotlin/Unit>): io.github.yuroyami.kiteaudio.midi.devices/MidiInput // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.openInput|openInput(io.github.yuroyami.kiteaudio.midi.devices.MidiPort;kotlin.Function1<io.github.yuroyami.kiteaudio.midi.devices.TimedMidiMessage,kotlin.Unit>){}[0]
+    abstract suspend fun openOutput(io.github.yuroyami.kiteaudio.midi.devices/MidiPort): io.github.yuroyami.kiteaudio.midi.devices/MidiOutput // io.github.yuroyami.kiteaudio.midi.devices/MidiDevices.openOutput|openOutput(io.github.yuroyami.kiteaudio.midi.devices.MidiPort){}[0]
+}
+
+abstract interface io.github.yuroyami.kiteaudio.midi.devices/MidiInput { // io.github.yuroyami.kiteaudio.midi.devices/MidiInput|null[0]
+    abstract val port // io.github.yuroyami.kiteaudio.midi.devices/MidiInput.port|{}port[0]
+        abstract fun <get-port>(): io.github.yuroyami.kiteaudio.midi.devices/MidiPort // io.github.yuroyami.kiteaudio.midi.devices/MidiInput.port.<get-port>|<get-port>(){}[0]
+
+    abstract fun close() // io.github.yuroyami.kiteaudio.midi.devices/MidiInput.close|close(){}[0]
+}
+
+abstract interface io.github.yuroyami.kiteaudio.midi.devices/MidiOutput { // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput|null[0]
+    abstract val port // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput.port|{}port[0]
+        abstract fun <get-port>(): io.github.yuroyami.kiteaudio.midi.devices/MidiPort // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput.port.<get-port>|<get-port>(){}[0]
+
+    abstract fun close() // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput.close|close(){}[0]
+    abstract fun send(io.github.yuroyami.kiteaudio.midi/MidiMessage) // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput.send|send(io.github.yuroyami.kiteaudio.midi.MidiMessage){}[0]
+    abstract fun sendRaw(kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi.devices/MidiOutput.sendRaw|sendRaw(kotlin.ByteArray){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi.devices/MidiPort { // io.github.yuroyami.kiteaudio.midi.devices/MidiPort|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String?, io.github.yuroyami.kiteaudio.midi.devices/MidiDirection, io.github.yuroyami.kiteaudio.midi.devices/MidiTransport) // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.<init>|<init>(kotlin.String;kotlin.String;kotlin.String?;io.github.yuroyami.kiteaudio.midi.devices.MidiDirection;io.github.yuroyami.kiteaudio.midi.devices.MidiTransport){}[0]
+
+    final val direction // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.direction|{}direction[0]
+        final fun <get-direction>(): io.github.yuroyami.kiteaudio.midi.devices/MidiDirection // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.direction.<get-direction>|<get-direction>(){}[0]
+    final val displayName // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.displayName|{}displayName[0]
+        final fun <get-displayName>(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.displayName.<get-displayName>|<get-displayName>(){}[0]
+    final val id // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.id.<get-id>|<get-id>(){}[0]
+    final val manufacturer // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.manufacturer|{}manufacturer[0]
+        final fun <get-manufacturer>(): kotlin/String? // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.manufacturer.<get-manufacturer>|<get-manufacturer>(){}[0]
+    final val name // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.name.<get-name>|<get-name>(){}[0]
+    final val transport // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.transport|{}transport[0]
+        final fun <get-transport>(): io.github.yuroyami.kiteaudio.midi.devices/MidiTransport // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.transport.<get-transport>|<get-transport>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.component3|component3(){}[0]
+    final fun component4(): io.github.yuroyami.kiteaudio.midi.devices/MidiDirection // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.component4|component4(){}[0]
+    final fun component5(): io.github.yuroyami.kiteaudio.midi.devices/MidiTransport // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String? = ..., io.github.yuroyami.kiteaudio.midi.devices/MidiDirection = ..., io.github.yuroyami.kiteaudio.midi.devices/MidiTransport = ...): io.github.yuroyami.kiteaudio.midi.devices/MidiPort // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.copy|copy(kotlin.String;kotlin.String;kotlin.String?;io.github.yuroyami.kiteaudio.midi.devices.MidiDirection;io.github.yuroyami.kiteaudio.midi.devices.MidiTransport){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/MidiPort.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi.devices/MidiPortException : kotlin/Exception { // io.github.yuroyami.kiteaudio.midi.devices/MidiPortException|null[0]
+    constructor <init>(kotlin/String, kotlin/Throwable? = ...) // io.github.yuroyami.kiteaudio.midi.devices/MidiPortException.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser { // io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser|null[0]
+    constructor <init>(kotlin/Function1<io.github.yuroyami.kiteaudio.midi/MidiMessage, kotlin/Unit>) // io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser.<init>|<init>(kotlin.Function1<io.github.yuroyami.kiteaudio.midi.MidiMessage,kotlin.Unit>){}[0]
+    constructor <init>(kotlin/Int = ..., kotlin/Function1<io.github.yuroyami.kiteaudio.midi/MidiMessage, kotlin/Unit>) // io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser.<init>|<init>(kotlin.Int;kotlin.Function1<io.github.yuroyami.kiteaudio.midi.MidiMessage,kotlin.Unit>){}[0]
+
+    final fun feed(kotlin/ByteArray, kotlin/Int = ..., kotlin/Int = ...) // io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser.feed|feed(kotlin.ByteArray;kotlin.Int;kotlin.Int){}[0]
+    final fun reset() // io.github.yuroyami.kiteaudio.midi.devices/MidiStreamParser.reset|reset(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage { // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/MidiMessage, kotlin/Long) // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.<init>|<init>(io.github.yuroyami.kiteaudio.midi.MidiMessage;kotlin.Long){}[0]
+
+    final val message // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.message|{}message[0]
+        final fun <get-message>(): io.github.yuroyami.kiteaudio.midi/MidiMessage // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.message.<get-message>|<get-message>(){}[0]
+    final val timestampNanos // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.timestampNanos|{}timestampNanos[0]
+        final fun <get-timestampNanos>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.timestampNanos.<get-timestampNanos>|<get-timestampNanos>(){}[0]
+
+    final fun component1(): io.github.yuroyami.kiteaudio.midi/MidiMessage // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.component2|component2(){}[0]
+    final fun copy(io.github.yuroyami.kiteaudio.midi/MidiMessage = ..., kotlin/Long = ...): io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.copy|copy(io.github.yuroyami.kiteaudio.midi.MidiMessage;kotlin.Long){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi.devices/TimedMidiMessage.toString|toString(){}[0]
+}
+
+final fun io.github.yuroyami.kiteaudio.midi.devices/appleMidiDevices(kotlinx.coroutines/CoroutineScope): io.github.yuroyami.kiteaudio.midi.devices/MidiDevices // io.github.yuroyami.kiteaudio.midi.devices/appleMidiDevices|appleMidiDevices(kotlinx.coroutines.CoroutineScope){}[0]

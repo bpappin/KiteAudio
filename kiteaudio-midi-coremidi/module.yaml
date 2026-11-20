@@ -1,0 +1,41 @@
+# CoreMIDI on macOS from the JVM, through the foreign function API, with no JNI and no native build.
+# It is a separate artifact because it needs JDK 22 or later and only does anything on macOS. A desktop
+# app checks coreMidiAvailable() and falls back to :kiteaudio-midi-devices.
+product: jvm/lib
+
+dependencies:
+  - //kiteaudio-midi-devices: exported
+  - $libs.coroutines.core: exported
+
+test-dependencies:
+  - $libs.coroutines.test
+
+apply:
+  - ../library.module-template.yaml
+
+settings:
+  kotlin:
+    # Emit Java 21 bytecode, so a Java 21 desktop build can depend on this module.
+    freeCompilerArgs: [ -jvm-target, "21" ]
+  jvm:
+    # JDK 25 compiles the code, so the Java 22 java.lang.foreign API resolves. `release: 21` would
+    # limit the code to the Java 21 API. coreMidiAvailable() keeps an older runtime from loading it.
+    jdk:
+      version: 25
+    release: null
+    test:
+      # Linker.nativeLinker is a restricted method. Without this flag the JDK warns, and later refuses.
+      freeJvmArgs: [ --enable-native-access=ALL-UNNAMED ]
+  publishing:
+    pom:
+      name: KiteMIDI CoreMIDI for JVM
+      description: >-
+        CoreMIDI device input and output on macOS through the Java Foreign Function and Memory API. Provides native
+        MIDI ports for desktop JVM applications, with JDK 22 or later required at runtime.
+
+plugins:
+  dokka:
+    enabled: true
+    moduleName: kiteaudio-midi-coremidi
+    footerMessage: Apache-2.0 · KiteMIDI is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteMIDI/blob/main/kiteaudio-midi-coremidi/src

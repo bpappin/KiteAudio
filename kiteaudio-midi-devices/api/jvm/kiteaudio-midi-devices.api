@@ -1,0 +1,90 @@
+public final class io/github/yuroyami/kiteaudio/midi/devices/JvmMidiDevicesKt {
+	public static final fun jvmMidiDevices (Lkotlinx/coroutines/CoroutineScope;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiDevices;
+}
+
+public abstract interface class io/github/yuroyami/kiteaudio/midi/devices/MidiDevices {
+	public abstract fun close ()V
+	public abstract fun getPorts ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun openInput (Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun openOutput (Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun refresh ()V
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/MidiDirection : java/lang/Enum {
+	public static final field INPUT Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+	public static final field OUTPUT Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+	public static fun values ()[Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+}
+
+public abstract interface class io/github/yuroyami/kiteaudio/midi/devices/MidiInput {
+	public abstract fun close ()V
+	public abstract fun getPort ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;
+}
+
+public abstract interface class io/github/yuroyami/kiteaudio/midi/devices/MidiOutput {
+	public abstract fun close ()V
+	public abstract fun getPort ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;
+	public abstract fun send (Lio/github/yuroyami/kiteaudio/midi/MidiMessage;)V
+	public abstract fun sendRaw ([B)V
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/MidiPort {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+	public final fun component5 ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiPort;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiDirection;
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTransport ()Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/MidiPortException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/MidiStreamParser {
+	public fun <init> (ILkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun feed ([BII)V
+	public static synthetic fun feed$default (Lio/github/yuroyami/kiteaudio/midi/devices/MidiStreamParser;[BIIILjava/lang/Object;)V
+	public final fun reset ()V
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/MidiTransport : java/lang/Enum {
+	public static final field BLUETOOTH Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static final field NETWORK Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static final field UNKNOWN Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static final field USB Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static final field VIRTUAL Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+	public static fun values ()[Lio/github/yuroyami/kiteaudio/midi/devices/MidiTransport;
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/devices/TimedMidiMessage {
+	public fun <init> (Lio/github/yuroyami/kiteaudio/midi/MidiMessage;J)V
+	public final fun component1 ()Lio/github/yuroyami/kiteaudio/midi/MidiMessage;
+	public final fun component2 ()J
+	public final fun copy (Lio/github/yuroyami/kiteaudio/midi/MidiMessage;J)Lio/github/yuroyami/kiteaudio/midi/devices/TimedMidiMessage;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/midi/devices/TimedMidiMessage;Lio/github/yuroyami/kiteaudio/midi/MidiMessage;JILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/midi/devices/TimedMidiMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Lio/github/yuroyami/kiteaudio/midi/MidiMessage;
+	public final fun getTimestampNanos ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+

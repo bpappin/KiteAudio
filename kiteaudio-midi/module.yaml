@@ -1,0 +1,79 @@
+# Pure MIDI: Standard MIDI File reading and writing, the message hierarchy, the tempo map and note
+# pairing. It depends on kotlin-stdlib only.
+product:
+  type: kmp/lib
+  platforms:
+    - jvm
+    - android
+    - iosArm64
+    - iosSimulatorArm64
+    - iosX64
+    - macosArm64
+
+apply:
+  - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+
+settings:
+  android:
+    namespace: io.github.yuroyami.kiteaudio.midi
+    minSdk: 23
+  publishing:
+    pom:
+      name: KiteMIDI
+      description: >-
+        MIDI for Kotlin Multiplatform. Reads and writes Standard MIDI Files in formats 0, 1 and 2, including running
+        status, meta events and system exclusive. Provides a typed message hierarchy, a tempo map that converts ticks
+        to microseconds in both directions, key-down note pairing, and helpers for universal system exclusive messages
+        such as device inquiry and master tuning. kotlin-stdlib only.
+
+# Gradle named the klib "io.github.yuroyami:kiteaudio-midi". Keep that name, or libraries built against
+# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
+# renames the klibs of shared native code, which must keep their own names.
+settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi, -Xshort-module-name=kiteaudio-midi ]
+
+settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi, -Xshort-module-name=kiteaudio-midi ]
+
+settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi, -Xshort-module-name=kiteaudio-midi ]
+
+settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi, -Xshort-module-name=kiteaudio-midi ]
+
+# Tests compile into their own klib, which needs a different name. The test blocks name the
+# same platforms as the blocks above, so the toolchain applies them last.
+test-settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi_test, -Xshort-module-name=kiteaudio-midi_test ]
+
+test-settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi_test, -Xshort-module-name=kiteaudio-midi_test ]
+
+test-settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi_test, -Xshort-module-name=kiteaudio-midi_test ]
+
+test-settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi_test, -Xshort-module-name=kiteaudio-midi_test ]
+
+plugins:
+  abi-check:
+    enabled: true
+    # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
+    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, macosArm64 ]
+  dokka:
+    enabled: true
+    moduleName: kiteaudio-midi
+    footerMessage: Apache-2.0 · KiteMIDI is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteMIDI/blob/main/kiteaudio-midi/src
+    # `./kotlin do dokkaSite` merges the pages of these modules into build/dokka/html.
+    siteName: KiteMIDI
+    siteModules: [ kiteaudio-midi, kiteaudio-midi-devices, kiteaudio-midi-coremidi ]

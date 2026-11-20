@@ -1,0 +1,90 @@
+# Real MIDI hardware: MidiManager on Android, CoreMIDI on Apple and javax.sound.midi on the JVM.
+# It needs coroutines and platform APIs, so it is a separate artifact and the core stays portable.
+# CoreMIDI needs no cinterop: Kotlin/Native ships it as a platform library.
+product:
+  type: kmp/lib
+  platforms:
+    - jvm
+    - android
+    - iosArm64
+    - iosSimulatorArm64
+    - iosX64
+    - macosArm64
+
+dependencies:
+  - //kiteaudio-midi: exported
+  - $libs.coroutines.core: exported
+
+test-dependencies:
+  - $libs.coroutines.test
+
+apply:
+  - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+
+settings:
+  kotlin:
+    optIns: [ kotlin.experimental.ExperimentalNativeApi ]
+  android:
+    namespace: io.github.yuroyami.kiteaudio.midi.devices
+    minSdk: 23
+  publishing:
+    pom:
+      name: KiteMIDI IO
+      description: >-
+        MIDI device input and output for Kotlin Multiplatform. Enumerates ports, opens them and carries typed messages
+        both ways, over MidiManager on Android, CoreMIDI on Apple and javax.sound.midi on the JVM. Includes a byte-
+        stream parser that handles running status and system exclusive split across packets.
+
+settings@native:
+  kotlin:
+    # kotlinx.cinterop exists only on native, so the JVM and Android builds do not get this opt-in.
+    optIns: [ kotlinx.cinterop.ExperimentalForeignApi, kotlin.experimental.ExperimentalNativeApi ]
+
+# Gradle named the klib "io.github.yuroyami:kiteaudio-midi-devices". Keep that name, or libraries built against
+# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
+# renames the klibs of shared native code, which must keep their own names.
+settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi-devices, -Xshort-module-name=kiteaudio-midi-devices ]
+
+settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi-devices, -Xshort-module-name=kiteaudio-midi-devices ]
+
+settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi-devices, -Xshort-module-name=kiteaudio-midi-devices ]
+
+settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi-devices, -Xshort-module-name=kiteaudio-midi-devices ]
+
+# Tests compile into their own klib, which needs a different name. The test blocks name the
+# same platforms as the blocks above, so the toolchain applies them last.
+test-settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi-devices_test, -Xshort-module-name=kiteaudio-midi-devices_test ]
+
+test-settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi-devices_test, -Xshort-module-name=kiteaudio-midi-devices_test ]
+
+test-settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi-devices_test, -Xshort-module-name=kiteaudio-midi-devices_test ]
+
+test-settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-midi-devices_test, -Xshort-module-name=kiteaudio-midi-devices_test ]
+
+plugins:
+  abi-check:
+    enabled: true
+    # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
+    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, macosArm64 ]
+  dokka:
+    enabled: true
+    moduleName: kiteaudio-midi-devices
+    footerMessage: Apache-2.0 · KiteMIDI is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteMIDI/blob/main/kiteaudio-midi-devices/src

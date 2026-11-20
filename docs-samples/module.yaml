@@ -6,8 +6,8 @@
 product: jvm/lib
 
 test-dependencies:
-  - //audiokodec
-  - //audiokodec-io
+  - //kiteaudio-codec
+  - //kiteaudio-codec-io
 
 settings:
   kotlin:

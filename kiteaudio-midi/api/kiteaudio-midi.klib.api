@@ -1,0 +1,796 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yuroyami:kiteaudio-midi>
+final enum class io.github.yuroyami.kiteaudio.midi/SysExKind : kotlin/Enum<io.github.yuroyami.kiteaudio.midi/SysExKind> { // io.github.yuroyami.kiteaudio.midi/SysExKind|null[0]
+    enum entry F0 // io.github.yuroyami.kiteaudio.midi/SysExKind.F0|null[0]
+    enum entry F7 // io.github.yuroyami.kiteaudio.midi/SysExKind.F7|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.midi/SysExKind.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.midi/SysExKind> // io.github.yuroyami.kiteaudio.midi/SysExKind.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.midi/SysExKind // io.github.yuroyami.kiteaudio.midi/SysExKind.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.midi/SysExKind> // io.github.yuroyami.kiteaudio.midi/SysExKind.values|values#static(){}[0]
+}
+
+final enum class io.github.yuroyami.kiteaudio.midi/TextKind : kotlin/Enum<io.github.yuroyami.kiteaudio.midi/TextKind> { // io.github.yuroyami.kiteaudio.midi/TextKind|null[0]
+    enum entry COPYRIGHT // io.github.yuroyami.kiteaudio.midi/TextKind.COPYRIGHT|null[0]
+    enum entry CUE_POINT // io.github.yuroyami.kiteaudio.midi/TextKind.CUE_POINT|null[0]
+    enum entry DEVICE_NAME // io.github.yuroyami.kiteaudio.midi/TextKind.DEVICE_NAME|null[0]
+    enum entry INSTRUMENT_NAME // io.github.yuroyami.kiteaudio.midi/TextKind.INSTRUMENT_NAME|null[0]
+    enum entry LYRIC // io.github.yuroyami.kiteaudio.midi/TextKind.LYRIC|null[0]
+    enum entry MARKER // io.github.yuroyami.kiteaudio.midi/TextKind.MARKER|null[0]
+    enum entry PROGRAM_NAME // io.github.yuroyami.kiteaudio.midi/TextKind.PROGRAM_NAME|null[0]
+    enum entry TEXT // io.github.yuroyami.kiteaudio.midi/TextKind.TEXT|null[0]
+    enum entry TRACK_NAME // io.github.yuroyami.kiteaudio.midi/TextKind.TRACK_NAME|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.midi/TextKind.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.midi/TextKind> // io.github.yuroyami.kiteaudio.midi/TextKind.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/TextKind.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TextKind.type.<get-type>|<get-type>(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.midi/TextKind // io.github.yuroyami.kiteaudio.midi/TextKind.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.midi/TextKind> // io.github.yuroyami.kiteaudio.midi/TextKind.values|values#static(){}[0]
+}
+
+sealed interface io.github.yuroyami.kiteaudio.midi/Division { // io.github.yuroyami.kiteaudio.midi/Division|null[0]
+    final class Ppq : io.github.yuroyami.kiteaudio.midi/Division { // io.github.yuroyami.kiteaudio.midi/Division.Ppq|null[0]
+        constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/Division.Ppq.<init>|<init>(kotlin.Int){}[0]
+
+        final val ticksPerQuarter // io.github.yuroyami.kiteaudio.midi/Division.Ppq.ticksPerQuarter|{}ticksPerQuarter[0]
+            final fun <get-ticksPerQuarter>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Ppq.ticksPerQuarter.<get-ticksPerQuarter>|<get-ticksPerQuarter>(){}[0]
+
+        final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Ppq.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/Division.Ppq // io.github.yuroyami.kiteaudio.midi/Division.Ppq.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/Division.Ppq.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Ppq.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/Division.Ppq.toString|toString(){}[0]
+    }
+
+    final class Smpte : io.github.yuroyami.kiteaudio.midi/Division { // io.github.yuroyami.kiteaudio.midi/Division.Smpte|null[0]
+        constructor <init>(kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/Division.Smpte.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+        final val framesPerSecond // io.github.yuroyami.kiteaudio.midi/Division.Smpte.framesPerSecond|{}framesPerSecond[0]
+            final fun <get-framesPerSecond>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Smpte.framesPerSecond.<get-framesPerSecond>|<get-framesPerSecond>(){}[0]
+        final val ticksPerFrame // io.github.yuroyami.kiteaudio.midi/Division.Smpte.ticksPerFrame|{}ticksPerFrame[0]
+            final fun <get-ticksPerFrame>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Smpte.ticksPerFrame.<get-ticksPerFrame>|<get-ticksPerFrame>(){}[0]
+
+        final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Smpte.component1|component1(){}[0]
+        final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Smpte.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/Division.Smpte // io.github.yuroyami.kiteaudio.midi/Division.Smpte.copy|copy(kotlin.Int;kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/Division.Smpte.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Division.Smpte.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/Division.Smpte.toString|toString(){}[0]
+    }
+}
+
+sealed interface io.github.yuroyami.kiteaudio.midi/MetaEvent : io.github.yuroyami.kiteaudio.midi/MidiEvent { // io.github.yuroyami.kiteaudio.midi/MetaEvent|null[0]
+    abstract val type // io.github.yuroyami.kiteaudio.midi/MetaEvent.type|{}type[0]
+        abstract fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MetaEvent.type.<get-type>|<get-type>(){}[0]
+
+    abstract fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/MetaEvent.payload|payload(){}[0]
+    open fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/MetaEvent.toBytes|toBytes(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.midi/MetaEvent.Companion|null[0]
+        final fun parse(kotlin/Int, kotlin/ByteArray): io.github.yuroyami.kiteaudio.midi/MetaEvent // io.github.yuroyami.kiteaudio.midi/MetaEvent.Companion.parse|parse(kotlin.Int;kotlin.ByteArray){}[0]
+    }
+}
+
+sealed interface io.github.yuroyami.kiteaudio.midi/MidiEvent // io.github.yuroyami.kiteaudio.midi/MidiEvent|null[0]
+
+sealed interface io.github.yuroyami.kiteaudio.midi/MidiMessage : io.github.yuroyami.kiteaudio.midi/MidiEvent { // io.github.yuroyami.kiteaudio.midi/MidiMessage|null[0]
+    abstract fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/MidiMessage.toBytes|toBytes(){}[0]
+
+    sealed interface ChannelMessage : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage|null[0]
+        abstract val channel // io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage.channel|{}channel[0]
+            abstract fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage.channel.<get-channel>|<get-channel>(){}[0]
+        abstract val status // io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage.status|{}status[0]
+            abstract fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage.status.<get-status>|<get-status>(){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.midi/ChannelPrefix : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/ChannelPrefix|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.<init>|<init>(kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.channel.<get-channel>|<get-channel>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ChannelPrefix // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ChannelPrefix.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/ChannelPressure : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/ChannelPressure|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/ChannelPressure.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/ChannelPressure.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.channel.<get-channel>|<get-channel>(){}[0]
+    final val pressure // io.github.yuroyami.kiteaudio.midi/ChannelPressure.pressure|{}pressure[0]
+        final fun <get-pressure>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.pressure.<get-pressure>|<get-pressure>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/ChannelPressure.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.status.<get-status>|<get-status>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ChannelPressure // io.github.yuroyami.kiteaudio.midi/ChannelPressure.copy|copy(kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ChannelPressure.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ChannelPressure.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/ChannelPressure.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ChannelPressure.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/ControlChange : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/ControlChange|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/ControlChange.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/ControlChange.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.channel.<get-channel>|<get-channel>(){}[0]
+    final val controller // io.github.yuroyami.kiteaudio.midi/ControlChange.controller|{}controller[0]
+        final fun <get-controller>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.controller.<get-controller>|<get-controller>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/ControlChange.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.status.<get-status>|<get-status>(){}[0]
+    final val value // io.github.yuroyami.kiteaudio.midi/ControlChange.value|{}value[0]
+        final fun <get-value>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ControlChange // io.github.yuroyami.kiteaudio.midi/ControlChange.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ControlChange.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/ControlChange.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ControlChange.toString|toString(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion|null[0]
+        final const val ALL_NOTES_OFF // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.ALL_NOTES_OFF|{}ALL_NOTES_OFF[0]
+            final fun <get-ALL_NOTES_OFF>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.ALL_NOTES_OFF.<get-ALL_NOTES_OFF>|<get-ALL_NOTES_OFF>(){}[0]
+        final const val ALL_SOUND_OFF // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.ALL_SOUND_OFF|{}ALL_SOUND_OFF[0]
+            final fun <get-ALL_SOUND_OFF>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.ALL_SOUND_OFF.<get-ALL_SOUND_OFF>|<get-ALL_SOUND_OFF>(){}[0]
+        final const val LOCAL_CONTROL // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.LOCAL_CONTROL|{}LOCAL_CONTROL[0]
+            final fun <get-LOCAL_CONTROL>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.LOCAL_CONTROL.<get-LOCAL_CONTROL>|<get-LOCAL_CONTROL>(){}[0]
+        final const val PORTAMENTO_PEDAL // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.PORTAMENTO_PEDAL|{}PORTAMENTO_PEDAL[0]
+            final fun <get-PORTAMENTO_PEDAL>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.PORTAMENTO_PEDAL.<get-PORTAMENTO_PEDAL>|<get-PORTAMENTO_PEDAL>(){}[0]
+        final const val RESET_ALL_CONTROLLERS // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.RESET_ALL_CONTROLLERS|{}RESET_ALL_CONTROLLERS[0]
+            final fun <get-RESET_ALL_CONTROLLERS>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.RESET_ALL_CONTROLLERS.<get-RESET_ALL_CONTROLLERS>|<get-RESET_ALL_CONTROLLERS>(){}[0]
+        final const val SOFT_PEDAL // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SOFT_PEDAL|{}SOFT_PEDAL[0]
+            final fun <get-SOFT_PEDAL>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SOFT_PEDAL.<get-SOFT_PEDAL>|<get-SOFT_PEDAL>(){}[0]
+        final const val SOSTENUTO_PEDAL // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SOSTENUTO_PEDAL|{}SOSTENUTO_PEDAL[0]
+            final fun <get-SOSTENUTO_PEDAL>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SOSTENUTO_PEDAL.<get-SOSTENUTO_PEDAL>|<get-SOSTENUTO_PEDAL>(){}[0]
+        final const val SUSTAIN_PEDAL // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SUSTAIN_PEDAL|{}SUSTAIN_PEDAL[0]
+            final fun <get-SUSTAIN_PEDAL>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ControlChange.Companion.SUSTAIN_PEDAL.<get-SUSTAIN_PEDAL>|<get-SUSTAIN_PEDAL>(){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply { // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin.collections/List<kotlin/Int>) // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.collections.List<kotlin.Int>){}[0]
+
+    final val deviceId // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.deviceId|{}deviceId[0]
+        final fun <get-deviceId>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.deviceId.<get-deviceId>|<get-deviceId>(){}[0]
+    final val family // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.family|{}family[0]
+        final fun <get-family>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.family.<get-family>|<get-family>(){}[0]
+    final val familyMember // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.familyMember|{}familyMember[0]
+        final fun <get-familyMember>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.familyMember.<get-familyMember>|<get-familyMember>(){}[0]
+    final val manufacturerId // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.manufacturerId|{}manufacturerId[0]
+        final fun <get-manufacturerId>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.manufacturerId.<get-manufacturerId>|<get-manufacturerId>(){}[0]
+    final val manufacturerName // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.manufacturerName|{}manufacturerName[0]
+        final fun <get-manufacturerName>(): kotlin/String? // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.manufacturerName.<get-manufacturerName>|<get-manufacturerName>(){}[0]
+    final val softwareVersion // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.softwareVersion|{}softwareVersion[0]
+        final fun <get-softwareVersion>(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.softwareVersion.<get-softwareVersion>|<get-softwareVersion>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin.collections/List<kotlin/Int> = ...): io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.collections.List<kotlin.Int>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/KeySignature : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/KeySignature|null[0]
+    constructor <init>(kotlin/Int, kotlin/Boolean) // io.github.yuroyami.kiteaudio.midi/KeySignature.<init>|<init>(kotlin.Int;kotlin.Boolean){}[0]
+
+    final val minor // io.github.yuroyami.kiteaudio.midi/KeySignature.minor|{}minor[0]
+        final fun <get-minor>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/KeySignature.minor.<get-minor>|<get-minor>(){}[0]
+    final val sharps // io.github.yuroyami.kiteaudio.midi/KeySignature.sharps|{}sharps[0]
+        final fun <get-sharps>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/KeySignature.sharps.<get-sharps>|<get-sharps>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/KeySignature.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/KeySignature.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/KeySignature.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/KeySignature.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Boolean = ...): io.github.yuroyami.kiteaudio.midi/KeySignature // io.github.yuroyami.kiteaudio.midi/KeySignature.copy|copy(kotlin.Int;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/KeySignature.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/KeySignature.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/KeySignature.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/KeySignature.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/MidiFormatException : kotlin/IllegalArgumentException { // io.github.yuroyami.kiteaudio.midi/MidiFormatException|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.midi/MidiFormatException.<init>|<init>(kotlin.String;kotlin.Int){}[0]
+
+    final val offset // io.github.yuroyami.kiteaudio.midi/MidiFormatException.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiFormatException.offset.<get-offset>|<get-offset>(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/MidiNote { // io.github.yuroyami.kiteaudio.midi/MidiNote|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/MidiNote.<init>|<init>(kotlin.Long;kotlin.Long;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/MidiNote.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.channel.<get-channel>|<get-channel>(){}[0]
+    final val durationTicks // io.github.yuroyami.kiteaudio.midi/MidiNote.durationTicks|{}durationTicks[0]
+        final fun <get-durationTicks>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiNote.durationTicks.<get-durationTicks>|<get-durationTicks>(){}[0]
+    final val endTick // io.github.yuroyami.kiteaudio.midi/MidiNote.endTick|{}endTick[0]
+        final fun <get-endTick>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiNote.endTick.<get-endTick>|<get-endTick>(){}[0]
+    final val key // io.github.yuroyami.kiteaudio.midi/MidiNote.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.key.<get-key>|<get-key>(){}[0]
+    final val offVelocity // io.github.yuroyami.kiteaudio.midi/MidiNote.offVelocity|{}offVelocity[0]
+        final fun <get-offVelocity>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.offVelocity.<get-offVelocity>|<get-offVelocity>(){}[0]
+    final val startTick // io.github.yuroyami.kiteaudio.midi/MidiNote.startTick|{}startTick[0]
+        final fun <get-startTick>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiNote.startTick.<get-startTick>|<get-startTick>(){}[0]
+    final val track // io.github.yuroyami.kiteaudio.midi/MidiNote.track|{}track[0]
+        final fun <get-track>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.track.<get-track>|<get-track>(){}[0]
+    final val velocity // io.github.yuroyami.kiteaudio.midi/MidiNote.velocity|{}velocity[0]
+        final fun <get-velocity>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.velocity.<get-velocity>|<get-velocity>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiNote.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiNote.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.component4|component4(){}[0]
+    final fun component5(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.component5|component5(){}[0]
+    final fun component6(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.component6|component6(){}[0]
+    final fun component7(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.component7|component7(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/MidiNote // io.github.yuroyami.kiteaudio.midi/MidiNote.copy|copy(kotlin.Long;kotlin.Long;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/MidiNote.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/MidiNote.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/MidiNote.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/MidiTimeline { // io.github.yuroyami.kiteaudio.midi/MidiTimeline|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/Division, kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/TimedEvent>, io.github.yuroyami.kiteaudio.midi/TempoMap) // io.github.yuroyami.kiteaudio.midi/MidiTimeline.<init>|<init>(io.github.yuroyami.kiteaudio.midi.Division;kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.TimedEvent>;io.github.yuroyami.kiteaudio.midi.TempoMap){}[0]
+
+    final val division // io.github.yuroyami.kiteaudio.midi/MidiTimeline.division|{}division[0]
+        final fun <get-division>(): io.github.yuroyami.kiteaudio.midi/Division // io.github.yuroyami.kiteaudio.midi/MidiTimeline.division.<get-division>|<get-division>(){}[0]
+    final val durationMicros // io.github.yuroyami.kiteaudio.midi/MidiTimeline.durationMicros|{}durationMicros[0]
+        final fun <get-durationMicros>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiTimeline.durationMicros.<get-durationMicros>|<get-durationMicros>(){}[0]
+    final val endTick // io.github.yuroyami.kiteaudio.midi/MidiTimeline.endTick|{}endTick[0]
+        final fun <get-endTick>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/MidiTimeline.endTick.<get-endTick>|<get-endTick>(){}[0]
+    final val events // io.github.yuroyami.kiteaudio.midi/MidiTimeline.events|{}events[0]
+        final fun <get-events>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/TimedEvent> // io.github.yuroyami.kiteaudio.midi/MidiTimeline.events.<get-events>|<get-events>(){}[0]
+    final val notes // io.github.yuroyami.kiteaudio.midi/MidiTimeline.notes|{}notes[0]
+        final fun <get-notes>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/MidiNote> // io.github.yuroyami.kiteaudio.midi/MidiTimeline.notes.<get-notes>|<get-notes>(){}[0]
+    final val tempoMap // io.github.yuroyami.kiteaudio.midi/MidiTimeline.tempoMap|{}tempoMap[0]
+        final fun <get-tempoMap>(): io.github.yuroyami.kiteaudio.midi/TempoMap // io.github.yuroyami.kiteaudio.midi/MidiTimeline.tempoMap.<get-tempoMap>|<get-tempoMap>(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/NoteOff : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/NoteOff|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/NoteOff.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/NoteOff.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.channel.<get-channel>|<get-channel>(){}[0]
+    final val key // io.github.yuroyami.kiteaudio.midi/NoteOff.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.key.<get-key>|<get-key>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/NoteOff.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.status.<get-status>|<get-status>(){}[0]
+    final val velocity // io.github.yuroyami.kiteaudio.midi/NoteOff.velocity|{}velocity[0]
+        final fun <get-velocity>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.velocity.<get-velocity>|<get-velocity>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/NoteOff // io.github.yuroyami.kiteaudio.midi/NoteOff.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/NoteOff.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOff.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/NoteOff.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/NoteOff.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/NoteOn : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/NoteOn|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/NoteOn.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/NoteOn.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.channel.<get-channel>|<get-channel>(){}[0]
+    final val key // io.github.yuroyami.kiteaudio.midi/NoteOn.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.key.<get-key>|<get-key>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/NoteOn.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.status.<get-status>|<get-status>(){}[0]
+    final val velocity // io.github.yuroyami.kiteaudio.midi/NoteOn.velocity|{}velocity[0]
+        final fun <get-velocity>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.velocity.<get-velocity>|<get-velocity>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/NoteOn // io.github.yuroyami.kiteaudio.midi/NoteOn.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/NoteOn.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/NoteOn.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/NoteOn.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/NoteOn.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/ParsedMessage { // io.github.yuroyami.kiteaudio.midi/ParsedMessage|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/MidiMessage, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/ParsedMessage.<init>|<init>(io.github.yuroyami.kiteaudio.midi.MidiMessage;kotlin.Int;kotlin.Int){}[0]
+
+    final val length // io.github.yuroyami.kiteaudio.midi/ParsedMessage.length|{}length[0]
+        final fun <get-length>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ParsedMessage.length.<get-length>|<get-length>(){}[0]
+    final val message // io.github.yuroyami.kiteaudio.midi/ParsedMessage.message|{}message[0]
+        final fun <get-message>(): io.github.yuroyami.kiteaudio.midi/MidiMessage // io.github.yuroyami.kiteaudio.midi/ParsedMessage.message.<get-message>|<get-message>(){}[0]
+    final val runningStatus // io.github.yuroyami.kiteaudio.midi/ParsedMessage.runningStatus|{}runningStatus[0]
+        final fun <get-runningStatus>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ParsedMessage.runningStatus.<get-runningStatus>|<get-runningStatus>(){}[0]
+
+    final fun component1(): io.github.yuroyami.kiteaudio.midi/MidiMessage // io.github.yuroyami.kiteaudio.midi/ParsedMessage.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ParsedMessage.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ParsedMessage.component3|component3(){}[0]
+    final fun copy(io.github.yuroyami.kiteaudio.midi/MidiMessage = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ParsedMessage // io.github.yuroyami.kiteaudio.midi/ParsedMessage.copy|copy(io.github.yuroyami.kiteaudio.midi.MidiMessage;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ParsedMessage.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ParsedMessage.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ParsedMessage.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/PitchBend : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/PitchBend|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/PitchBend.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/PitchBend.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.channel.<get-channel>|<get-channel>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/PitchBend.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.status.<get-status>|<get-status>(){}[0]
+    final val value // io.github.yuroyami.kiteaudio.midi/PitchBend.value|{}value[0]
+        final fun <get-value>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.value.<get-value>|<get-value>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/PitchBend // io.github.yuroyami.kiteaudio.midi/PitchBend.copy|copy(kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/PitchBend.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PitchBend.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/PitchBend.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/PitchBend.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/PolyPressure : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/PolyPressure|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/PolyPressure.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/PolyPressure.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.channel.<get-channel>|<get-channel>(){}[0]
+    final val key // io.github.yuroyami.kiteaudio.midi/PolyPressure.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.key.<get-key>|<get-key>(){}[0]
+    final val pressure // io.github.yuroyami.kiteaudio.midi/PolyPressure.pressure|{}pressure[0]
+        final fun <get-pressure>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.pressure.<get-pressure>|<get-pressure>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/PolyPressure.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.status.<get-status>|<get-status>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/PolyPressure // io.github.yuroyami.kiteaudio.midi/PolyPressure.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/PolyPressure.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PolyPressure.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/PolyPressure.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/PolyPressure.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/PortPrefix : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/PortPrefix|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/PortPrefix.<init>|<init>(kotlin.Int){}[0]
+
+    final val port // io.github.yuroyami.kiteaudio.midi/PortPrefix.port|{}port[0]
+        final fun <get-port>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PortPrefix.port.<get-port>|<get-port>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/PortPrefix.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PortPrefix.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PortPrefix.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/PortPrefix // io.github.yuroyami.kiteaudio.midi/PortPrefix.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/PortPrefix.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/PortPrefix.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/PortPrefix.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/PortPrefix.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/ProgramChange : io.github.yuroyami.kiteaudio.midi/MidiMessage.ChannelMessage { // io.github.yuroyami.kiteaudio.midi/ProgramChange|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/ProgramChange.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final val channel // io.github.yuroyami.kiteaudio.midi/ProgramChange.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.channel.<get-channel>|<get-channel>(){}[0]
+    final val program // io.github.yuroyami.kiteaudio.midi/ProgramChange.program|{}program[0]
+        final fun <get-program>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.program.<get-program>|<get-program>(){}[0]
+    final val status // io.github.yuroyami.kiteaudio.midi/ProgramChange.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.status.<get-status>|<get-status>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ProgramChange // io.github.yuroyami.kiteaudio.midi/ProgramChange.copy|copy(kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ProgramChange.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ProgramChange.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/ProgramChange.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ProgramChange.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SequenceNumber : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/SequenceNumber|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SequenceNumber.<init>|<init>(kotlin.Int){}[0]
+
+    final val number // io.github.yuroyami.kiteaudio.midi/SequenceNumber.number|{}number[0]
+        final fun <get-number>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequenceNumber.number.<get-number>|<get-number>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/SequenceNumber.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequenceNumber.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequenceNumber.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SequenceNumber // io.github.yuroyami.kiteaudio.midi/SequenceNumber.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SequenceNumber.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequenceNumber.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SequenceNumber.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SequenceNumber.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SequencerSpecific : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/SequencerSpecific|null[0]
+    constructor <init>(kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final val data // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.data|{}data[0]
+        final fun <get-data>(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.data.<get-data>|<get-data>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.type.<get-type>|<get-type>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SequencerSpecific.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SetTempo : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/SetTempo|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SetTempo.<init>|<init>(kotlin.Int){}[0]
+
+    final val beatsPerMinute // io.github.yuroyami.kiteaudio.midi/SetTempo.beatsPerMinute|{}beatsPerMinute[0]
+        final fun <get-beatsPerMinute>(): kotlin/Double // io.github.yuroyami.kiteaudio.midi/SetTempo.beatsPerMinute.<get-beatsPerMinute>|<get-beatsPerMinute>(){}[0]
+    final val microsPerQuarter // io.github.yuroyami.kiteaudio.midi/SetTempo.microsPerQuarter|{}microsPerQuarter[0]
+        final fun <get-microsPerQuarter>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SetTempo.microsPerQuarter.<get-microsPerQuarter>|<get-microsPerQuarter>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/SetTempo.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SetTempo.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SetTempo.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SetTempo // io.github.yuroyami.kiteaudio.midi/SetTempo.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SetTempo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SetTempo.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SetTempo.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SetTempo.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SmfEvent { // io.github.yuroyami.kiteaudio.midi/SmfEvent|null[0]
+    constructor <init>(kotlin/Int, io.github.yuroyami.kiteaudio.midi/MidiEvent) // io.github.yuroyami.kiteaudio.midi/SmfEvent.<init>|<init>(kotlin.Int;io.github.yuroyami.kiteaudio.midi.MidiEvent){}[0]
+
+    final val delta // io.github.yuroyami.kiteaudio.midi/SmfEvent.delta|{}delta[0]
+        final fun <get-delta>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfEvent.delta.<get-delta>|<get-delta>(){}[0]
+    final val event // io.github.yuroyami.kiteaudio.midi/SmfEvent.event|{}event[0]
+        final fun <get-event>(): io.github.yuroyami.kiteaudio.midi/MidiEvent // io.github.yuroyami.kiteaudio.midi/SmfEvent.event.<get-event>|<get-event>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfEvent.component1|component1(){}[0]
+    final fun component2(): io.github.yuroyami.kiteaudio.midi/MidiEvent // io.github.yuroyami.kiteaudio.midi/SmfEvent.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., io.github.yuroyami.kiteaudio.midi/MidiEvent = ...): io.github.yuroyami.kiteaudio.midi/SmfEvent // io.github.yuroyami.kiteaudio.midi/SmfEvent.copy|copy(kotlin.Int;io.github.yuroyami.kiteaudio.midi.MidiEvent){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SmfEvent.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfEvent.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SmfEvent.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SmfFile { // io.github.yuroyami.kiteaudio.midi/SmfFile|null[0]
+    constructor <init>(kotlin/Int, io.github.yuroyami.kiteaudio.midi/Division, kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfTrack>) // io.github.yuroyami.kiteaudio.midi/SmfFile.<init>|<init>(kotlin.Int;io.github.yuroyami.kiteaudio.midi.Division;kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.SmfTrack>){}[0]
+
+    final val division // io.github.yuroyami.kiteaudio.midi/SmfFile.division|{}division[0]
+        final fun <get-division>(): io.github.yuroyami.kiteaudio.midi/Division // io.github.yuroyami.kiteaudio.midi/SmfFile.division.<get-division>|<get-division>(){}[0]
+    final val format // io.github.yuroyami.kiteaudio.midi/SmfFile.format|{}format[0]
+        final fun <get-format>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfFile.format.<get-format>|<get-format>(){}[0]
+    final val tracks // io.github.yuroyami.kiteaudio.midi/SmfFile.tracks|{}tracks[0]
+        final fun <get-tracks>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfTrack> // io.github.yuroyami.kiteaudio.midi/SmfFile.tracks.<get-tracks>|<get-tracks>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfFile.component1|component1(){}[0]
+    final fun component2(): io.github.yuroyami.kiteaudio.midi/Division // io.github.yuroyami.kiteaudio.midi/SmfFile.component2|component2(){}[0]
+    final fun component3(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfTrack> // io.github.yuroyami.kiteaudio.midi/SmfFile.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., io.github.yuroyami.kiteaudio.midi/Division = ..., kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfTrack> = ...): io.github.yuroyami.kiteaudio.midi/SmfFile // io.github.yuroyami.kiteaudio.midi/SmfFile.copy|copy(kotlin.Int;io.github.yuroyami.kiteaudio.midi.Division;kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.SmfTrack>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SmfFile.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfFile.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SmfFile.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SmfTrack { // io.github.yuroyami.kiteaudio.midi/SmfTrack|null[0]
+    constructor <init>(kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfEvent>) // io.github.yuroyami.kiteaudio.midi/SmfTrack.<init>|<init>(kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.SmfEvent>){}[0]
+
+    final val events // io.github.yuroyami.kiteaudio.midi/SmfTrack.events|{}events[0]
+        final fun <get-events>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfEvent> // io.github.yuroyami.kiteaudio.midi/SmfTrack.events.<get-events>|<get-events>(){}[0]
+
+    final fun component1(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfEvent> // io.github.yuroyami.kiteaudio.midi/SmfTrack.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/SmfEvent> = ...): io.github.yuroyami.kiteaudio.midi/SmfTrack // io.github.yuroyami.kiteaudio.midi/SmfTrack.copy|copy(kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.SmfEvent>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SmfTrack.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmfTrack.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SmfTrack.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SmpteOffset : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/SmpteOffset|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SmpteOffset.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val frames // io.github.yuroyami.kiteaudio.midi/SmpteOffset.frames|{}frames[0]
+        final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.frames.<get-frames>|<get-frames>(){}[0]
+    final val hours // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hours|{}hours[0]
+        final fun <get-hours>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hours.<get-hours>|<get-hours>(){}[0]
+    final val minutes // io.github.yuroyami.kiteaudio.midi/SmpteOffset.minutes|{}minutes[0]
+        final fun <get-minutes>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.minutes.<get-minutes>|<get-minutes>(){}[0]
+    final val seconds // io.github.yuroyami.kiteaudio.midi/SmpteOffset.seconds|{}seconds[0]
+        final fun <get-seconds>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.seconds.<get-seconds>|<get-seconds>(){}[0]
+    final val subFrames // io.github.yuroyami.kiteaudio.midi/SmpteOffset.subFrames|{}subFrames[0]
+        final fun <get-subFrames>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.subFrames.<get-subFrames>|<get-subFrames>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/SmpteOffset.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component4|component4(){}[0]
+    final fun component5(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SmpteOffset // io.github.yuroyami.kiteaudio.midi/SmpteOffset.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SmpteOffset.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SmpteOffset.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SmpteOffset.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SongPosition : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/SongPosition|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SongPosition.<init>|<init>(kotlin.Int){}[0]
+
+    final val beats // io.github.yuroyami.kiteaudio.midi/SongPosition.beats|{}beats[0]
+        final fun <get-beats>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongPosition.beats.<get-beats>|<get-beats>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongPosition.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SongPosition // io.github.yuroyami.kiteaudio.midi/SongPosition.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SongPosition.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongPosition.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SongPosition.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SongPosition.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SongSelect : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/SongSelect|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SongSelect.<init>|<init>(kotlin.Int){}[0]
+
+    final val song // io.github.yuroyami.kiteaudio.midi/SongSelect.song|{}song[0]
+        final fun <get-song>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongSelect.song.<get-song>|<get-song>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongSelect.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SongSelect // io.github.yuroyami.kiteaudio.midi/SongSelect.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SongSelect.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SongSelect.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SongSelect.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SongSelect.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SysEx : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/SysEx|null[0]
+    constructor <init>(kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi/SysEx.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final val data // io.github.yuroyami.kiteaudio.midi/SysEx.data|{}data[0]
+        final fun <get-data>(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SysEx.data.<get-data>|<get-data>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SysEx.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SysEx.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SysEx.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SysEx.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/SysExChunk : io.github.yuroyami.kiteaudio.midi/MidiEvent { // io.github.yuroyami.kiteaudio.midi/SysExChunk|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/SysExKind, kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi/SysExChunk.<init>|<init>(io.github.yuroyami.kiteaudio.midi.SysExKind;kotlin.ByteArray){}[0]
+
+    final val data // io.github.yuroyami.kiteaudio.midi/SysExChunk.data|{}data[0]
+        final fun <get-data>(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SysExChunk.data.<get-data>|<get-data>(){}[0]
+    final val kind // io.github.yuroyami.kiteaudio.midi/SysExChunk.kind|{}kind[0]
+        final fun <get-kind>(): io.github.yuroyami.kiteaudio.midi/SysExKind // io.github.yuroyami.kiteaudio.midi/SysExChunk.kind.<get-kind>|<get-kind>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SysExChunk.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SysExChunk.hashCode|hashCode(){}[0]
+    final fun toMessage(): io.github.yuroyami.kiteaudio.midi/SysEx? // io.github.yuroyami.kiteaudio.midi/SysExChunk.toMessage|toMessage(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SysExChunk.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TempoEntry { // io.github.yuroyami.kiteaudio.midi/TempoEntry|null[0]
+    constructor <init>(kotlin/Long, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/TempoEntry.<init>|<init>(kotlin.Long;kotlin.Int){}[0]
+
+    final val microsPerQuarter // io.github.yuroyami.kiteaudio.midi/TempoEntry.microsPerQuarter|{}microsPerQuarter[0]
+        final fun <get-microsPerQuarter>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TempoEntry.microsPerQuarter.<get-microsPerQuarter>|<get-microsPerQuarter>(){}[0]
+    final val tick // io.github.yuroyami.kiteaudio.midi/TempoEntry.tick|{}tick[0]
+        final fun <get-tick>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TempoEntry.tick.<get-tick>|<get-tick>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TempoEntry.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TempoEntry.component2|component2(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/TempoEntry // io.github.yuroyami.kiteaudio.midi/TempoEntry.copy|copy(kotlin.Long;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TempoEntry.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TempoEntry.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TempoEntry.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TempoMap { // io.github.yuroyami.kiteaudio.midi/TempoMap|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/Division, kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/TempoEntry>) // io.github.yuroyami.kiteaudio.midi/TempoMap.<init>|<init>(io.github.yuroyami.kiteaudio.midi.Division;kotlin.collections.List<io.github.yuroyami.kiteaudio.midi.TempoEntry>){}[0]
+
+    final val division // io.github.yuroyami.kiteaudio.midi/TempoMap.division|{}division[0]
+        final fun <get-division>(): io.github.yuroyami.kiteaudio.midi/Division // io.github.yuroyami.kiteaudio.midi/TempoMap.division.<get-division>|<get-division>(){}[0]
+    final val entries // io.github.yuroyami.kiteaudio.midi/TempoMap.entries|{}entries[0]
+        final fun <get-entries>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.midi/TempoEntry> // io.github.yuroyami.kiteaudio.midi/TempoMap.entries.<get-entries>|<get-entries>(){}[0]
+
+    final fun bpmAt(kotlin/Long): kotlin/Double // io.github.yuroyami.kiteaudio.midi/TempoMap.bpmAt|bpmAt(kotlin.Long){}[0]
+    final fun microsPerQuarterAt(kotlin/Long): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TempoMap.microsPerQuarterAt|microsPerQuarterAt(kotlin.Long){}[0]
+    final fun microsToTick(kotlin/Long): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TempoMap.microsToTick|microsToTick(kotlin.Long){}[0]
+    final fun tickToMicros(kotlin/Long): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TempoMap.tickToMicros|tickToMicros(kotlin.Long){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.midi/TempoMap.Companion|null[0]
+        final const val DEFAULT_MICROS_PER_QUARTER // io.github.yuroyami.kiteaudio.midi/TempoMap.Companion.DEFAULT_MICROS_PER_QUARTER|{}DEFAULT_MICROS_PER_QUARTER[0]
+            final fun <get-DEFAULT_MICROS_PER_QUARTER>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TempoMap.Companion.DEFAULT_MICROS_PER_QUARTER.<get-DEFAULT_MICROS_PER_QUARTER>|<get-DEFAULT_MICROS_PER_QUARTER>(){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TextEvent : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/TextEvent|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/TextKind, kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi/TextEvent.<init>|<init>(io.github.yuroyami.kiteaudio.midi.TextKind;kotlin.ByteArray){}[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.midi/TextKind, kotlin/String) // io.github.yuroyami.kiteaudio.midi/TextEvent.<init>|<init>(io.github.yuroyami.kiteaudio.midi.TextKind;kotlin.String){}[0]
+
+    final val bytes // io.github.yuroyami.kiteaudio.midi/TextEvent.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TextEvent.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val kind // io.github.yuroyami.kiteaudio.midi/TextEvent.kind|{}kind[0]
+        final fun <get-kind>(): io.github.yuroyami.kiteaudio.midi/TextKind // io.github.yuroyami.kiteaudio.midi/TextEvent.kind.<get-kind>|<get-kind>(){}[0]
+    final val text // io.github.yuroyami.kiteaudio.midi/TextEvent.text|{}text[0]
+        final fun <get-text>(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TextEvent.text.<get-text>|<get-text>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/TextEvent.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TextEvent.type.<get-type>|<get-type>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TextEvent.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TextEvent.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TextEvent.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TextEvent.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame|null[0]
+    constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.<init>|<init>(kotlin.Int){}[0]
+
+    final val data // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.data|{}data[0]
+        final fun <get-data>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.data.<get-data>|<get-data>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.component1|component1(){}[0]
+    final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.copy|copy(kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TimeCodeQuarterFrame.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TimeSignature : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/TimeSignature|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int = ..., kotlin/Int = ...) // io.github.yuroyami.kiteaudio.midi/TimeSignature.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val clocksPerClick // io.github.yuroyami.kiteaudio.midi/TimeSignature.clocksPerClick|{}clocksPerClick[0]
+        final fun <get-clocksPerClick>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.clocksPerClick.<get-clocksPerClick>|<get-clocksPerClick>(){}[0]
+    final val denominator // io.github.yuroyami.kiteaudio.midi/TimeSignature.denominator|{}denominator[0]
+        final fun <get-denominator>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.denominator.<get-denominator>|<get-denominator>(){}[0]
+    final val numerator // io.github.yuroyami.kiteaudio.midi/TimeSignature.numerator|{}numerator[0]
+        final fun <get-numerator>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.numerator.<get-numerator>|<get-numerator>(){}[0]
+    final val thirtySecondsPerQuarter // io.github.yuroyami.kiteaudio.midi/TimeSignature.thirtySecondsPerQuarter|{}thirtySecondsPerQuarter[0]
+        final fun <get-thirtySecondsPerQuarter>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.thirtySecondsPerQuarter.<get-thirtySecondsPerQuarter>|<get-thirtySecondsPerQuarter>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/TimeSignature.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.type.<get-type>|<get-type>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.component4|component4(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/TimeSignature // io.github.yuroyami.kiteaudio.midi/TimeSignature.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TimeSignature.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimeSignature.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TimeSignature.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TimeSignature.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/TimedEvent { // io.github.yuroyami.kiteaudio.midi/TimedEvent|null[0]
+    constructor <init>(kotlin/Long, kotlin/Int, io.github.yuroyami.kiteaudio.midi/MidiEvent) // io.github.yuroyami.kiteaudio.midi/TimedEvent.<init>|<init>(kotlin.Long;kotlin.Int;io.github.yuroyami.kiteaudio.midi.MidiEvent){}[0]
+
+    final val event // io.github.yuroyami.kiteaudio.midi/TimedEvent.event|{}event[0]
+        final fun <get-event>(): io.github.yuroyami.kiteaudio.midi/MidiEvent // io.github.yuroyami.kiteaudio.midi/TimedEvent.event.<get-event>|<get-event>(){}[0]
+    final val tick // io.github.yuroyami.kiteaudio.midi/TimedEvent.tick|{}tick[0]
+        final fun <get-tick>(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TimedEvent.tick.<get-tick>|<get-tick>(){}[0]
+    final val track // io.github.yuroyami.kiteaudio.midi/TimedEvent.track|{}track[0]
+        final fun <get-track>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimedEvent.track.<get-track>|<get-track>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.yuroyami.kiteaudio.midi/TimedEvent.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimedEvent.component2|component2(){}[0]
+    final fun component3(): io.github.yuroyami.kiteaudio.midi/MidiEvent // io.github.yuroyami.kiteaudio.midi/TimedEvent.component3|component3(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Int = ..., io.github.yuroyami.kiteaudio.midi/MidiEvent = ...): io.github.yuroyami.kiteaudio.midi/TimedEvent // io.github.yuroyami.kiteaudio.midi/TimedEvent.copy|copy(kotlin.Long;kotlin.Int;io.github.yuroyami.kiteaudio.midi.MidiEvent){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TimedEvent.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimedEvent.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TimedEvent.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.midi/UnknownMeta : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/UnknownMeta|null[0]
+    constructor <init>(kotlin/Int, kotlin/ByteArray) // io.github.yuroyami.kiteaudio.midi/UnknownMeta.<init>|<init>(kotlin.Int;kotlin.ByteArray){}[0]
+
+    final val data // io.github.yuroyami.kiteaudio.midi/UnknownMeta.data|{}data[0]
+        final fun <get-data>(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/UnknownMeta.data.<get-data>|<get-data>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/UnknownMeta.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/UnknownMeta.type.<get-type>|<get-type>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/UnknownMeta.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/UnknownMeta.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/UnknownMeta.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/UnknownMeta.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/ActiveSensing : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/ActiveSensing|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/ActiveSensing.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/ActiveSensing.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/ActiveSensing.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/ActiveSensing.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/Continue : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/Continue|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/Continue.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Continue.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/Continue.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/Continue.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/EndOfTrack : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/EndOfTrack|null[0]
+    final val type // io.github.yuroyami.kiteaudio.midi/EndOfTrack.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/EndOfTrack.type.<get-type>|<get-type>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/EndOfTrack.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/EndOfTrack.hashCode|hashCode(){}[0]
+    final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/EndOfTrack.payload|payload(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/EndOfTrack.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/KiteMidi { // io.github.yuroyami.kiteaudio.midi/KiteMidi|null[0]
+    final fun parseMessage(kotlin/ByteArray, kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/ParsedMessage? // io.github.yuroyami.kiteaudio.midi/KiteMidi.parseMessage|parseMessage(kotlin.ByteArray;kotlin.Int;kotlin.Int){}[0]
+    final fun read(kotlin/ByteArray): io.github.yuroyami.kiteaudio.midi/SmfFile // io.github.yuroyami.kiteaudio.midi/KiteMidi.read|read(kotlin.ByteArray){}[0]
+    final fun readTimeline(kotlin/ByteArray): io.github.yuroyami.kiteaudio.midi/MidiTimeline // io.github.yuroyami.kiteaudio.midi/KiteMidi.readTimeline|readTimeline(kotlin.ByteArray){}[0]
+    final fun write(io.github.yuroyami.kiteaudio.midi/SmfFile): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/KiteMidi.write|write(io.github.yuroyami.kiteaudio.midi.SmfFile){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/Start : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/Start|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/Start.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Start.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/Start.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/Start.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/Stop : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/Stop|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/Stop.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/Stop.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/Stop.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/Stop.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/SystemReset : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/SystemReset|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SystemReset.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SystemReset.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SystemReset.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/SystemReset.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/TimingClock : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/TimingClock|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TimingClock.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TimingClock.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TimingClock.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TimingClock.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/TuneRequest : io.github.yuroyami.kiteaudio.midi/MidiMessage { // io.github.yuroyami.kiteaudio.midi/TuneRequest|null[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/TuneRequest.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/TuneRequest.hashCode|hashCode(){}[0]
+    final fun toBytes(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/TuneRequest.toBytes|toBytes(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.midi/TuneRequest.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.midi/UniversalSysEx { // io.github.yuroyami.kiteaudio.midi/UniversalSysEx|null[0]
+    final const val ALL_DEVICES // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.ALL_DEVICES|{}ALL_DEVICES[0]
+        final fun <get-ALL_DEVICES>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.ALL_DEVICES.<get-ALL_DEVICES>|<get-ALL_DEVICES>(){}[0]
+
+    final fun centsBetween(kotlin/Double, kotlin/Double): kotlin/Double // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.centsBetween|centsBetween(kotlin.Double;kotlin.Double){}[0]
+    final fun deviceInquiry(kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SysEx // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.deviceInquiry|deviceInquiry(kotlin.Int){}[0]
+    final fun masterCoarseTune(kotlin/Int, kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SysEx // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.masterCoarseTune|masterCoarseTune(kotlin.Int;kotlin.Int){}[0]
+    final fun masterFineTune(kotlin/Double, kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SysEx // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.masterFineTune|masterFineTune(kotlin.Double;kotlin.Int){}[0]
+    final fun masterVolume(kotlin/Int, kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SysEx // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.masterVolume|masterVolume(kotlin.Int;kotlin.Int){}[0]
+    final fun parseDeviceInquiryReply(io.github.yuroyami.kiteaudio.midi/SysEx): io.github.yuroyami.kiteaudio.midi/DeviceInquiryReply? // io.github.yuroyami.kiteaudio.midi/UniversalSysEx.parseDeviceInquiryReply|parseDeviceInquiryReply(io.github.yuroyami.kiteaudio.midi.SysEx){}[0]
+}
+
+final fun (io.github.yuroyami.kiteaudio.midi/SmfFile).io.github.yuroyami.kiteaudio.midi/toTimeline(): io.github.yuroyami.kiteaudio.midi/MidiTimeline // io.github.yuroyami.kiteaudio.midi/toTimeline|toTimeline@io.github.yuroyami.kiteaudio.midi.SmfFile(){}[0]

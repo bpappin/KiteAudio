@@ -207,7 +207,7 @@ audio and Ogg.
   `Xing`, `Info` and `VBRI` headers, LAME gapless trimming, and exact
   durations for constant and variable bitrate files alike. Layers I, II and
   III all decode, with sample-accurate seeking.
-- `audiokodec-io`, the optional kotlinx-io bridge.
+- `kiteaudio-codec-io`, the optional kotlinx-io bridge.
 
 ### Build
 

@@ -26,8 +26,8 @@ and version default to zero in a new block. Version 2 uses the specified
 unknown-loudness sentinel when no stored extension is supplied.
 
 ```kotlin
-import io.github.yuroyami.audiokodec.AudioKodec
-import io.github.yuroyami.audiokodec.tag.*
+import io.github.yuroyami.kiteaudio.codec.AudioKodec
+import io.github.yuroyami.kiteaudio.codec.tag.*
 
 val values = mapOf(
     "Description" to "Interview recording",

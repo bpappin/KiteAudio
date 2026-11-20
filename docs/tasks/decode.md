@@ -1,6 +1,6 @@
 # Decode a file to PCM
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 Give AudioKodec the bytes of an audio file and it gives back the samples, whatever the
 format: WAV, FLAC, MP3, AAC, Ogg Vorbis, Opus and the [rest](../formats.md).

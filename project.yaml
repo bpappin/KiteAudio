@@ -1,15 +1,15 @@
 modules:
-  - audiokodec
-  - audiokodec-io
+  - kiteaudio-codec
+  - kiteaudio-codec-io
   - build-plugins/abi-check
   - build-plugins/attribution
   - build-plugins/dokka
   - docs-samples
-  - kitemidi
-  - kitemidi-io
-  - kitemidi-io-coremidi
-  - kitert
-  - kitesynth
+  - kiteaudio-midi
+  - kiteaudio-midi-devices
+  - kiteaudio-midi-coremidi
+  - kiteaudio-output
+  - kiteaudio-synth
   - sample
 
 plugins:

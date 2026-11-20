@@ -3,7 +3,7 @@ from pathlib import Path
 import sys
 import xml.etree.ElementTree as ET
 
-reports = Path("build/reports/audiokodec/jvm")
+reports = Path("build/reports/kiteaudio-codec/jvm")
 required = {
     "AacDecodeOracleTest", "AdtsOracleTest", "AiffCOracleTest", "AlacOracleTest", "AlacEncodeOracleTest", "BextOracleTest", "CafOracleTest", "FfmpegOracleTest",
     "FfmpegTagOracleTest", "FlacEncodeOracleTest", "FlacOracleTest", "FlacConformanceTest",

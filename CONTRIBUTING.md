@@ -60,14 +60,14 @@ that the committed code does not support. The documentation uses American
 spelling.
 
 A code sample added to `docs/` is not typed into the page. It lives in a test under
-`docs-samples/test/io/github/yuroyami/audiokodec/docs/`, a module
+`docs-samples/test/io/github/yuroyami/kiteaudio/codec/docs/`, a module
 that sees only the published modules, between `// --8<-- [start:name]` and
 `// --8<-- [end:name]` markers, and the page includes it with
 `--8<-- "File.kt:name"`. The test must run the sample on input it makes itself
 and assert what the page says it does. `./kotlin test -m docs-samples` runs the
 samples, and `mkdocs build --strict` fails on a missing file or marker. The
 Web Audio sample is the one exception to the location: it is Kotlin/JS, so it
-lives in `audiokodec/test@js` and runs with
+lives in `kiteaudio-codec/test@js` and runs with
 `python3 .github/scripts/web-tests/run.py --platform js`.
 
 Code follows the official Kotlin style.
@@ -84,8 +84,8 @@ To regenerate every JVM fixture and record the exact tool versions, executable
 SHA-256, argument arrays, caller recipes and input/output hashes, run:
 
 ```sh
-python3 generate-test-fixtures.py --output audiokodec/build/fixtures-first
-python3 generate-test-fixtures.py --output audiokodec/build/fixtures-second --compare audiokodec/build/fixtures-first
+python3 generate-test-fixtures.py --output kiteaudio-codec/build/fixtures-first
+python3 generate-test-fixtures.py --output kiteaudio-codec/build/fixtures-second --compare kiteaudio-codec/build/fixtures-first
 ```
 
 Prepare the executable oracles first using the instructions below and
@@ -120,8 +120,8 @@ executables only and their implementation source stays unopened.
 For tests without provenance recording:
 
 ```
-./kotlin test -m audiokodec -p jvm
-./kotlin test -m audiokodec -p macosArm64
+./kotlin test -m kiteaudio-codec -p jvm
+./kotlin test -m kiteaudio-codec -p macosArm64
 python3 .github/scripts/web-tests/run.py
 ```
 
@@ -129,13 +129,13 @@ python3 .github/scripts/web-tests/run.py
 only in a browser, with a 30-second limit that the malformed-input sweeps
 exceed. The script links the JS, wasmJs and wasmWasi tests with the toolchain
 and runs them in Node. Add `--module` or `--platform` to run only part of them,
-for example `--module audiokodec-io --platform js`.
+for example `--module kiteaudio-codec-io --platform js`.
 
 This command measures decode speed against the floors recorded in
 [docs/support.md](docs/support.md#decode-speed):
 
 ```sh
-./kotlin run -m sample --main-class=io.github.yuroyami.audiokodec.sample.BenchmarkKt --jvm-args=-Xmx2g
+./kotlin run -m sample --main-class=io.github.yuroyami.kiteaudio.codec.sample.BenchmarkKt --jvm-args=-Xmx2g
 ```
 
 A change to a decoder's inner loops should be measured before and after.
@@ -161,7 +161,7 @@ vectors run without a download; prepare all 86 licensed vectors with:
 
 ```sh
 python3 .github/scripts/prepare-flac-conformance.py
-./kotlin test -m audiokodec -p jvm --include-classes='*FlacConformanceTest'
+./kotlin test -m kiteaudio-codec -p jvm --include-classes='*FlacConformanceTest'
 ```
 
 The complete corpus occupies about 310 MB in the ignored build cache. Use
@@ -175,9 +175,9 @@ The ID3 identity and mixed-artwork suites also run Mutagen through Python. It re
 test skip when the module is unavailable. Use an isolated interpreter:
 
 ```sh
-python3 -m venv /tmp/audiokodec-tag-oracle
-/tmp/audiokodec-tag-oracle/bin/python -m pip install mutagen==1.47.0
-AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./kotlin test -m audiokodec -p jvm
+python3 -m venv /tmp/kiteaudio-codec-tag-oracle
+/tmp/kiteaudio-codec-tag-oracle/bin/python -m pip install mutagen==1.47.0
+AUDIOKODEC_MUTAGEN_PYTHON=/tmp/kiteaudio-codec-tag-oracle/bin/python ./kotlin test -m kiteaudio-codec -p jvm
 ```
 
 Mutagen is a test executable only. Its implementation source must stay
@@ -196,7 +196,7 @@ that cannot load fails the test. On macOS:
 ```sh
 brew install opusfile
 AUDIOKODEC_OPUSFILE_LIBRARY="$(brew --prefix opusfile)/lib/libopusfile.0.dylib" \
-AUDIOKODEC_MUTAGEN_PYTHON=/tmp/audiokodec-tag-oracle/bin/python ./kotlin test -m audiokodec -p jvm
+AUDIOKODEC_MUTAGEN_PYTHON=/tmp/kiteaudio-codec-tag-oracle/bin/python ./kotlin test -m kiteaudio-codec -p jvm
 ```
 
 Only its public API is used. No implementation source is read.

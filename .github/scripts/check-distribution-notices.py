@@ -33,7 +33,7 @@ def verify(path, read):
 
 
 tasks = root / "build" / "tasks"
-for module in ("audiokodec", "audiokodec-io"):
+for module in ("kiteaudio-codec", "kiteaudio-codec-io"):
     jars = sorted(tasks.glob(f"_{module}_jarJvm/*.jar"))
     aars = sorted(tasks.glob(f"_{module}_aarAndroid*/*.aar"))
     if not jars or not aars:

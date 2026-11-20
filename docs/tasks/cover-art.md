@@ -1,6 +1,6 @@
 # Read and write cover art
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 Pictures are part of the tags: `readTags` returns them and `writeTags` stores them. A
 picture is the image file exactly as it was stored, JPEG or PNG usually, with its MIME type

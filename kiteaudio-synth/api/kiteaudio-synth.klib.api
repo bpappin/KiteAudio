@@ -1,0 +1,542 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yuroyami:kiteaudio-synth>
+final enum class io.github.yuroyami.kiteaudio.synth/EnvelopeStage : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/EnvelopeStage> { // io.github.yuroyami.kiteaudio.synth/EnvelopeStage|null[0]
+    enum entry Attack // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Attack|null[0]
+    enum entry Decay // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Decay|null[0]
+    enum entry Delay // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Delay|null[0]
+    enum entry Finished // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Finished|null[0]
+    enum entry Hold // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Hold|null[0]
+    enum entry Release // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Release|null[0]
+    enum entry Sustain // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.Sustain|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.synth/EnvelopeStage> // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.synth/EnvelopeStage // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/EnvelopeStage> // io.github.yuroyami.kiteaudio.synth/EnvelopeStage.values|values#static(){}[0]
+}
+
+final enum class io.github.yuroyami.kiteaudio.synth/Generator : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/Generator> { // io.github.yuroyami.kiteaudio.synth/Generator|null[0]
+    enum entry AttackModEnv // io.github.yuroyami.kiteaudio.synth/Generator.AttackModEnv|null[0]
+    enum entry AttackVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.AttackVolEnv|null[0]
+    enum entry ChorusEffectsSend // io.github.yuroyami.kiteaudio.synth/Generator.ChorusEffectsSend|null[0]
+    enum entry CoarseTune // io.github.yuroyami.kiteaudio.synth/Generator.CoarseTune|null[0]
+    enum entry DecayModEnv // io.github.yuroyami.kiteaudio.synth/Generator.DecayModEnv|null[0]
+    enum entry DecayVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.DecayVolEnv|null[0]
+    enum entry DelayModEnv // io.github.yuroyami.kiteaudio.synth/Generator.DelayModEnv|null[0]
+    enum entry DelayModLfo // io.github.yuroyami.kiteaudio.synth/Generator.DelayModLfo|null[0]
+    enum entry DelayVibLfo // io.github.yuroyami.kiteaudio.synth/Generator.DelayVibLfo|null[0]
+    enum entry DelayVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.DelayVolEnv|null[0]
+    enum entry EndAddrsCoarseOffset // io.github.yuroyami.kiteaudio.synth/Generator.EndAddrsCoarseOffset|null[0]
+    enum entry EndAddrsOffset // io.github.yuroyami.kiteaudio.synth/Generator.EndAddrsOffset|null[0]
+    enum entry EndLoopAddrsCoarseOffset // io.github.yuroyami.kiteaudio.synth/Generator.EndLoopAddrsCoarseOffset|null[0]
+    enum entry EndLoopAddrsOffset // io.github.yuroyami.kiteaudio.synth/Generator.EndLoopAddrsOffset|null[0]
+    enum entry ExclusiveClass // io.github.yuroyami.kiteaudio.synth/Generator.ExclusiveClass|null[0]
+    enum entry FineTune // io.github.yuroyami.kiteaudio.synth/Generator.FineTune|null[0]
+    enum entry FreqModLfo // io.github.yuroyami.kiteaudio.synth/Generator.FreqModLfo|null[0]
+    enum entry FreqVibLfo // io.github.yuroyami.kiteaudio.synth/Generator.FreqVibLfo|null[0]
+    enum entry HoldModEnv // io.github.yuroyami.kiteaudio.synth/Generator.HoldModEnv|null[0]
+    enum entry HoldVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.HoldVolEnv|null[0]
+    enum entry InitialAttenuation // io.github.yuroyami.kiteaudio.synth/Generator.InitialAttenuation|null[0]
+    enum entry InitialFilterFc // io.github.yuroyami.kiteaudio.synth/Generator.InitialFilterFc|null[0]
+    enum entry InitialFilterQ // io.github.yuroyami.kiteaudio.synth/Generator.InitialFilterQ|null[0]
+    enum entry Instrument // io.github.yuroyami.kiteaudio.synth/Generator.Instrument|null[0]
+    enum entry KeyRange // io.github.yuroyami.kiteaudio.synth/Generator.KeyRange|null[0]
+    enum entry Keynum // io.github.yuroyami.kiteaudio.synth/Generator.Keynum|null[0]
+    enum entry KeynumToModEnvDecay // io.github.yuroyami.kiteaudio.synth/Generator.KeynumToModEnvDecay|null[0]
+    enum entry KeynumToModEnvHold // io.github.yuroyami.kiteaudio.synth/Generator.KeynumToModEnvHold|null[0]
+    enum entry KeynumToVolEnvDecay // io.github.yuroyami.kiteaudio.synth/Generator.KeynumToVolEnvDecay|null[0]
+    enum entry KeynumToVolEnvHold // io.github.yuroyami.kiteaudio.synth/Generator.KeynumToVolEnvHold|null[0]
+    enum entry ModEnvToFilterFc // io.github.yuroyami.kiteaudio.synth/Generator.ModEnvToFilterFc|null[0]
+    enum entry ModEnvToPitch // io.github.yuroyami.kiteaudio.synth/Generator.ModEnvToPitch|null[0]
+    enum entry ModLfoToFilterFc // io.github.yuroyami.kiteaudio.synth/Generator.ModLfoToFilterFc|null[0]
+    enum entry ModLfoToPitch // io.github.yuroyami.kiteaudio.synth/Generator.ModLfoToPitch|null[0]
+    enum entry ModLfoToVolume // io.github.yuroyami.kiteaudio.synth/Generator.ModLfoToVolume|null[0]
+    enum entry OverridingRootKey // io.github.yuroyami.kiteaudio.synth/Generator.OverridingRootKey|null[0]
+    enum entry Pan // io.github.yuroyami.kiteaudio.synth/Generator.Pan|null[0]
+    enum entry ReleaseModEnv // io.github.yuroyami.kiteaudio.synth/Generator.ReleaseModEnv|null[0]
+    enum entry ReleaseVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.ReleaseVolEnv|null[0]
+    enum entry ReverbEffectsSend // io.github.yuroyami.kiteaudio.synth/Generator.ReverbEffectsSend|null[0]
+    enum entry SampleId // io.github.yuroyami.kiteaudio.synth/Generator.SampleId|null[0]
+    enum entry SampleModes // io.github.yuroyami.kiteaudio.synth/Generator.SampleModes|null[0]
+    enum entry ScaleTuning // io.github.yuroyami.kiteaudio.synth/Generator.ScaleTuning|null[0]
+    enum entry StartAddrsCoarseOffset // io.github.yuroyami.kiteaudio.synth/Generator.StartAddrsCoarseOffset|null[0]
+    enum entry StartAddrsOffset // io.github.yuroyami.kiteaudio.synth/Generator.StartAddrsOffset|null[0]
+    enum entry StartLoopAddrsCoarseOffset // io.github.yuroyami.kiteaudio.synth/Generator.StartLoopAddrsCoarseOffset|null[0]
+    enum entry StartLoopAddrsOffset // io.github.yuroyami.kiteaudio.synth/Generator.StartLoopAddrsOffset|null[0]
+    enum entry SustainModEnv // io.github.yuroyami.kiteaudio.synth/Generator.SustainModEnv|null[0]
+    enum entry SustainVolEnv // io.github.yuroyami.kiteaudio.synth/Generator.SustainVolEnv|null[0]
+    enum entry VelRange // io.github.yuroyami.kiteaudio.synth/Generator.VelRange|null[0]
+    enum entry Velocity // io.github.yuroyami.kiteaudio.synth/Generator.Velocity|null[0]
+    enum entry VibLfoToPitch // io.github.yuroyami.kiteaudio.synth/Generator.VibLfoToPitch|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.synth/Generator.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.synth/Generator> // io.github.yuroyami.kiteaudio.synth/Generator.entries.<get-entries>|<get-entries>#static(){}[0]
+    final val id // io.github.yuroyami.kiteaudio.synth/Generator.id|{}id[0]
+        final fun <get-id>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Generator.id.<get-id>|<get-id>(){}[0]
+    final val signed // io.github.yuroyami.kiteaudio.synth/Generator.signed|{}signed[0]
+        final fun <get-signed>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Generator.signed.<get-signed>|<get-signed>(){}[0]
+
+    final fun read(kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Generator.read|read(kotlin.Int){}[0]
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.synth/Generator // io.github.yuroyami.kiteaudio.synth/Generator.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/Generator> // io.github.yuroyami.kiteaudio.synth/Generator.values|values#static(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/Generator.Companion|null[0]
+        final fun of(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Generator? // io.github.yuroyami.kiteaudio.synth/Generator.Companion.of|of(kotlin.Int){}[0]
+    }
+}
+
+final enum class io.github.yuroyami.kiteaudio.synth/Interpolation : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/Interpolation> { // io.github.yuroyami.kiteaudio.synth/Interpolation|null[0]
+    enum entry Cubic // io.github.yuroyami.kiteaudio.synth/Interpolation.Cubic|null[0]
+    enum entry Linear // io.github.yuroyami.kiteaudio.synth/Interpolation.Linear|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.synth/Interpolation.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.synth/Interpolation> // io.github.yuroyami.kiteaudio.synth/Interpolation.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.synth/Interpolation // io.github.yuroyami.kiteaudio.synth/Interpolation.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/Interpolation> // io.github.yuroyami.kiteaudio.synth/Interpolation.values|values#static(){}[0]
+}
+
+final enum class io.github.yuroyami.kiteaudio.synth/LoopMode : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/LoopMode> { // io.github.yuroyami.kiteaudio.synth/LoopMode|null[0]
+    enum entry Continuous // io.github.yuroyami.kiteaudio.synth/LoopMode.Continuous|null[0]
+    enum entry NoLoop // io.github.yuroyami.kiteaudio.synth/LoopMode.NoLoop|null[0]
+    enum entry UntilRelease // io.github.yuroyami.kiteaudio.synth/LoopMode.UntilRelease|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.synth/LoopMode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.synth/LoopMode> // io.github.yuroyami.kiteaudio.synth/LoopMode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.synth/LoopMode // io.github.yuroyami.kiteaudio.synth/LoopMode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/LoopMode> // io.github.yuroyami.kiteaudio.synth/LoopMode.values|values#static(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/LoopMode.Companion|null[0]
+        final fun of(kotlin/Int): io.github.yuroyami.kiteaudio.synth/LoopMode // io.github.yuroyami.kiteaudio.synth/LoopMode.Companion.of|of(kotlin.Int){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Chorus { // io.github.yuroyami.kiteaudio.synth/Chorus|null[0]
+    constructor <init>(kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Chorus.<init>|<init>(kotlin.Int){}[0]
+
+    final var level // io.github.yuroyami.kiteaudio.synth/Chorus.level|{}level[0]
+        final fun <get-level>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Chorus.level.<get-level>|<get-level>(){}[0]
+        final fun <set-level>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Chorus.level.<set-level>|<set-level>(kotlin.Double){}[0]
+
+    final fun clear() // io.github.yuroyami.kiteaudio.synth/Chorus.clear|clear(){}[0]
+    final fun process(kotlin/FloatArray, kotlin/FloatArray, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Chorus.process|process(kotlin.FloatArray;kotlin.FloatArray;kotlin.Int;kotlin.Int){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/EnvelopeSpec { // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val attackTimecents // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.attackTimecents|{}attackTimecents[0]
+        final fun <get-attackTimecents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.attackTimecents.<get-attackTimecents>|<get-attackTimecents>(){}[0]
+    final val decayTimecents // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.decayTimecents|{}decayTimecents[0]
+        final fun <get-decayTimecents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.decayTimecents.<get-decayTimecents>|<get-decayTimecents>(){}[0]
+    final val delayTimecents // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.delayTimecents|{}delayTimecents[0]
+        final fun <get-delayTimecents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.delayTimecents.<get-delayTimecents>|<get-delayTimecents>(){}[0]
+    final val holdTimecents // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.holdTimecents|{}holdTimecents[0]
+        final fun <get-holdTimecents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.holdTimecents.<get-holdTimecents>|<get-holdTimecents>(){}[0]
+    final val releaseTimecents // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.releaseTimecents|{}releaseTimecents[0]
+        final fun <get-releaseTimecents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.releaseTimecents.<get-releaseTimecents>|<get-releaseTimecents>(){}[0]
+    final val sustainCb // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.sustainCb|{}sustainCb[0]
+        final fun <get-sustainCb>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.sustainCb.<get-sustainCb>|<get-sustainCb>(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.Companion|null[0]
+        final val Default // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.Companion.Default|{}Default[0]
+            final fun <get-Default>(): io.github.yuroyami.kiteaudio.synth/EnvelopeSpec // io.github.yuroyami.kiteaudio.synth/EnvelopeSpec.Companion.Default.<get-Default>|<get-Default>(){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.synth/GeneratorSet { // io.github.yuroyami.kiteaudio.synth/GeneratorSet|null[0]
+    constructor <init>(kotlin.collections/Map<kotlin/Int, kotlin/Int> = ...) // io.github.yuroyami.kiteaudio.synth/GeneratorSet.<init>|<init>(kotlin.collections.Map<kotlin.Int,kotlin.Int>){}[0]
+
+    final val size // io.github.yuroyami.kiteaudio.synth/GeneratorSet.size|{}size[0]
+        final fun <get-size>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/GeneratorSet.size.<get-size>|<get-size>(){}[0]
+
+    final fun all(): kotlin.collections/Map<kotlin/Int, kotlin/Int> // io.github.yuroyami.kiteaudio.synth/GeneratorSet.all|all(){}[0]
+    final fun contains(io.github.yuroyami.kiteaudio.synth/Generator): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/GeneratorSet.contains|contains(io.github.yuroyami.kiteaudio.synth.Generator){}[0]
+    final fun get(io.github.yuroyami.kiteaudio.synth/Generator): kotlin/Int? // io.github.yuroyami.kiteaudio.synth/GeneratorSet.get|get(io.github.yuroyami.kiteaudio.synth.Generator){}[0]
+    final fun get(io.github.yuroyami.kiteaudio.synth/Generator, kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/GeneratorSet.get|get(io.github.yuroyami.kiteaudio.synth.Generator;kotlin.Int){}[0]
+    final fun over(io.github.yuroyami.kiteaudio.synth/GeneratorSet): io.github.yuroyami.kiteaudio.synth/GeneratorSet // io.github.yuroyami.kiteaudio.synth/GeneratorSet.over|over(io.github.yuroyami.kiteaudio.synth.GeneratorSet){}[0]
+    final fun raw(io.github.yuroyami.kiteaudio.synth/Generator): kotlin/Int? // io.github.yuroyami.kiteaudio.synth/GeneratorSet.raw|raw(io.github.yuroyami.kiteaudio.synth.Generator){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/GeneratorSet.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Instrument { // io.github.yuroyami.kiteaudio.synth/Instrument|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/InstrumentZone>) // io.github.yuroyami.kiteaudio.synth/Instrument.<init>|<init>(kotlin.String;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.InstrumentZone>){}[0]
+
+    final val name // io.github.yuroyami.kiteaudio.synth/Instrument.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Instrument.name.<get-name>|<get-name>(){}[0]
+    final val zones // io.github.yuroyami.kiteaudio.synth/Instrument.zones|{}zones[0]
+        final fun <get-zones>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/InstrumentZone> // io.github.yuroyami.kiteaudio.synth/Instrument.zones.<get-zones>|<get-zones>(){}[0]
+
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Instrument.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/InstrumentZone { // io.github.yuroyami.kiteaudio.synth/InstrumentZone|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.synth/GeneratorSet, io.github.yuroyami.kiteaudio.synth/Span, io.github.yuroyami.kiteaudio.synth/Span, kotlin/Int?, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> = ...) // io.github.yuroyami.kiteaudio.synth/InstrumentZone.<init>|<init>(io.github.yuroyami.kiteaudio.synth.GeneratorSet;io.github.yuroyami.kiteaudio.synth.Span;io.github.yuroyami.kiteaudio.synth.Span;kotlin.Int?;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.Modulator>){}[0]
+
+    final val generators // io.github.yuroyami.kiteaudio.synth/InstrumentZone.generators|{}generators[0]
+        final fun <get-generators>(): io.github.yuroyami.kiteaudio.synth/GeneratorSet // io.github.yuroyami.kiteaudio.synth/InstrumentZone.generators.<get-generators>|<get-generators>(){}[0]
+    final val keys // io.github.yuroyami.kiteaudio.synth/InstrumentZone.keys|{}keys[0]
+        final fun <get-keys>(): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/InstrumentZone.keys.<get-keys>|<get-keys>(){}[0]
+    final val modulators // io.github.yuroyami.kiteaudio.synth/InstrumentZone.modulators|{}modulators[0]
+        final fun <get-modulators>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> // io.github.yuroyami.kiteaudio.synth/InstrumentZone.modulators.<get-modulators>|<get-modulators>(){}[0]
+    final val sampleId // io.github.yuroyami.kiteaudio.synth/InstrumentZone.sampleId|{}sampleId[0]
+        final fun <get-sampleId>(): kotlin/Int? // io.github.yuroyami.kiteaudio.synth/InstrumentZone.sampleId.<get-sampleId>|<get-sampleId>(){}[0]
+    final val velocities // io.github.yuroyami.kiteaudio.synth/InstrumentZone.velocities|{}velocities[0]
+        final fun <get-velocities>(): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/InstrumentZone.velocities.<get-velocities>|<get-velocities>(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Lfo { // io.github.yuroyami.kiteaudio.synth/Lfo|null[0]
+    constructor <init>() // io.github.yuroyami.kiteaudio.synth/Lfo.<init>|<init>(){}[0]
+
+    final val value // io.github.yuroyami.kiteaudio.synth/Lfo.value|{}value[0]
+        final fun <get-value>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Lfo.value.<get-value>|<get-value>(){}[0]
+
+    final fun advance(kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Lfo.advance|advance(kotlin.Int){}[0]
+    final fun start(kotlin/Int, kotlin/Double, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Lfo.start|start(kotlin.Int;kotlin.Double;kotlin.Int){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/Lfo.Companion|null[0]
+        final fun hertzOf(kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Lfo.Companion.hertzOf|hertzOf(kotlin.Int){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.synth/LowPassFilter { // io.github.yuroyami.kiteaudio.synth/LowPassFilter|null[0]
+    constructor <init>() // io.github.yuroyami.kiteaudio.synth/LowPassFilter.<init>|<init>(){}[0]
+
+    final var bypassed // io.github.yuroyami.kiteaudio.synth/LowPassFilter.bypassed|{}bypassed[0]
+        final fun <get-bypassed>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/LowPassFilter.bypassed.<get-bypassed>|<get-bypassed>(){}[0]
+
+    final fun process(kotlin/Float): kotlin/Float // io.github.yuroyami.kiteaudio.synth/LowPassFilter.process|process(kotlin.Float){}[0]
+    final fun reset() // io.github.yuroyami.kiteaudio.synth/LowPassFilter.reset|reset(){}[0]
+    final fun set(kotlin/Double, kotlin/Double, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/LowPassFilter.set|set(kotlin.Double;kotlin.Double;kotlin.Int){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Modulator { // io.github.yuroyami.kiteaudio.synth/Modulator|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Modulator.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+
+    final val amount // io.github.yuroyami.kiteaudio.synth/Modulator.amount|{}amount[0]
+        final fun <get-amount>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Modulator.amount.<get-amount>|<get-amount>(){}[0]
+    final val amountSource // io.github.yuroyami.kiteaudio.synth/Modulator.amountSource|{}amountSource[0]
+        final fun <get-amountSource>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Modulator.amountSource.<get-amountSource>|<get-amountSource>(){}[0]
+    final val destination // io.github.yuroyami.kiteaudio.synth/Modulator.destination|{}destination[0]
+        final fun <get-destination>(): io.github.yuroyami.kiteaudio.synth/Generator? // io.github.yuroyami.kiteaudio.synth/Modulator.destination.<get-destination>|<get-destination>(){}[0]
+    final val destinationId // io.github.yuroyami.kiteaudio.synth/Modulator.destinationId|{}destinationId[0]
+        final fun <get-destinationId>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Modulator.destinationId.<get-destinationId>|<get-destinationId>(){}[0]
+    final val source // io.github.yuroyami.kiteaudio.synth/Modulator.source|{}source[0]
+        final fun <get-source>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Modulator.source.<get-source>|<get-source>(){}[0]
+    final val transform // io.github.yuroyami.kiteaudio.synth/Modulator.transform|{}transform[0]
+        final fun <get-transform>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Modulator.transform.<get-transform>|<get-transform>(){}[0]
+
+    final fun sameAs(io.github.yuroyami.kiteaudio.synth/Modulator): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Modulator.sameAs|sameAs(io.github.yuroyami.kiteaudio.synth.Modulator){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Modulator.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Preset { // io.github.yuroyami.kiteaudio.synth/Preset|null[0]
+    constructor <init>(kotlin/String, kotlin/Int, kotlin/Int, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/PresetZone>) // io.github.yuroyami.kiteaudio.synth/Preset.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Int;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.PresetZone>){}[0]
+
+    final val bank // io.github.yuroyami.kiteaudio.synth/Preset.bank|{}bank[0]
+        final fun <get-bank>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Preset.bank.<get-bank>|<get-bank>(){}[0]
+    final val name // io.github.yuroyami.kiteaudio.synth/Preset.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Preset.name.<get-name>|<get-name>(){}[0]
+    final val program // io.github.yuroyami.kiteaudio.synth/Preset.program|{}program[0]
+        final fun <get-program>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Preset.program.<get-program>|<get-program>(){}[0]
+    final val zones // io.github.yuroyami.kiteaudio.synth/Preset.zones|{}zones[0]
+        final fun <get-zones>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/PresetZone> // io.github.yuroyami.kiteaudio.synth/Preset.zones.<get-zones>|<get-zones>(){}[0]
+
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Preset.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/PresetZone { // io.github.yuroyami.kiteaudio.synth/PresetZone|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.synth/GeneratorSet, io.github.yuroyami.kiteaudio.synth/Span, io.github.yuroyami.kiteaudio.synth/Span, kotlin/Int?, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> = ...) // io.github.yuroyami.kiteaudio.synth/PresetZone.<init>|<init>(io.github.yuroyami.kiteaudio.synth.GeneratorSet;io.github.yuroyami.kiteaudio.synth.Span;io.github.yuroyami.kiteaudio.synth.Span;kotlin.Int?;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.Modulator>){}[0]
+
+    final val generators // io.github.yuroyami.kiteaudio.synth/PresetZone.generators|{}generators[0]
+        final fun <get-generators>(): io.github.yuroyami.kiteaudio.synth/GeneratorSet // io.github.yuroyami.kiteaudio.synth/PresetZone.generators.<get-generators>|<get-generators>(){}[0]
+    final val instrumentId // io.github.yuroyami.kiteaudio.synth/PresetZone.instrumentId|{}instrumentId[0]
+        final fun <get-instrumentId>(): kotlin/Int? // io.github.yuroyami.kiteaudio.synth/PresetZone.instrumentId.<get-instrumentId>|<get-instrumentId>(){}[0]
+    final val keys // io.github.yuroyami.kiteaudio.synth/PresetZone.keys|{}keys[0]
+        final fun <get-keys>(): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/PresetZone.keys.<get-keys>|<get-keys>(){}[0]
+    final val modulators // io.github.yuroyami.kiteaudio.synth/PresetZone.modulators|{}modulators[0]
+        final fun <get-modulators>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> // io.github.yuroyami.kiteaudio.synth/PresetZone.modulators.<get-modulators>|<get-modulators>(){}[0]
+    final val velocities // io.github.yuroyami.kiteaudio.synth/PresetZone.velocities|{}velocities[0]
+        final fun <get-velocities>(): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/PresetZone.velocities.<get-velocities>|<get-velocities>(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Reverb { // io.github.yuroyami.kiteaudio.synth/Reverb|null[0]
+    constructor <init>(kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Reverb.<init>|<init>(kotlin.Int){}[0]
+
+    final var damping // io.github.yuroyami.kiteaudio.synth/Reverb.damping|{}damping[0]
+        final fun <get-damping>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Reverb.damping.<get-damping>|<get-damping>(){}[0]
+        final fun <set-damping>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Reverb.damping.<set-damping>|<set-damping>(kotlin.Double){}[0]
+    final var dry // io.github.yuroyami.kiteaudio.synth/Reverb.dry|{}dry[0]
+        final fun <get-dry>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Reverb.dry.<get-dry>|<get-dry>(){}[0]
+        final fun <set-dry>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Reverb.dry.<set-dry>|<set-dry>(kotlin.Double){}[0]
+    final var roomSize // io.github.yuroyami.kiteaudio.synth/Reverb.roomSize|{}roomSize[0]
+        final fun <get-roomSize>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Reverb.roomSize.<get-roomSize>|<get-roomSize>(){}[0]
+        final fun <set-roomSize>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Reverb.roomSize.<set-roomSize>|<set-roomSize>(kotlin.Double){}[0]
+    final var wet // io.github.yuroyami.kiteaudio.synth/Reverb.wet|{}wet[0]
+        final fun <get-wet>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Reverb.wet.<get-wet>|<get-wet>(){}[0]
+        final fun <set-wet>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Reverb.wet.<set-wet>|<set-wet>(kotlin.Double){}[0]
+    final var width // io.github.yuroyami.kiteaudio.synth/Reverb.width|{}width[0]
+        final fun <get-width>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Reverb.width.<get-width>|<get-width>(){}[0]
+        final fun <set-width>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Reverb.width.<set-width>|<set-width>(kotlin.Double){}[0]
+
+    final fun clear() // io.github.yuroyami.kiteaudio.synth/Reverb.clear|clear(){}[0]
+    final fun process(kotlin/FloatArray, kotlin/FloatArray, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Reverb.process|process(kotlin.FloatArray;kotlin.FloatArray;kotlin.Int;kotlin.Int){}[0]
+    final fun process(kotlin/FloatArray, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Reverb.process|process(kotlin.FloatArray;kotlin.Int){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/Reverb.Companion|null[0]
+        final fun dryRoom(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Reverb // io.github.yuroyami.kiteaudio.synth/Reverb.Companion.dryRoom|dryRoom(kotlin.Int){}[0]
+        final fun hall(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Reverb // io.github.yuroyami.kiteaudio.synth/Reverb.Companion.hall|hall(kotlin.Int){}[0]
+        final fun room(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Reverb // io.github.yuroyami.kiteaudio.synth/Reverb.Companion.room|room(kotlin.Int){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.synth/SampleHeader { // io.github.yuroyami.kiteaudio.synth/SampleHeader|null[0]
+    constructor <init>(kotlin/String, kotlin/ShortArray, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/ByteArray? = ...) // io.github.yuroyami.kiteaudio.synth/SampleHeader.<init>|<init>(kotlin.String;kotlin.ShortArray;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.ByteArray?){}[0]
+
+    final val compressed // io.github.yuroyami.kiteaudio.synth/SampleHeader.compressed|{}compressed[0]
+        final fun <get-compressed>(): kotlin/ByteArray? // io.github.yuroyami.kiteaudio.synth/SampleHeader.compressed.<get-compressed>|<get-compressed>(){}[0]
+    final val correctionCents // io.github.yuroyami.kiteaudio.synth/SampleHeader.correctionCents|{}correctionCents[0]
+        final fun <get-correctionCents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.correctionCents.<get-correctionCents>|<get-correctionCents>(){}[0]
+    final val data // io.github.yuroyami.kiteaudio.synth/SampleHeader.data|{}data[0]
+        final fun <get-data>(): kotlin/ShortArray // io.github.yuroyami.kiteaudio.synth/SampleHeader.data.<get-data>|<get-data>(){}[0]
+    final val frameCount // io.github.yuroyami.kiteaudio.synth/SampleHeader.frameCount|{}frameCount[0]
+        final fun <get-frameCount>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.frameCount.<get-frameCount>|<get-frameCount>(){}[0]
+    final val hasUsableLoop // io.github.yuroyami.kiteaudio.synth/SampleHeader.hasUsableLoop|{}hasUsableLoop[0]
+        final fun <get-hasUsableLoop>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/SampleHeader.hasUsableLoop.<get-hasUsableLoop>|<get-hasUsableLoop>(){}[0]
+    final val link // io.github.yuroyami.kiteaudio.synth/SampleHeader.link|{}link[0]
+        final fun <get-link>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.link.<get-link>|<get-link>(){}[0]
+    final val loopEnd // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopEnd|{}loopEnd[0]
+        final fun <get-loopEnd>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopEnd.<get-loopEnd>|<get-loopEnd>(){}[0]
+    final val loopStart // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopStart|{}loopStart[0]
+        final fun <get-loopStart>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopStart.<get-loopStart>|<get-loopStart>(){}[0]
+    final val name // io.github.yuroyami.kiteaudio.synth/SampleHeader.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SampleHeader.name.<get-name>|<get-name>(){}[0]
+    final val originalKey // io.github.yuroyami.kiteaudio.synth/SampleHeader.originalKey|{}originalKey[0]
+        final fun <get-originalKey>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.originalKey.<get-originalKey>|<get-originalKey>(){}[0]
+    final val sampleRate // io.github.yuroyami.kiteaudio.synth/SampleHeader.sampleRate|{}sampleRate[0]
+        final fun <get-sampleRate>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.sampleRate.<get-sampleRate>|<get-sampleRate>(){}[0]
+    final val type // io.github.yuroyami.kiteaudio.synth/SampleHeader.type|{}type[0]
+        final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.type.<get-type>|<get-type>(){}[0]
+
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SampleHeader.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/SoundFont { // io.github.yuroyami.kiteaudio.synth/SoundFont|null[0]
+    constructor <init>(kotlin/String, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Preset>, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Instrument>, kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/SampleHeader>, kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // io.github.yuroyami.kiteaudio.synth/SoundFont.<init>|<init>(kotlin.String;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.Preset>;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.Instrument>;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.SampleHeader>;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final val defaultPreset // io.github.yuroyami.kiteaudio.synth/SoundFont.defaultPreset|{}defaultPreset[0]
+        final fun <get-defaultPreset>(): io.github.yuroyami.kiteaudio.synth/Preset? // io.github.yuroyami.kiteaudio.synth/SoundFont.defaultPreset.<get-defaultPreset>|<get-defaultPreset>(){}[0]
+    final val info // io.github.yuroyami.kiteaudio.synth/SoundFont.info|{}info[0]
+        final fun <get-info>(): kotlin.collections/Map<kotlin/String, kotlin/String> // io.github.yuroyami.kiteaudio.synth/SoundFont.info.<get-info>|<get-info>(){}[0]
+    final val instruments // io.github.yuroyami.kiteaudio.synth/SoundFont.instruments|{}instruments[0]
+        final fun <get-instruments>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Instrument> // io.github.yuroyami.kiteaudio.synth/SoundFont.instruments.<get-instruments>|<get-instruments>(){}[0]
+    final val name // io.github.yuroyami.kiteaudio.synth/SoundFont.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SoundFont.name.<get-name>|<get-name>(){}[0]
+    final val presets // io.github.yuroyami.kiteaudio.synth/SoundFont.presets|{}presets[0]
+        final fun <get-presets>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Preset> // io.github.yuroyami.kiteaudio.synth/SoundFont.presets.<get-presets>|<get-presets>(){}[0]
+    final val samples // io.github.yuroyami.kiteaudio.synth/SoundFont.samples|{}samples[0]
+        final fun <get-samples>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/SampleHeader> // io.github.yuroyami.kiteaudio.synth/SoundFont.samples.<get-samples>|<get-samples>(){}[0]
+
+    final fun decoded(kotlin/Function1<kotlin/ByteArray, kotlin/ShortArray>): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/SoundFont.decoded|decoded(kotlin.Function1<kotlin.ByteArray,kotlin.ShortArray>){}[0]
+    final fun preset(kotlin/Int, kotlin/Int): io.github.yuroyami.kiteaudio.synth/Preset? // io.github.yuroyami.kiteaudio.synth/SoundFont.preset|preset(kotlin.Int;kotlin.Int){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SoundFont.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/SoundFontFormatException : kotlin/Exception { // io.github.yuroyami.kiteaudio.synth/SoundFontFormatException|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ..., kotlin/Throwable? = ...) // io.github.yuroyami.kiteaudio.synth/SoundFontFormatException.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Throwable?){}[0]
+
+    final val offset // io.github.yuroyami.kiteaudio.synth/SoundFontFormatException.offset|{}offset[0]
+        final fun <get-offset>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SoundFontFormatException.offset.<get-offset>|<get-offset>(){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Span { // io.github.yuroyami.kiteaudio.synth/Span|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Span.<init>|<init>(kotlin.Int;kotlin.Int){}[0]
+
+    final val high // io.github.yuroyami.kiteaudio.synth/Span.high|{}high[0]
+        final fun <get-high>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Span.high.<get-high>|<get-high>(){}[0]
+    final val low // io.github.yuroyami.kiteaudio.synth/Span.low|{}low[0]
+        final fun <get-low>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Span.low.<get-low>|<get-low>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Span.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Span.component2|component2(){}[0]
+    final fun contains(kotlin/Int): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Span.contains|contains(kotlin.Int){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/Span.copy|copy(kotlin.Int;kotlin.Int){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Span.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Span.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/Span.toString|toString(){}[0]
+
+    final object Companion { // io.github.yuroyami.kiteaudio.synth/Span.Companion|null[0]
+        final val Full // io.github.yuroyami.kiteaudio.synth/Span.Companion.Full|{}Full[0]
+            final fun <get-Full>(): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/Span.Companion.Full.<get-Full>|<get-Full>(){}[0]
+
+        final fun ofPacked(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Span // io.github.yuroyami.kiteaudio.synth/Span.Companion.ofPacked|ofPacked(kotlin.Int){}[0]
+    }
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Synth { // io.github.yuroyami.kiteaudio.synth/Synth|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.synth/SoundFont, kotlin/Int = ..., kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.<init>|<init>(io.github.yuroyami.kiteaudio.synth.SoundFont;kotlin.Int;kotlin.Int){}[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.synth/SoundFont, kotlin/Int = ..., kotlin/Int = ..., kotlin/Int, kotlin/Int = ..., kotlin/Long = ...) // io.github.yuroyami.kiteaudio.synth/Synth.<init>|<init>(io.github.yuroyami.kiteaudio.synth.SoundFont;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Long){}[0]
+
+    final val activeVoices // io.github.yuroyami.kiteaudio.synth/Synth.activeVoices|{}activeVoices[0]
+        final fun <get-activeVoices>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.activeVoices.<get-activeVoices>|<get-activeVoices>(){}[0]
+    final val chorus // io.github.yuroyami.kiteaudio.synth/Synth.chorus|{}chorus[0]
+        final fun <get-chorus>(): io.github.yuroyami.kiteaudio.synth/Chorus // io.github.yuroyami.kiteaudio.synth/Synth.chorus.<get-chorus>|<get-chorus>(){}[0]
+    final val maxPreparedModulators // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedModulators|{}maxPreparedModulators[0]
+        final fun <get-maxPreparedModulators>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedModulators.<get-maxPreparedModulators>|<get-maxPreparedModulators>(){}[0]
+    final val maxPreparedPairs // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedPairs|{}maxPreparedPairs[0]
+        final fun <get-maxPreparedPairs>(): kotlin/Long // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedPairs.<get-maxPreparedPairs>|<get-maxPreparedPairs>(){}[0]
+    final val maxPreparedRegions // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedRegions|{}maxPreparedRegions[0]
+        final fun <get-maxPreparedRegions>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.maxPreparedRegions.<get-maxPreparedRegions>|<get-maxPreparedRegions>(){}[0]
+    final val maxVoices // io.github.yuroyami.kiteaudio.synth/Synth.maxVoices|{}maxVoices[0]
+        final fun <get-maxVoices>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.maxVoices.<get-maxVoices>|<get-maxVoices>(){}[0]
+    final val reverb // io.github.yuroyami.kiteaudio.synth/Synth.reverb|{}reverb[0]
+        final fun <get-reverb>(): io.github.yuroyami.kiteaudio.synth/Reverb // io.github.yuroyami.kiteaudio.synth/Synth.reverb.<get-reverb>|<get-reverb>(){}[0]
+    final val sampleRate // io.github.yuroyami.kiteaudio.synth/Synth.sampleRate|{}sampleRate[0]
+        final fun <get-sampleRate>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.sampleRate.<get-sampleRate>|<get-sampleRate>(){}[0]
+    final val soundingKeys // io.github.yuroyami.kiteaudio.synth/Synth.soundingKeys|{}soundingKeys[0]
+        final fun <get-soundingKeys>(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.synth/Synth.soundingKeys.<get-soundingKeys>|<get-soundingKeys>(){}[0]
+    final val tuningCents // io.github.yuroyami.kiteaudio.synth/Synth.tuningCents|{}tuningCents[0]
+        final fun <get-tuningCents>(): kotlin/DoubleArray // io.github.yuroyami.kiteaudio.synth/Synth.tuningCents.<get-tuningCents>|<get-tuningCents>(){}[0]
+
+    final var font // io.github.yuroyami.kiteaudio.synth/Synth.font|{}font[0]
+        final fun <get-font>(): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/Synth.font.<get-font>|<get-font>(){}[0]
+        final fun <set-font>(io.github.yuroyami.kiteaudio.synth/SoundFont) // io.github.yuroyami.kiteaudio.synth/Synth.font.<set-font>|<set-font>(io.github.yuroyami.kiteaudio.synth.SoundFont){}[0]
+    final var interpolation // io.github.yuroyami.kiteaudio.synth/Synth.interpolation|{}interpolation[0]
+        final fun <get-interpolation>(): io.github.yuroyami.kiteaudio.synth/Interpolation // io.github.yuroyami.kiteaudio.synth/Synth.interpolation.<get-interpolation>|<get-interpolation>(){}[0]
+        final fun <set-interpolation>(io.github.yuroyami.kiteaudio.synth/Interpolation) // io.github.yuroyami.kiteaudio.synth/Synth.interpolation.<set-interpolation>|<set-interpolation>(io.github.yuroyami.kiteaudio.synth.Interpolation){}[0]
+    final var referenceA4 // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4|{}referenceA4[0]
+        final fun <get-referenceA4>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4.<get-referenceA4>|<get-referenceA4>(){}[0]
+        final fun <set-referenceA4>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4.<set-referenceA4>|<set-referenceA4>(kotlin.Double){}[0]
+    final var rejectedEvents // io.github.yuroyami.kiteaudio.synth/Synth.rejectedEvents|{}rejectedEvents[0]
+        final fun <get-rejectedEvents>(): kotlin/Long // io.github.yuroyami.kiteaudio.synth/Synth.rejectedEvents.<get-rejectedEvents>|<get-rejectedEvents>(){}[0]
+
+    final fun allNotesOff(kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Synth.allNotesOff|allNotesOff(kotlin.Int){}[0]
+    final fun allSoundOff() // io.github.yuroyami.kiteaudio.synth/Synth.allSoundOff|allSoundOff(){}[0]
+    final fun allSoundOff(kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Synth.allSoundOff|allSoundOff(kotlin.Int){}[0]
+    final fun bankOn(kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.bankOn|bankOn(kotlin.Int){}[0]
+    final fun bendRangeSemitones(kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Synth.bendRangeSemitones|bendRangeSemitones(kotlin.Int){}[0]
+    final fun channelPressure(kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.channelPressure|channelPressure(kotlin.Int){}[0]
+    final fun controlChange(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.controlChange|controlChange(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun controller(kotlin/Int, kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.controller|controller(kotlin.Int;kotlin.Int){}[0]
+    final fun currentFont(): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/Synth.currentFont|currentFont(){}[0]
+    final fun enqueue(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Synth.enqueue|enqueue(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun isPercussion(kotlin/Int): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Synth.isPercussion|isPercussion(kotlin.Int){}[0]
+    final fun noteOff(kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.noteOff|noteOff(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun noteOn(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.noteOn|noteOn(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun pitchBend(kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.pitchBend|pitchBend(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun polyPressure(kotlin/Int, kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.polyPressure|polyPressure(kotlin.Int;kotlin.Int){}[0]
+    final fun presetOn(kotlin/Int): io.github.yuroyami.kiteaudio.synth/Preset? // io.github.yuroyami.kiteaudio.synth/Synth.presetOn|presetOn(kotlin.Int){}[0]
+    final fun programChange(kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.synth/Synth.programChange|programChange(kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun programOn(kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Synth.programOn|programOn(kotlin.Int){}[0]
+    final fun render(kotlin/FloatArray, kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Synth.render|render(kotlin.FloatArray;kotlin.Int){}[0]
+    final fun replaceFont(io.github.yuroyami.kiteaudio.synth/SoundFont) // io.github.yuroyami.kiteaudio.synth/Synth.replaceFont|replaceFont(io.github.yuroyami.kiteaudio.synth.SoundFont){}[0]
+    final fun reset(kotlin/Int) // io.github.yuroyami.kiteaudio.synth/Synth.reset|reset(kotlin.Int){}[0]
+    final fun setPercussion(kotlin/Int, kotlin/Boolean) // io.github.yuroyami.kiteaudio.synth/Synth.setPercussion|setPercussion(kotlin.Int;kotlin.Boolean){}[0]
+    final fun tryEnqueue(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Synth.tryEnqueue|tryEnqueue(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/Voice { // io.github.yuroyami.kiteaudio.synth/Voice|null[0]
+    constructor <init>() // io.github.yuroyami.kiteaudio.synth/Voice.<init>|<init>(){}[0]
+
+    final var active // io.github.yuroyami.kiteaudio.synth/Voice.active|{}active[0]
+        final fun <get-active>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Voice.active.<get-active>|<get-active>(){}[0]
+    final var age // io.github.yuroyami.kiteaudio.synth/Voice.age|{}age[0]
+        final fun <get-age>(): kotlin/Long // io.github.yuroyami.kiteaudio.synth/Voice.age.<get-age>|<get-age>(){}[0]
+    final var channel // io.github.yuroyami.kiteaudio.synth/Voice.channel|{}channel[0]
+        final fun <get-channel>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Voice.channel.<get-channel>|<get-channel>(){}[0]
+    final var currentGain // io.github.yuroyami.kiteaudio.synth/Voice.currentGain|{}currentGain[0]
+        final fun <get-currentGain>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Voice.currentGain.<get-currentGain>|<get-currentGain>(){}[0]
+    final var exclusiveClass // io.github.yuroyami.kiteaudio.synth/Voice.exclusiveClass|{}exclusiveClass[0]
+        final fun <get-exclusiveClass>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Voice.exclusiveClass.<get-exclusiveClass>|<get-exclusiveClass>(){}[0]
+    final var key // io.github.yuroyami.kiteaudio.synth/Voice.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Voice.key.<get-key>|<get-key>(){}[0]
+    final var releasing // io.github.yuroyami.kiteaudio.synth/Voice.releasing|{}releasing[0]
+        final fun <get-releasing>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.synth/Voice.releasing.<get-releasing>|<get-releasing>(){}[0]
+    final var stage // io.github.yuroyami.kiteaudio.synth/Voice.stage|{}stage[0]
+        final fun <get-stage>(): io.github.yuroyami.kiteaudio.synth/EnvelopeStage // io.github.yuroyami.kiteaudio.synth/Voice.stage.<get-stage>|<get-stage>(){}[0]
+
+    final fun kill() // io.github.yuroyami.kiteaudio.synth/Voice.kill|kill(){}[0]
+    final fun release() // io.github.yuroyami.kiteaudio.synth/Voice.release|release(){}[0]
+    final fun render(kotlin/FloatArray, kotlin/Int, kotlin/Int, kotlin/Double = ...) // io.github.yuroyami.kiteaudio.synth/Voice.render|render(kotlin.FloatArray;kotlin.Int;kotlin.Int;kotlin.Double){}[0]
+    final fun start(io.github.yuroyami.kiteaudio.synth/VoicePlan, kotlin/Int, kotlin/Int, kotlin/Long, kotlin/Double = ...) // io.github.yuroyami.kiteaudio.synth/Voice.start|start(io.github.yuroyami.kiteaudio.synth.VoicePlan;kotlin.Int;kotlin.Int;kotlin.Long;kotlin.Double){}[0]
+}
+
+final class io.github.yuroyami.kiteaudio.synth/VoicePlan { // io.github.yuroyami.kiteaudio.synth/VoicePlan|null[0]
+    constructor <init>(io.github.yuroyami.kiteaudio.synth/SampleHeader, kotlin/Int, kotlin/Int, io.github.yuroyami.kiteaudio.synth/LoopMode, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, io.github.yuroyami.kiteaudio.synth/EnvelopeSpec, kotlin/Int, kotlin/IntArray = ..., kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> = ...) // io.github.yuroyami.kiteaudio.synth/VoicePlan.<init>|<init>(io.github.yuroyami.kiteaudio.synth.SampleHeader;kotlin.Int;kotlin.Int;io.github.yuroyami.kiteaudio.synth.LoopMode;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;io.github.yuroyami.kiteaudio.synth.EnvelopeSpec;kotlin.Int;kotlin.IntArray;kotlin.collections.List<io.github.yuroyami.kiteaudio.synth.Modulator>){}[0]
+
+    final val attenuationCb // io.github.yuroyami.kiteaudio.synth/VoicePlan.attenuationCb|{}attenuationCb[0]
+        final fun <get-attenuationCb>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.attenuationCb.<get-attenuationCb>|<get-attenuationCb>(){}[0]
+    final val endFrame // io.github.yuroyami.kiteaudio.synth/VoicePlan.endFrame|{}endFrame[0]
+        final fun <get-endFrame>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.endFrame.<get-endFrame>|<get-endFrame>(){}[0]
+    final val exclusiveClass // io.github.yuroyami.kiteaudio.synth/VoicePlan.exclusiveClass|{}exclusiveClass[0]
+        final fun <get-exclusiveClass>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.exclusiveClass.<get-exclusiveClass>|<get-exclusiveClass>(){}[0]
+    final val generators // io.github.yuroyami.kiteaudio.synth/VoicePlan.generators|{}generators[0]
+        final fun <get-generators>(): kotlin/IntArray // io.github.yuroyami.kiteaudio.synth/VoicePlan.generators.<get-generators>|<get-generators>(){}[0]
+    final val key // io.github.yuroyami.kiteaudio.synth/VoicePlan.key|{}key[0]
+        final fun <get-key>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.key.<get-key>|<get-key>(){}[0]
+    final val loopEndFrame // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopEndFrame|{}loopEndFrame[0]
+        final fun <get-loopEndFrame>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopEndFrame.<get-loopEndFrame>|<get-loopEndFrame>(){}[0]
+    final val loopMode // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopMode|{}loopMode[0]
+        final fun <get-loopMode>(): io.github.yuroyami.kiteaudio.synth/LoopMode // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopMode.<get-loopMode>|<get-loopMode>(){}[0]
+    final val loopStartFrame // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopStartFrame|{}loopStartFrame[0]
+        final fun <get-loopStartFrame>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.loopStartFrame.<get-loopStartFrame>|<get-loopStartFrame>(){}[0]
+    final val modulators // io.github.yuroyami.kiteaudio.synth/VoicePlan.modulators|{}modulators[0]
+        final fun <get-modulators>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> // io.github.yuroyami.kiteaudio.synth/VoicePlan.modulators.<get-modulators>|<get-modulators>(){}[0]
+    final val pan // io.github.yuroyami.kiteaudio.synth/VoicePlan.pan|{}pan[0]
+        final fun <get-pan>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.pan.<get-pan>|<get-pan>(){}[0]
+    final val rootKey // io.github.yuroyami.kiteaudio.synth/VoicePlan.rootKey|{}rootKey[0]
+        final fun <get-rootKey>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.rootKey.<get-rootKey>|<get-rootKey>(){}[0]
+    final val sample // io.github.yuroyami.kiteaudio.synth/VoicePlan.sample|{}sample[0]
+        final fun <get-sample>(): io.github.yuroyami.kiteaudio.synth/SampleHeader // io.github.yuroyami.kiteaudio.synth/VoicePlan.sample.<get-sample>|<get-sample>(){}[0]
+    final val scaleTuning // io.github.yuroyami.kiteaudio.synth/VoicePlan.scaleTuning|{}scaleTuning[0]
+        final fun <get-scaleTuning>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.scaleTuning.<get-scaleTuning>|<get-scaleTuning>(){}[0]
+    final val startFrame // io.github.yuroyami.kiteaudio.synth/VoicePlan.startFrame|{}startFrame[0]
+        final fun <get-startFrame>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.startFrame.<get-startFrame>|<get-startFrame>(){}[0]
+    final val tuneCents // io.github.yuroyami.kiteaudio.synth/VoicePlan.tuneCents|{}tuneCents[0]
+        final fun <get-tuneCents>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.tuneCents.<get-tuneCents>|<get-tuneCents>(){}[0]
+    final val velocity // io.github.yuroyami.kiteaudio.synth/VoicePlan.velocity|{}velocity[0]
+        final fun <get-velocity>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.velocity.<get-velocity>|<get-velocity>(){}[0]
+    final val volumeEnvelope // io.github.yuroyami.kiteaudio.synth/VoicePlan.volumeEnvelope|{}volumeEnvelope[0]
+        final fun <get-volumeEnvelope>(): io.github.yuroyami.kiteaudio.synth/EnvelopeSpec // io.github.yuroyami.kiteaudio.synth/VoicePlan.volumeEnvelope.<get-volumeEnvelope>|<get-volumeEnvelope>(){}[0]
+
+    final fun get(io.github.yuroyami.kiteaudio.synth/Generator): kotlin/Int // io.github.yuroyami.kiteaudio.synth/VoicePlan.get|get(io.github.yuroyami.kiteaudio.synth.Generator){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/VoicePlan.toString|toString(){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.synth/KiteSynth { // io.github.yuroyami.kiteaudio.synth/KiteSynth|null[0]
+    final fun readFont(kotlin/ByteArray, kotlin/Boolean = ...): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/KiteSynth.readFont|readFont(kotlin.ByteArray;kotlin.Boolean){}[0]
+    final fun readFont(kotlin/ByteArray, kotlin/Boolean = ..., kotlin/Long): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/KiteSynth.readFont|readFont(kotlin.ByteArray;kotlin.Boolean;kotlin.Long){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.synth/SoundFontWriter { // io.github.yuroyami.kiteaudio.synth/SoundFontWriter|null[0]
+    final fun write(io.github.yuroyami.kiteaudio.synth/SoundFont): kotlin/ByteArray // io.github.yuroyami.kiteaudio.synth/SoundFontWriter.write|write(io.github.yuroyami.kiteaudio.synth.SoundFont){}[0]
+}
+
+final object io.github.yuroyami.kiteaudio.synth/Units { // io.github.yuroyami.kiteaudio.synth/Units|null[0]
+    final const val SILENCE_CB // io.github.yuroyami.kiteaudio.synth/Units.SILENCE_CB|{}SILENCE_CB[0]
+        final fun <get-SILENCE_CB>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/Units.SILENCE_CB.<get-SILENCE_CB>|<get-SILENCE_CB>(){}[0]
+
+    final fun centibelsToGain(kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Units.centibelsToGain|centibelsToGain(kotlin.Int){}[0]
+    final fun centsToRatio(kotlin/Double): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Units.centsToRatio|centsToRatio(kotlin.Double){}[0]
+    final fun gainOf(kotlin/Double): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Units.gainOf|gainOf(kotlin.Double){}[0]
+    final fun keyCents(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Units.keyCents|keyCents(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun timecentsToSeconds(kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Units.timecentsToSeconds|timecentsToSeconds(kotlin.Int){}[0]
+}
+
+final val io.github.yuroyami.kiteaudio.synth/DefaultModulators // io.github.yuroyami.kiteaudio.synth/DefaultModulators|{}DefaultModulators[0]
+    final fun <get-DefaultModulators>(): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/Modulator> // io.github.yuroyami.kiteaudio.synth/DefaultModulators.<get-DefaultModulators>|<get-DefaultModulators>(){}[0]
+
+final fun (io.github.yuroyami.kiteaudio.synth/SoundFont).io.github.yuroyami.kiteaudio.synth/merged(io.github.yuroyami.kiteaudio.synth/SoundFont, kotlin/String = ...): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/merged|merged@io.github.yuroyami.kiteaudio.synth.SoundFont(io.github.yuroyami.kiteaudio.synth.SoundFont;kotlin.String){}[0]
+final fun (io.github.yuroyami.kiteaudio.synth/SoundFont).io.github.yuroyami.kiteaudio.synth/pruned(): io.github.yuroyami.kiteaudio.synth/SoundFont // io.github.yuroyami.kiteaudio.synth/pruned|pruned@io.github.yuroyami.kiteaudio.synth.SoundFont(){}[0]
+final fun (io.github.yuroyami.kiteaudio.synth/SoundFont).io.github.yuroyami.kiteaudio.synth/voicesFor(io.github.yuroyami.kiteaudio.synth/Preset, kotlin/Int, kotlin/Int): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/VoicePlan> // io.github.yuroyami.kiteaudio.synth/voicesFor|voicesFor@io.github.yuroyami.kiteaudio.synth.SoundFont(io.github.yuroyami.kiteaudio.synth.Preset;kotlin.Int;kotlin.Int){}[0]
+final fun (io.github.yuroyami.kiteaudio.synth/SoundFont).io.github.yuroyami.kiteaudio.synth/voicesFor(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int): kotlin.collections/List<io.github.yuroyami.kiteaudio.synth/VoicePlan> // io.github.yuroyami.kiteaudio.synth/voicesFor|voicesFor@io.github.yuroyami.kiteaudio.synth.SoundFont(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+final fun io.github.yuroyami.kiteaudio.synth/defaultGenerators(): kotlin/IntArray // io.github.yuroyami.kiteaudio.synth/defaultGenerators|defaultGenerators(){}[0]
+final fun io.github.yuroyami.kiteaudio.synth/sourceCurve(kotlin/Int, kotlin/Int): kotlin/Double // io.github.yuroyami.kiteaudio.synth/sourceCurve|sourceCurve(kotlin.Int;kotlin.Int){}[0]

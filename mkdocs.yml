@@ -60,8 +60,8 @@ markdown_extensions:
   # Web Audio one), between `// --8<-- [start:name]` and `// --8<-- [end:name]` markers.
   - pymdownx.snippets:
       base_path:
-        - docs-samples/test/io/github/yuroyami/audiokodec/docs
-        - audiokodec/test@js/io/github/yuroyami/audiokodec/docs
+        - docs-samples/test/io/github/yuroyami/kiteaudio/codec/docs
+        - kiteaudio-codec/test@js/io/github/yuroyami/kiteaudio/codec/docs
       check_paths: true
       dedent_subsections: true
   - pymdownx.tabbed:

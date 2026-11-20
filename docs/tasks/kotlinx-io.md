@@ -1,10 +1,10 @@
 # Use the library with kotlinx-io
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0` and
-`io.github.yuroyami:audiokodec-io:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0` and
+`io.github.yuroyami:kiteaudio-codec-io:0.1.0`. See [Install](../index.md#install).
 
 The core library reads from and writes to its own small interfaces, `AudioSource` and
-`AudioSink`, and never touches the file system. `audiokodec-io` connects them to
+`AudioSink`, and never touches the file system. `kiteaudio-codec-io` connects them to
 kotlinx-io: open a `Path` as a source, or write a file through a sink.
 
 ```kotlin

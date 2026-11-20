@@ -2,7 +2,7 @@
 
 AudioKodec decodes every format to interleaved Float32 PCM. A whole file decodes in one call,
 and a long one streams a block at a time. Every function takes the encoded bytes as a
-`ByteArray` or as an `AudioSource`, which `audiokodec-io` makes from a file
+`ByteArray` or as an `AudioSource`, which `kiteaudio-codec-io` makes from a file
 (see [Files and kotlinx-io](files.md)).
 
 ## Decode a file

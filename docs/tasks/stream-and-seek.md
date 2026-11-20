@@ -1,6 +1,6 @@
 # Stream and seek through a long file
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 A decoder hands back one block of samples at a time, so a file of any length plays in the
 memory of a few blocks. `seek` moves it to an exact frame.
@@ -22,7 +22,7 @@ memory of a few blocks. `seek` moves it to an exact frame.
   the next `nextFrame()` call.
 - `use { }` closes the decoder, and the decoder closes its source.
 
-To read a file from disk this way, open it with `audiokodec-io`: see
+To read a file from disk this way, open it with `kiteaudio-codec-io`: see
 [Use kotlinx-io](kotlinx-io.md).
 
 ## Read part of a file

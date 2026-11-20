@@ -32,7 +32,7 @@ def source_files():
              ROOT / "library.module-template.yaml", ROOT / "kmp.module-template.yaml",
              ROOT / "codec.module-template.yaml", ROOT / "libs.versions.toml", ROOT / "reference/REFERENCES.md"]
     # The source folders of both libraries: src, test and their @platform variants.
-    directories = [path for module in ("audiokodec", "audiokodec-io") for path in (ROOT / module).iterdir()
+    directories = [path for module in ("kiteaudio-codec", "kiteaudio-codec-io") for path in (ROOT / module).iterdir()
                    if path.is_dir() and path.name.split("@")[0] in ("src", "test", "testResources")]
     for directory in directories + [ROOT / ".github/scripts", ROOT / "test-data"]:
         files.extend(path for path in directory.rglob("*") if path.is_file() and "__pycache__" not in path.parts)
@@ -43,7 +43,7 @@ def source_files():
 
 def check_process_coverage():
     unrecorded = []
-    for source in (ROOT / "audiokodec/test@jvm").rglob("*.kt"):
+    for source in (ROOT / "kiteaudio-codec/test@jvm").rglob("*.kt"):
         if source.name != "OracleProcess.kt" and re.search(r"\.start\s*\(\s*\)", source.read_text()):
             unrecorded.append(str(source.relative_to(ROOT)))
     if unrecorded:
@@ -114,7 +114,7 @@ def summarise(output):
     save(output / "commands.json", invocations)
     save(output / "tools.json", sorted(tools.values(), key=lambda tool: tool["path"]))
     reports = []
-    for module in ("audiokodec", "audiokodec-io"):
+    for module in ("kiteaudio-codec", "kiteaudio-codec-io"):
         # The toolchain writes one report per test engine, so group the cases by class.
         cases = {}
         for file in sorted((output / "test-results" / module).glob("TEST-*.xml")):
@@ -141,7 +141,7 @@ def normalise_calls(calls, run):
     def path(value):
         for prefix, token in replacements:
             value = value.replace(prefix, token)
-        return re.sub(r"(?<=/)audiokodec-[^/]*-\d+(?=/)",
+        return re.sub(r"(?<=/)kiteaudio-codec-[^/]*-\d+(?=/)",
                       lambda match: match[0].rsplit("-", 1)[0] + "-${FRESH}", value)
 
     normalised = []
@@ -175,7 +175,7 @@ def normalise_calls(calls, run):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--output", type=Path, default=ROOT / "audiokodec/build/fixture-provenance")
+    parser.add_argument("--output", type=Path, default=ROOT / "kiteaudio-codec/build/fixture-provenance")
     parser.add_argument("--tests", action="append", help="JVM test class pattern, repeatable; default runs both full JVM suites")
     parser.add_argument("--summarise-only", action="store_true", help="validate and summarise an existing recording")
     parser.add_argument("--compare", type=Path, help="require the same tool identities, commands and generated audio hashes as another recording")
@@ -191,15 +191,15 @@ def main():
         environment["AUDIOKODEC_FIXTURE_RECORDING_DIR"] = str(output)
         temporary = output / "temporary"
         temporary.mkdir()
-        flac_directory = Path(environment.get("AUDIOKODEC_FLAC_CONFORMANCE_DIR", ROOT / "audiokodec/build/flac-conformance")).resolve()
+        flac_directory = Path(environment.get("AUDIOKODEC_FLAC_CONFORMANCE_DIR", ROOT / "kiteaudio-codec/build/flac-conformance")).resolve()
         environment["AUDIOKODEC_FLAC_CONFORMANCE_DIR"] = str(flac_directory)
         subprocess.run([sys.executable, str(ROOT / ".github/scripts/prepare-flac-conformance.py"),
                         "--destination", str(flac_directory)], cwd=ROOT, check=True)
-        argv = [str(ROOT / ("kotlin.bat" if os.name == "nt" else "kotlin")), "test", "-p", "jvm", "-m", "audiokodec"]
+        argv = [str(ROOT / ("kotlin.bat" if os.name == "nt" else "kotlin")), "test", "-p", "jvm", "-m", "kiteaudio-codec"]
         for pattern in args.tests or []:
             argv.append(f"--include-classes={pattern}")
         if not args.tests:
-            argv.extend(["-m", "audiokodec-io"])
+            argv.extend(["-m", "kiteaudio-codec-io"])
         # The test JVM gets its own tmpdir, so the recording holds every temporary file.
         argv.append(f"--jvm-args=-Djava.io.tmpdir={temporary}")
         run = {"schema": 1, "gitCommit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip(),
@@ -219,7 +219,7 @@ def main():
         completed = subprocess.run(argv, cwd=ROOT, env=environment)
         run["testExitCode"] = completed.returncode
         run["finishedAt"] = datetime.now(timezone.utc).isoformat()
-        for module in (["audiokodec"] if args.tests else ["audiokodec", "audiokodec-io"]):
+        for module in (["kiteaudio-codec"] if args.tests else ["kiteaudio-codec", "kiteaudio-codec-io"]):
             destination = output / "test-results" / module
             destination.mkdir(parents=True)
             for report in (ROOT / "build/reports" / module / "jvm").glob("TEST-*.xml"):

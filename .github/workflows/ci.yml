@@ -61,7 +61,7 @@ jobs:
         run: python3 .github/scripts/web-tests/run.py
 
       - name: Core tests (native)
-        run: ./kotlin test -m audiokodec -m audiokodec-io -p linuxX64
+        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p linuxX64
 
       - name: Sample module tests and documentation samples
         run: ./kotlin test -m sample -m docs-samples
@@ -81,7 +81,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fixture-provenance-linux
-          path: audiokodec/build/fixture-provenance/*.json*
+          path: kiteaudio-codec/build/fixture-provenance/*.json*
 
   # MinGW binaries cross-compile elsewhere, but their tests can only execute
   # on Windows. Keep this separate from the JVM oracle suite so native failures
@@ -102,7 +102,7 @@ jobs:
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
       - name: MinGW x64 tests
-        run: .\kotlin.bat test -m audiokodec -m audiokodec-io -p mingwX64
+        run: .\kotlin.bat test -m kiteaudio-codec -m kiteaudio-codec-io -p mingwX64
 
   # Apple targets can only be built on a Mac, and they are a large part of why
   # this library exists, so they get their own job rather than riding along as
@@ -139,19 +139,19 @@ jobs:
         run: python3 .github/scripts/check-oracle-results.py
 
       - name: Native tests
-        run: ./kotlin test -m audiokodec -m audiokodec-io -p macosArm64 -p iosSimulatorArm64
+        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p macosArm64 -p iosSimulatorArm64
 
       # The klib check reads the klibs of every native, JS and wasm platform,
       # and only macOS builds the Apple ones.
       - name: Public klib API check
         run: |
-          ./kotlin build -m audiokodec -m audiokodec-io -p js -p wasmJs -p wasmWasi -p iosArm64 -p iosSimulatorArm64 -p iosX64 -p macosArm64 -p tvosArm64 -p tvosSimulatorArm64 -p watchosArm32 -p watchosArm64 -p watchosDeviceArm64 -p watchosSimulatorArm64 -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
+          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p js -p wasmJs -p wasmWasi -p iosArm64 -p iosSimulatorArm64 -p iosX64 -p macosArm64 -p tvosArm64 -p tvosSimulatorArm64 -p watchosArm32 -p watchosArm64 -p watchosDeviceArm64 -p watchosSimulatorArm64 -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
           ./kotlin check klibAbi
 
       - name: Check framework attribution
         run: |
           python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --build-type release --no-xcframework
-          python3 .github/scripts/check-distribution-notices.py --framework audiokodec/build/bin/iosSimulatorArm64/releaseFramework/AudioKodec.framework --framework audiokodec-io/build/bin/iosSimulatorArm64/releaseFramework/AudioKodecIO.framework
+          python3 .github/scripts/check-distribution-notices.py --framework kiteaudio-codec/build/bin/iosSimulatorArm64/releaseFramework/AudioKodec.framework --framework kiteaudio-codec-io/build/bin/iosSimulatorArm64/releaseFramework/AudioKodecIO.framework
 
       - name: Upload test reports
         if: failure()
@@ -165,7 +165,7 @@ jobs:
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: fixture-provenance-apple
-          path: audiokodec/build/fixture-provenance/*.json*
+          path: kiteaudio-codec/build/fixture-provenance/*.json*
 
   # The Android variants, which neither job above exercises.
   android:
@@ -188,10 +188,10 @@ jobs:
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"'
 
       - name: Android host tests
-        run: ./kotlin test -m audiokodec -m audiokodec-io -p android
+        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p android
 
       - name: Build every target that Linux can build
-        run: ./kotlin build -m audiokodec -m audiokodec-io -p jvm -p android -p js -p wasmJs -p wasmWasi -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
+        run: ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p jvm -p android -p js -p wasmJs -p wasmWasi -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
 
       - name: Check jar and Android attribution
         run: python3 .github/scripts/check-distribution-notices.py

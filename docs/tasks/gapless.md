@@ -1,6 +1,6 @@
 # Get gapless playback right
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 A live album or a DJ mix should play from one track into the next with nothing between
 them. Two things can break that. Lossy encoders add silence: a few hundred to a few thousand

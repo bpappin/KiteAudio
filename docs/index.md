@@ -10,9 +10,9 @@ without touching the audio. The same code runs on every target.
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:audiokodec:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec:0.1.0")
     // Optional, for files through kotlinx-io:
-    implementation("io.github.yuroyami:audiokodec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
 }
 ```
 
@@ -57,7 +57,7 @@ code sample on those pages is included from a test that runs in the build.
 - [MP4 metadata](mp4-tags.md) and [Broadcast Wave metadata](broadcast-wave.md): the details of
   those two carriers.
 - [Files and kotlinx-io](files.md) and [Seekable file input](file-input.md): read from and write
-  to files with the `audiokodec-io` module.
+  to files with the `kiteaudio-codec-io` module.
 
 ## Processing
 

@@ -1,6 +1,6 @@
 # Edit tags without touching the audio
 
-**Depends on** `io.github.yuroyami:audiokodec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
 
 `writeTags` writes a new copy of a file with new tags and the audio copied across byte for
 byte. Nothing is decoded or re-encoded, so it is safe on MP3, AAC and every other lossy
@@ -27,7 +27,7 @@ the file already has one. Matroska tags are read only. The
 
 `writeTags` returns a new file rather than changing one in place. Write it to a temporary
 file and move that over the original, so that a crash halfway through leaves the original
-intact. With `audiokodec-io`, `writeAudioAtomically` does exactly that:
+intact. With `kiteaudio-codec-io`, `writeAudioAtomically` does exactly that:
 
 ```kotlin
 --8<-- "KotlinxIoSample.kt:retitle"

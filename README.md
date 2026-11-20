@@ -30,9 +30,9 @@ With Gradle:
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:audiokodec:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec:0.1.0")
     // Optional, for files through kotlinx-io:
-    implementation("io.github.yuroyami:audiokodec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
 }
 ```
 
@@ -40,9 +40,9 @@ With the Kotlin Toolchain, in `module.yaml`:
 
 ```yaml
 dependencies:
-  - io.github.yuroyami:audiokodec:0.1.0
+  - io.github.yuroyami:kiteaudio-codec:0.1.0
   # Optional, for files through kotlinx-io:
-  - io.github.yuroyami:audiokodec-io:0.1.0
+  - io.github.yuroyami:kiteaudio-codec-io:0.1.0
 ```
 
 The JVM artifacts need Java 21 or newer.
@@ -117,7 +117,7 @@ See [Tags](docs/tags.md) for merged and raw views, pictures, chapters and loudne
 
 ### Files on disk
 
-The core never touches the filesystem. `audiokodec-io` adds the bridge to kotlinx-io, with a
+The core never touches the filesystem. `kiteaudio-codec-io` adds the bridge to kotlinx-io, with a
 seekable file source and an atomic write:
 
 ```kotlin
@@ -178,7 +178,7 @@ Both modules build for 22 targets:
 | Other native | `linuxX64`, `linuxArm64`, `mingwX64`, `androidNativeArm32`, `androidNativeArm64`, `androidNativeX64`, `androidNativeX86` |
 | Web | `js` and `wasmJs` (browser and Node), `wasmWasi` (Node) |
 
-`macosX64` is not built, because Kotlin deprecates Intel macOS. In a browser, `audiokodec-io`
+`macosX64` is not built, because Kotlin deprecates Intel macOS. In a browser, `kiteaudio-codec-io`
 reads and writes buffers and streams only, because a browser has no filesystem for kotlinx-io.
 
 ## Limits

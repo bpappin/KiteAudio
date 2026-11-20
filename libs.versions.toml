@@ -1,7 +1,7 @@
 [versions]
-# Used by :audiokodec-io only. The :audiokodec core depends on kotlin-stdlib only.
+# Used by :kiteaudio-codec-io only. The :kiteaudio-codec core depends on kotlin-stdlib only.
 kotlinx-io = "0.9.3"
-# Used by :kitemidi-io and :kitemidi-io-coremidi only. The :kitemidi core depends on kotlin-stdlib only.
+# Used by :kiteaudio-midi-devices and :kiteaudio-midi-coremidi only. The :kiteaudio-midi core depends on kotlin-stdlib only.
 coroutines = "1.11.0"
 
 [libraries]
