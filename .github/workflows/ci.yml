@@ -129,6 +129,11 @@ jobs:
           key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
+      # The Kotlin Toolchain runs its own web tests in Node 26, so the script gets the same.
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '26'
+
       # `./kotlin test` cannot run the JS and wasmWasi tests, and it runs wasmJs
       # only in a browser with a 30-second limit. The script links all three and
       # runs them in Node.
