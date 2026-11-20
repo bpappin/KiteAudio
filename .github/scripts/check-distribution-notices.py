@@ -2,6 +2,9 @@
 
 The Kotlin Toolchain puts the generated META-INF/LICENSE and META-INF/NOTICE into the JVM jar and the
 jar inside the Android AAR. Klibs and sources jars cannot carry them.
+
+Without arguments, the script checks the jars and the Android libraries. With --framework, it checks
+only the given frameworks, because the macOS job builds no jar and no Android library.
 """
 import argparse
 import io
@@ -33,7 +36,7 @@ def verify(path, read):
 
 
 tasks = root / "build" / "tasks"
-for module in ("kiteaudio-codec", "kiteaudio-codec-io"):
+for module in () if args.framework else ("kiteaudio-codec", "kiteaudio-codec-io"):
     jars = sorted(tasks.glob(f"_{module}_jarJvm/*.jar"))
     aars = sorted(tasks.glob(f"_{module}_aarAndroid*/*.aar"))
     if not jars or not aars:
