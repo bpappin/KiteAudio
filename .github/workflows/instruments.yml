@@ -1,0 +1,109 @@
+name: MIDI, synth and output CI
+
+# The MIDI, synth and output modules have their own workflow. A change that touches
+# only the codec modules does not start it. See ci.yml and docs.yml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'kiteaudio-midi/**'
+      - 'kiteaudio-midi-devices/**'
+      - 'kiteaudio-midi-coremidi/**'
+      - 'kiteaudio-synth/**'
+      - 'kiteaudio-output/**'
+      - 'kotlin'
+      - 'kotlin.bat'
+      - 'project.yaml'
+      - 'library.module-template.yaml'
+      - 'kmp.module-template.yaml'
+      - 'libs.versions.toml'
+      - 'build-plugins/**'
+      - '.github/workflows/instruments.yml'
+  pull_request:
+    paths:
+      - 'kiteaudio-midi/**'
+      - 'kiteaudio-midi-devices/**'
+      - 'kiteaudio-midi-coremidi/**'
+      - 'kiteaudio-synth/**'
+      - 'kiteaudio-output/**'
+      - 'kotlin'
+      - 'kotlin.bat'
+      - 'project.yaml'
+      - 'library.module-template.yaml'
+      - 'kmp.module-template.yaml'
+      - 'libs.versions.toml'
+      - 'build-plugins/**'
+      - '.github/workflows/instruments.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  KOTLIN_CLI_NO_WELCOME_BANNER: 1
+
+jobs:
+  # The JVM tests cover the common code of all five modules. The device tests of
+  # the MIDI and output modules return early on a runner that has no device.
+  jvm:
+    name: JVM tests, API check and Android build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      - name: JVM tests
+        run: ./kotlin test -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -m kiteaudio-synth -m kiteaudio-output -p jvm
+
+      # The CoreMIDI module has no committed API dump.
+      - name: Public API check
+        if: ${{ !cancelled() }}
+        run: ./kotlin check abi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output
+
+      # sdkmanager is not on PATH on the runner, so call it by its full path.
+      - name: Install the required Android SDK
+        if: ${{ !cancelled() }}
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"'
+
+      - name: Android build
+        if: ${{ !cancelled() }}
+        run: ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p android
+
+  # The Apple source sets of the MIDI device and output modules compile only on
+  # a Mac. The klib check reads the klibs of the four Apple platforms.
+  apple:
+    name: Apple klibs and klib API check
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Caches/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      # One platform per call, so the number of Kotlin/Native compiler processes stays small.
+      - name: Build the Apple klibs
+        run: |
+          for platform in iosArm64 iosSimulatorArm64 iosX64 macosArm64; do
+            ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p "$platform"
+          done
+
+      - name: Public klib API check
+        run: ./kotlin check klibAbi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output
