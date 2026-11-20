@@ -71,8 +71,9 @@ cmake --build reference/libopus/build-plain --target opus_demo opus_compare -j4
 # oracle, opus_encode_oracle.c, links libogg. The Vorbis encoder is written
 # from the Vorbis I specification and ports none of this source.
 reference_checkout reference/libogg https://github.com/xiph/ogg.git e1774cd77f471443541596e09078e78fdc342e4f
+# libogg asks for a CMake version older than 3.5, which CMake 4 no longer accepts by default.
 cmake -S reference/libogg -B reference/libogg/build -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DINSTALL_DOCS=OFF \
     -DCMAKE_INSTALL_PREFIX="$PWD/reference/libogg/install" -DCMAKE_INSTALL_LIBDIR=lib
 cmake --build reference/libogg/build -j4
 cmake --install reference/libogg/build
