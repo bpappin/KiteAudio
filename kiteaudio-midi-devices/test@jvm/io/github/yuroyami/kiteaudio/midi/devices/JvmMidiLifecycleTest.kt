@@ -70,7 +70,7 @@ class JvmMidiLifecycleTest {
     }
 
     @Test fun cancellationClosesAResultWaitingForItsCallerDispatcher() = runBlocking {
-        val fake = FakeDevice().apply { allowReceiver.countDown() }
+        val fake = FakeDevice()
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         val devices = JvmMidiDevices(scope, { arrayOf(fake.info) }, { fake })
         val caller = HeldDispatcher()
@@ -78,6 +78,10 @@ class JvmMidiLifecycleTest {
             val port = withTimeout(5_000) { devices.ports.first { it.isNotEmpty() }.single() }
             val opening = launch(caller) { devices.openOutput(port) }
             caller.runOne()
+            // The device holds its answer until the caller has suspended. An answer that is ready
+            // before that returns with no dispatch, and the wait below would never end.
+            assertTrue(fake.receiverEntered.await(5, TimeUnit.SECONDS))
+            fake.allowReceiver.countDown()
             withTimeout(5_000) { while (caller.pending.isEmpty()) delay(1) }
             opening.cancel()
             caller.runOne()
@@ -85,6 +89,7 @@ class JvmMidiLifecycleTest {
             assertEquals(1, fake.closes.get())
             assertEquals(1, fake.receiverCloses.get())
         } finally {
+            fake.allowReceiver.countDown()
             devices.close()
             scope.cancel()
         }

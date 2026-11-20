@@ -10,6 +10,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import javax.sound.sampled.AudioFormat
+import javax.sound.sampled.AudioSystem
+import javax.sound.sampled.DataLine
+import javax.sound.sampled.SourceDataLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -21,11 +25,21 @@ import kotlin.time.Duration.Companion.seconds
  * Every JDK ships Gervill, a software synthesiser that only takes messages, and a software
  * sequencer that both takes and sends them. That is enough to test both directions on any
  * machine, plugged-in hardware or not.
+ *
+ * Gervill is listed on every machine, but it opens only where there is audio output, because
+ * it plays into an audio line. The tests that open it return early on a machine with no sound
+ * card, such as a build server.
  */
 class JvmMidiDevicesTest {
 
     private val gervill = "Gervill"
     private val sequencer = "Real Time Sequencer"
+
+    // The line that Gervill asks for when it opens: 44.1 kHz, 16-bit, stereo.
+    private val gervillCanOpen: Boolean = runCatching {
+        val format = AudioFormat(44_100f, 16, 2, true, false)
+        AudioSystem.isLineSupported(DataLine.Info(SourceDataLine::class.java, format))
+    }.getOrDefault(false)
 
     // The polling lives on a scope of the test's own, so cancelling it cannot leave a loop
     // running after the test ends.
@@ -65,6 +79,7 @@ class JvmMidiDevicesTest {
 
     @Test
     fun sendingNotesToGervillCompletes() = runTest(timeout = 60.seconds) {
+        if (!gervillCanOpen) return@runTest
         val scope = pollingScope()
         val devices = jvmMidiDevices(scope)
         try {
@@ -82,6 +97,7 @@ class JvmMidiDevicesTest {
 
     @Test
     fun closingAnOutputTwiceIsSafe() = runTest(timeout = 60.seconds) {
+        if (!gervillCanOpen) return@runTest
         val scope = pollingScope()
         val devices = jvmMidiDevices(scope)
         try {
