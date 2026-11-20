@@ -79,11 +79,18 @@ jobs:
       - name: Let git read the checkout
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
 
+      # The cache action reads its key again when the job ends. By then the tests have left
+      # folders in the checkout that the runner cannot read, and hashFiles fails on them.
+      # So this step takes the hash once, before anything is built.
+      - name: Hash the build files
+        id: build-files
+        run: echo "hash=${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}" >> "$GITHUB_OUTPUT"
+
       - name: Cache the Kotlin Toolchain downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/JetBrains/Kotlin
-          key: kotlin-toolchain-debian-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          key: kotlin-toolchain-debian-${{ steps.build-files.outputs.hash }}
           restore-keys: kotlin-toolchain-debian-
 
       # Build the pinned permissive references. Missing tools are real skips,
@@ -191,11 +198,17 @@ jobs:
         with:
           persist-credentials: false
 
+      # The hash is taken once, before the reference tools and the klibs fill the checkout.
+      # See the same step in the oracles job.
+      - name: Hash the build files
+        id: build-files
+        run: echo "hash=${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}" >> "$GITHUB_OUTPUT"
+
       - name: Cache the Kotlin Toolchain downloads
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/Library/Caches/JetBrains/Kotlin
-          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          key: kotlin-toolchain-${{ runner.os }}-${{ steps.build-files.outputs.hash }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
       - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
