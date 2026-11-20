@@ -1,27 +1,119 @@
-name: CI
+name: Codec CI
 
+# The codec modules have their own workflow. A change that touches only the MIDI,
+# synth or output modules does not start it. See instruments.yml and docs.yml.
 on:
   push:
     branches: [main]
+    paths:
+      - 'kiteaudio-codec/**'
+      - 'kiteaudio-codec-io/**'
+      - 'sample/**'
+      - 'docs-samples/**'
+      - 'test-data/**'
+      - 'reference/REFERENCES.md'
+      - 'generate-test-fixtures.py'
+      - 'LICENSE'
+      - 'NOTICE'
+      - 'kotlin'
+      - 'kotlin.bat'
+      - 'project.yaml'
+      - '*.module-template.yaml'
+      - 'libs.versions.toml'
+      - 'build-plugins/**'
+      - '.github/scripts/**'
+      - '.github/workflows/ci.yml'
   pull_request:
+    paths:
+      - 'kiteaudio-codec/**'
+      - 'kiteaudio-codec-io/**'
+      - 'sample/**'
+      - 'docs-samples/**'
+      - 'test-data/**'
+      - 'reference/REFERENCES.md'
+      - 'generate-test-fixtures.py'
+      - 'LICENSE'
+      - 'NOTICE'
+      - 'kotlin'
+      - 'kotlin.bat'
+      - 'project.yaml'
+      - '*.module-template.yaml'
+      - 'libs.versions.toml'
+      - 'build-plugins/**'
+      - '.github/scripts/**'
+      - '.github/workflows/ci.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 env:
   KOTLIN_CLI_NO_WELCOME_BANNER: 1
 
 jobs:
-  # The JVM, JS, wasm and Linux native targets. This is the job that runs the
-  # full suite: the codecs are pure computation, so a pass here covers them
-  # everywhere.
+  # The comparison tests are bit-exact against reference tools, so they depend on the
+  # versions of those tools. They were qualified with the tools of Debian 13
+  # (test-data/fixture-tools.json), and they run in that system.
+  oracles:
+    name: Reference comparisons (Debian 13)
+    runs-on: ubuntu-latest
+    container: debian:13
+    steps:
+      # git comes first, so the checkout below is a real clone that the scripts can query.
+      - name: Install the build tools and the codec oracles
+        run: |
+          apt-get update
+          apt-get install -y ca-certificates git curl unzip zstd python3 python3-venv ffmpeg flac lame libopusfile0 libmpg123-dev libimage-exiftool-perl cmake build-essential musepack-tools speex libogg-dev
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The container runs as root and the runner owns the checkout.
+      - name: Let git read the checkout
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-debian-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-debian-
+
+      # Build the pinned permissive references. Missing tools are real skips,
+      # and the coverage step rejects unexpected ones.
+      - name: Build the reference tools
+        run: bash .github/scripts/prepare-codec-oracles.sh
+
+      - name: Core tests (JVM)
+        run: python3 generate-test-fixtures.py
+
+      - name: Verify oracle comparisons ran
+        if: always()
+        run: python3 .github/scripts/check-oracle-results.py
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: test-reports-oracles
+          path: build/reports/
+
+      - name: Upload fixture provenance
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: fixture-provenance-linux
+          path: kiteaudio-codec/build/fixture-provenance/*.json*
+
+  # The JS, wasm and Linux native targets, the samples and the public API.
+  # Each step runs even when an earlier one failed, so one run reports every fault.
   linux:
-    name: JVM / JS / wasm / native (Linux)
+    name: JS / wasm / native (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -35,25 +127,6 @@ jobs:
           key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
-      # Install executable oracles and build the pinned permissive references.
-      # Missing tools are real skips, and the coverage step rejects unexpected ones.
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12'
-
-      - name: Install the codec oracles
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg flac lame libopusfile0 libmpg123-dev libimage-exiftool-perl cmake build-essential python3-venv musepack-tools speex libogg-dev
-          bash .github/scripts/prepare-codec-oracles.sh
-
-      - name: Core tests (JVM)
-        run: python3 generate-test-fixtures.py
-
-      - name: Verify oracle comparisons ran
-        if: always()
-        run: python3 .github/scripts/check-oracle-results.py
-
       # `./kotlin test` cannot run the JS and wasmWasi tests, and it runs wasmJs
       # only in a browser with a 30-second limit. The script links all three and
       # runs them in Node.
@@ -61,13 +134,16 @@ jobs:
         run: python3 .github/scripts/web-tests/run.py
 
       - name: Core tests (native)
+        if: ${{ !cancelled() }}
         run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p linuxX64
 
       - name: Sample module tests and documentation samples
+        if: ${{ !cancelled() }}
         run: ./kotlin test -m sample -m docs-samples
 
       - name: Public API check
-        run: ./kotlin check abi
+        if: ${{ !cancelled() }}
+        run: ./kotlin check abi -m kiteaudio-codec -m kiteaudio-codec-io
 
       - name: Upload test reports
         if: failure()
@@ -75,13 +151,6 @@ jobs:
         with:
           name: test-reports-linux
           path: build/reports/
-
-      - name: Upload fixture provenance
-        if: always()
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: fixture-provenance-linux
-          path: kiteaudio-codec/build/fixture-provenance/*.json*
 
   # MinGW binaries cross-compile elsewhere, but their tests can only execute
   # on Windows. Keep this separate from the JVM oracle suite so native failures
@@ -126,29 +195,51 @@ jobs:
         with:
           python-version: '3.12'
 
+      # ffmpeg 7.1 is the version that the comparison tests were qualified with.
       - name: Install the codec oracles
         run: |
-          brew install ffmpeg flac lame exiftool opusfile mpg123 cmake musepack speex libogg
-          bash .github/scripts/prepare-codec-oracles.sh
+          brew install ffmpeg@7 flac lame exiftool opusfile mpg123 cmake musepack speex libogg
+          ffmpeg_bin="$(brew --prefix ffmpeg@7)/bin"
+          echo "$ffmpeg_bin" >> "$GITHUB_PATH"
+          PATH="$ffmpeg_bin:$PATH" bash .github/scripts/prepare-codec-oracles.sh
 
-      - name: Core tests and Apple format comparisons (JVM)
-        run: python3 generate-test-fixtures.py
+      # Only the suites that compare with Apple's own tools run here. The other
+      # comparisons are bit-exact against Linux builds of the reference tools, and
+      # the Debian job runs them.
+      - name: Apple format comparisons (JVM)
+        run: >-
+          python3 generate-test-fixtures.py
+          --tests '*.AiffCOracleTest' --tests '*.CafOracleTest' --tests '*.Mp4GaplessOracleTest'
+          --tests '*.AlacEncodeOracleTest' --tests '*.AacDecodeOracleTest'
 
-      - name: Verify oracle comparisons ran
+      - name: Verify the Apple comparisons ran
         if: always()
-        run: python3 .github/scripts/check-oracle-results.py
+        run: python3 .github/scripts/check-oracle-results.py --apple-formats
 
+      # The steps below do not need the oracles. Each one runs even when an earlier
+      # step failed, so one run reports every fault.
+
+      # One platform per call. The toolchain starts one Kotlin/Native compiler
+      # process of 3 GB per task with no limit, and the runner has 7 GB.
       - name: Native tests
-        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p macosArm64 -p iosSimulatorArm64
+        if: ${{ !cancelled() }}
+        run: |
+          ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p macosArm64
+          ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p iosSimulatorArm64
 
       # The klib check reads the klibs of every native, JS and wasm platform,
       # and only macOS builds the Apple ones.
       - name: Public klib API check
+        if: ${{ !cancelled() }}
         run: |
-          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p js -p wasmJs -p wasmWasi -p iosArm64 -p iosSimulatorArm64 -p iosX64 -p macosArm64 -p tvosArm64 -p tvosSimulatorArm64 -p watchosArm32 -p watchosArm64 -p watchosDeviceArm64 -p watchosSimulatorArm64 -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
+          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p js -p wasmJs -p wasmWasi
+          for platform in iosArm64 iosSimulatorArm64 iosX64 macosArm64 tvosArm64 tvosSimulatorArm64 watchosArm32 watchosArm64 watchosDeviceArm64 watchosSimulatorArm64 linuxX64 linuxArm64 mingwX64 androidNativeArm32 androidNativeArm64 androidNativeX86 androidNativeX64; do
+            ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
+          done
           ./kotlin check klibAbi -m kiteaudio-codec -m kiteaudio-codec-io
 
       - name: Check framework attribution
+        if: ${{ !cancelled() }}
         run: |
           python3 .github/scripts/apple_frameworks.py --frameworks AudioKodec,AudioKodecIO --platforms iosSimulatorArm64 --build-type release --no-xcframework
           python3 .github/scripts/check-distribution-notices.py --framework kiteaudio-codec/build/bin/iosSimulatorArm64/releaseFramework/AudioKodec.framework --framework kiteaudio-codec-io/build/bin/iosSimulatorArm64/releaseFramework/AudioKodecIO.framework
@@ -190,45 +281,15 @@ jobs:
       - name: Android host tests
         run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p android
 
+      # One Kotlin/Native platform per call. The toolchain starts one compiler
+      # process of 3 GB per native task with no limit, and twelve platforms in
+      # one call ran the runner out of memory.
       - name: Build every target that Linux can build
-        run: ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p jvm -p android -p js -p wasmJs -p wasmWasi -p linuxX64 -p linuxArm64 -p mingwX64 -p androidNativeArm32 -p androidNativeArm64 -p androidNativeX86 -p androidNativeX64
+        run: |
+          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p jvm -p android -p js -p wasmJs -p wasmWasi
+          for platform in linuxX64 linuxArm64 mingwX64 androidNativeArm32 androidNativeArm64 androidNativeX86 androidNativeX64; do
+            ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
+          done
 
       - name: Check jar and Android attribution
         run: python3 .github/scripts/check-distribution-notices.py
-
-  docs:
-    name: API documentation
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Cache the Kotlin Toolchain downloads
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.cache/JetBrains/Kotlin
-          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
-          restore-keys: kotlin-toolchain-${{ runner.os }}-
-
-      - name: Build the Dokka site
-        run: |
-          # `do` is a command of the kotlin script here, not the shell keyword.
-          # shellcheck disable=SC1010
-          ./kotlin do dokka && ./kotlin do dokkaSite
-
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
-        with:
-          python-version: '3.12'
-
-      # The guides include their code samples from compiled test sources; a
-      # missing file or section marker fails the strict build.
-      - name: Build the guides
-        run: |
-          python -m pip install mkdocs-material==9.7.7
-          mkdocs build --strict
-
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: api-docs
-          path: build/dokka/html

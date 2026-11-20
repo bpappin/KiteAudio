@@ -23,6 +23,11 @@ apple_only = {
     ("AlacEncodeOracleTest", "applesAfconvertDecodesExactlyWhatWentIn"),
     ("AacDecodeOracleTest", "appleEncodedFilesDecodeAsAppleDecodesThem"),
 }
+# The comparisons are bit-exact against reference tools. They were qualified on Linux, and
+# the Linux job runs all of them. The macOS job passes --apple-formats and runs only the
+# suites that compare with Apple's own tools.
+if "--apple-formats" in sys.argv[1:]:
+    required = {name for name, _ in apple_only}
 seen = set()
 failures = []
 passed = skipped = 0
