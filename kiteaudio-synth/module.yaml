@@ -20,15 +20,15 @@ settings:
     minSdk: 23
   publishing:
     pom:
-      name: KiteSynth
+      name: KiteAudio Synth
       description: >-
         SoundFont reading, writing and sample-based synthesis for Kotlin Multiplatform. Renders stereo Float32 PCM
         with envelopes, modulation, filtering, reverb and chorus. Retains SF3 samples for an application-provided
         decoder. The common core depends only on kotlin-stdlib.
 
-# Gradle named the klib "io.github.yuroyami:kiteaudio-synth". Keep that name, or libraries built against
-# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
-# renames the klibs of shared native code, which must keep their own names.
+# Pin the klib name to "io.github.yuroyami:kiteaudio-synth", the group and artifact name. The committed
+# klib ABI dump records this name. Set it per platform: on @native, it also renames the
+# klibs of shared native code, which must keep their own names.
 settings@iosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-synth, -Xshort-module-name=kiteaudio-synth ]
@@ -71,5 +71,5 @@ plugins:
   dokka:
     enabled: true
     moduleName: kiteaudio-synth
-    footerMessage: Apache-2.0 · KiteSynth is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/KiteSynth/blob/main/kiteaudio-synth/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-synth/src

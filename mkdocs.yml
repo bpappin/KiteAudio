@@ -1,11 +1,11 @@
-site_name: AudioKodec
-site_url: https://yuroyami.github.io/AudioKodec/
+site_name: KiteAudio
+site_url: https://yuroyami.github.io/KiteAudio/
 site_description: Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform. Decode, encode and edit tags from common code.
 site_author: yuroyami
 copyright: Apache-2.0
 
-repo_name: yuroyami/AudioKodec
-repo_url: https://github.com/yuroyami/AudioKodec
+repo_name: yuroyami/KiteAudio
+repo_url: https://github.com/yuroyami/KiteAudio
 edit_uri: edit/main/docs/
 
 docs_dir: docs

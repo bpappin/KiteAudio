@@ -19,8 +19,8 @@
 
 KiteSynth brings its own synthesis engine. It depends only on `kotlin-stdlib`, with no JNI,
 platform synthesiser or bundled SoundFont. Your app supplies the font bytes and the audio output;
-[KiteRT](https://github.com/yuroyami/KiteRT) is the companion library for sending PCM to a device,
-and [KiteMIDI](https://github.com/yuroyami/KiteMIDI) handles MIDI files and connections.
+[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output) is the companion library for sending PCM to a device,
+and [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) handles MIDI files and connections.
 
 | Task | What KiteSynth provides |
 | --- | --- |
@@ -327,11 +327,11 @@ under the system temporary directory and measure a 96-voice render workload. The
 machine-specific assertions are disabled when `CI` is set; its numbers are not a device guarantee.
 
 Known defects, open proposals and platform limits are tracked as
-[GitHub issues](https://github.com/yuroyami/KiteSynth/issues).
+[GitHub issues](https://github.com/yuroyami/KiteAudio/issues).
 
 ## Contribute
 
-Open an [issue](https://github.com/yuroyami/KiteSynth/issues) with the smallest font or MIDI
+Open an [issue](https://github.com/yuroyami/KiteAudio/issues) with the smallest font or MIDI
 sequence that shows the problem, the sample rate and render block size, target and toolchain,
 and the observed and expected behaviour. A generated fixture is welcome when a real SoundFont
 cannot be redistributed. For an audio mismatch, a short output WAV and a reference render help.
@@ -345,5 +345,5 @@ API changes should include an entry in [CHANGELOG.md](../CHANGELOG.md).
 Apache-2.0. See [LICENSE](../LICENSE). KiteSynth bundles no SoundFont bank; fonts and decoders supplied
 by an application have their own licenses.
 
-Part of the Kite family: [KiteMIDI](https://github.com/yuroyami/KiteMIDI),
-[KiteRT](https://github.com/yuroyami/KiteRT), [KitePDF](https://github.com/yuroyami/KitePDF).
+Part of the Kite family: [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi),
+[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output), [KitePDF](https://github.com/yuroyami/KitePDF).

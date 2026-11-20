@@ -195,7 +195,7 @@ reads and writes buffers and streams only, because a browser has no filesystem f
 
 [CONTRIBUTING.md](CONTRIBUTING.md) covers the build, the tests and the reference tools that
 check each codec. Report a security problem as [SECURITY.md](SECURITY.md) describes. Open work
-is in [GitHub Issues](https://github.com/yuroyami/AudioKodec/issues).
+is in [GitHub Issues](https://github.com/yuroyami/KiteAudio/issues).
 
 ## License
 

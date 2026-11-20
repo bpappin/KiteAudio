@@ -20,14 +20,14 @@ settings:
     minSdk: 23
   publishing:
     pom:
-      name: KiteRT
+      name: KiteAudio Output
       description: >-
         Callback-based mono and stereo audio output for Kotlin Multiplatform. Accepts interleaved Float32 samples and
         outputs 16-bit PCM through Java Sound on the JVM, AudioTrack on Android and AudioQueue on Apple platforms.
 
-# Gradle named the klib "io.github.yuroyami:kiteaudio-output". Keep that name, or libraries built against
-# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
-# renames the klibs of shared native code, which must keep their own names.
+# Pin the klib name to "io.github.yuroyami:kiteaudio-output", the group and artifact name. The committed
+# klib ABI dump records this name. Set it per platform: on @native, it also renames the
+# klibs of shared native code, which must keep their own names.
 settings@iosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
@@ -70,5 +70,5 @@ plugins:
   dokka:
     enabled: true
     moduleName: kiteaudio-output
-    footerMessage: Apache-2.0 · KiteRT is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/KiteRT/blob/main/kiteaudio-output/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-output/src

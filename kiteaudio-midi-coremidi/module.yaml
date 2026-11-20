@@ -28,7 +28,7 @@ settings:
       freeJvmArgs: [ --enable-native-access=ALL-UNNAMED ]
   publishing:
     pom:
-      name: KiteMIDI CoreMIDI for JVM
+      name: KiteAudio MIDI CoreMIDI for JVM
       description: >-
         CoreMIDI device input and output on macOS through the Java Foreign Function and Memory API. Provides native
         MIDI ports for desktop JVM applications, with JDK 22 or later required at runtime.
@@ -37,5 +37,5 @@ plugins:
   dokka:
     enabled: true
     moduleName: kiteaudio-midi-coremidi
-    footerMessage: Apache-2.0 · KiteMIDI is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/KiteMIDI/blob/main/kiteaudio-midi-coremidi/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-midi-coremidi/src

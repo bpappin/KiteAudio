@@ -41,16 +41,17 @@ settings:
     namespace: io.github.yuroyami.kiteaudio.codec
   publishing:
     pom:
-      name: AudioKodec
+      name: KiteAudio Codec
       description: >-
         Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform. Decodes 22 containers to Float32 PCM,
         among them FLAC, WAV, AIFF, MP3, Ogg Vorbis and Opus, AAC, ALAC, AC-3, Matroska, WavPack and Monkey's Audio.
         Encodes FLAC, WAV, AIFF, AU and ALAC. Reads and edits ID3, APE, Vorbis comment, MP4 and RIFF tags with the audio
         left byte-identical. Names 30 formats by sniffing. Depends on kotlin-stdlib only and builds for 22 targets.
 
-# Gradle named the klib "io.github.yuroyami:kiteaudio-codec". Keep that name, or libraries built against
-# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
-# renames the klibs of shared native code, which must keep their own names.
+# Pin the klib name to "io.github.yuroyami:kiteaudio-codec", the group and artifact name.
+# The committed klib ABI dump records this name. The web test runner finds the test klib
+# by the test name below. Set it per platform: on @native, it also renames the klibs of
+# shared native code, which must keep their own names.
 settings@js:
   kotlin:
     freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-codec ]
@@ -224,9 +225,9 @@ plugins:
     includes: [ Module.md ]
     customStyleSheets: [ ../docs/api-theme/kite.css ]
     templatesDir: ../dokka-templates
-    footerMessage: Apache-2.0 · AudioKodec is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/AudioKodec/blob/main/kiteaudio-codec/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-codec/src
     # `./kotlin do dokkaSite` merges the pages of these modules into build/dokka/html.
-    siteName: AudioKodec
-    siteModules: [ kiteaudio-codec, kiteaudio-codec-io ]
+    siteName: KiteAudio
+    siteModules: [ kiteaudio-codec, kiteaudio-codec-io, kiteaudio-midi, kiteaudio-midi-devices, kiteaudio-midi-coremidi, kiteaudio-synth, kiteaudio-output ]
     siteIncludes: [ ../kiteaudio-codec-io/Module.md ]

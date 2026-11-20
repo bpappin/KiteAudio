@@ -395,7 +395,7 @@ currently contains no CI workflow. Commands above describe available checks; con
 their actual output for the targets and tests that ran.
 
 Known defects, open proposals and platform limits are tracked as
-[GitHub issues](https://github.com/yuroyami/KiteMIDI/issues).
+[GitHub issues](https://github.com/yuroyami/KiteAudio/issues).
 
 ## Contribute
 
@@ -406,7 +406,7 @@ sending, receiving, cancelling or closing. Remove personal data from attachments
 
 Changes to the core and shared I/O API should include their applicable tests and ABI
 checks. Keep a runtime result distinct from compilation, virtual endpoints and physical
-instrument behavior. Report issues through [GitHub](https://github.com/yuroyami/KiteMIDI/issues).
+instrument behavior. Report issues through [GitHub](https://github.com/yuroyami/KiteAudio/issues).
 
 ## License
 
@@ -414,5 +414,5 @@ Apache-2.0. See [LICENSE](../LICENSE). MIDI file and message formats follow the 
 Manufacturers Association specifications; the implementation is Kotlin source in this
 repository.
 
-Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteSynth),
-[KiteRT](https://github.com/yuroyami/KiteRT), [KitePDF](https://github.com/yuroyami/KitePDF).
+Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth),
+[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output), [KitePDF](https://github.com/yuroyami/KitePDF).

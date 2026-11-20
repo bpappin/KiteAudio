@@ -42,14 +42,15 @@ settings:
     namespace: io.github.yuroyami.kiteaudio.codec.io
   publishing:
     pom:
-      name: AudioKodec kotlinx-io
+      name: KiteAudio Codec kotlinx-io
       description: >-
         kotlinx-io bridge for AudioKodec. Reads a Path or RawSource into an AudioSource, and writes an encoder's output
         to a Sink or a Path. Optional; the AudioKodec core needs no dependency beyond kotlin-stdlib.
 
-# Gradle named the klib "io.github.yuroyami:kiteaudio-codec-io". Keep that name, or libraries built against
-# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
-# renames the klibs of shared native code, which must keep their own names.
+# Pin the klib name to "io.github.yuroyami:kiteaudio-codec-io", the group and artifact name.
+# The committed klib ABI dump records this name. The web test runner finds the test klib
+# by the test name below. Set it per platform: on @native, it also renames the klibs of
+# shared native code, which must keep their own names.
 settings@js:
   kotlin:
     freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-codec-io ]
@@ -223,5 +224,5 @@ plugins:
     includes: [ Module.md ]
     customStyleSheets: [ ../docs/api-theme/kite.css ]
     templatesDir: ../dokka-templates
-    footerMessage: Apache-2.0 · AudioKodec is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/AudioKodec/blob/main/kiteaudio-codec-io/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-codec-io/src

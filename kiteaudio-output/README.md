@@ -30,8 +30,8 @@ samples; each backend clamps them and converts them to signed 16-bit PCM.
 | `AudioSinkEvent` | Reports startup, deliberate stops, short renders, slow renders and some failures. Device-loss detection differs by backend. |
 
 There is no Compose dependency, UI, audio decoder, synthesizer or input stream. Pair it
-with [KiteSynth](https://github.com/yuroyami/KiteSynth) to generate sound and
-[KiteMIDI](https://github.com/yuroyami/KiteMIDI) to read MIDI messages.
+with [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth) to generate sound and
+[KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) to read MIDI messages.
 
 > [!NOTE]
 > The configured project version is `0.1.0`. The API is early and can change. A Maven Central
@@ -202,7 +202,7 @@ need an explicit handoff.
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |
 | Input | Recording and full-duplex streams are not implemented. |
 
-See the [issue tracker](https://github.com/yuroyami/KiteRT/issues) for defects and proposed
+See the [issue tracker](https://github.com/yuroyami/KiteAudio/issues) for defects and proposed
 improvements. This README describes the current implementation; it does not certify audio
 quality, route recovery or device coverage.
 
@@ -248,11 +248,11 @@ suite establishes Android or physical iOS behavior. The repository currently has
 Actions workflow. Fake-driver results establish tested control flow, not hardware playback.
 
 Known defects, open proposals and platform limits are tracked as
-[GitHub issues](https://github.com/yuroyami/KiteRT/issues).
+[GitHub issues](https://github.com/yuroyami/KiteAudio/issues).
 
 ## Contribute
 
-File one root cause per [GitHub issue](https://github.com/yuroyami/KiteRT/issues/new).
+File one root cause per [GitHub issue](https://github.com/yuroyami/KiteAudio/issues/new).
 Include your OS and device, target, sample rate, channel layout, buffer size, callback
 behavior and the relevant events. A bounded reproduction using a fake backend is useful
 for lifecycle or concurrency failures; distinguish it from an observed hardware failure.
@@ -263,6 +263,6 @@ interruption, stop, restart or removal.
 
 [Apache-2.0](../LICENSE).
 
-Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteSynth),
-[KiteMIDI](https://github.com/yuroyami/KiteMIDI),
+Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth),
+[KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi),
 [KitePDF](https://github.com/yuroyami/KitePDF).

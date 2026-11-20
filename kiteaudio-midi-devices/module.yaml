@@ -30,7 +30,7 @@ settings:
     minSdk: 23
   publishing:
     pom:
-      name: KiteMIDI IO
+      name: KiteAudio MIDI Devices
       description: >-
         MIDI device input and output for Kotlin Multiplatform. Enumerates ports, opens them and carries typed messages
         both ways, over MidiManager on Android, CoreMIDI on Apple and javax.sound.midi on the JVM. Includes a byte-
@@ -41,9 +41,9 @@ settings@native:
     # kotlinx.cinterop exists only on native, so the JVM and Android builds do not get this opt-in.
     optIns: [ kotlinx.cinterop.ExperimentalForeignApi, kotlin.experimental.ExperimentalNativeApi ]
 
-# Gradle named the klib "io.github.yuroyami:kiteaudio-midi-devices". Keep that name, or libraries built against
-# earlier releases fail to link on Kotlin/Native. Set it per platform: on @native, it also
-# renames the klibs of shared native code, which must keep their own names.
+# Pin the klib name to "io.github.yuroyami:kiteaudio-midi-devices", the group and artifact name. The committed
+# klib ABI dump records this name. Set it per platform: on @native, it also renames the
+# klibs of shared native code, which must keep their own names.
 settings@iosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-midi-devices, -Xshort-module-name=kiteaudio-midi-devices ]
@@ -86,5 +86,5 @@ plugins:
   dokka:
     enabled: true
     moduleName: kiteaudio-midi-devices
-    footerMessage: Apache-2.0 · KiteMIDI is part of the Kite family.
-    sourceLinkUrl: https://github.com/yuroyami/KiteMIDI/blob/main/kiteaudio-midi-devices/src
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-midi-devices/src
