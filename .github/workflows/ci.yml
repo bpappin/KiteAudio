@@ -184,8 +184,16 @@ jobs:
           key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin.bat', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
-      - name: MinGW x64 tests
-        run: .\kotlin.bat test -m kiteaudio-codec -m kiteaudio-codec-io -p mingwX64
+      # The file module runs first and alone, with a time limit. If one of its tests
+      # hangs, the step ends with its log, and the codec tests still run.
+      - name: MinGW x64 tests of the file module
+        timeout-minutes: 15
+        run: .\kotlin.bat test -m kiteaudio-codec-io -p mingwX64
+
+      - name: MinGW x64 tests of the codec
+        if: ${{ !cancelled() }}
+        timeout-minutes: 60
+        run: .\kotlin.bat test -m kiteaudio-codec -p mingwX64
 
   # Apple targets can only be built on a Mac, and they are a large part of why
   # this library exists, so they get their own job rather than riding along as
