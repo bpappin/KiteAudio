@@ -78,8 +78,9 @@ cmake -S reference/libogg -B reference/libogg/build -DCMAKE_BUILD_TYPE=Release \
 cmake --build reference/libogg/build -j4
 cmake --install reference/libogg/build
 reference_checkout reference/libvorbis https://github.com/xiph/vorbis.git 0657aee69dec8508a0011f47f3b69d7538e9d262
+# libvorbis asks for the same old CMake version as libogg.
 cmake -S reference/libvorbis -B reference/libvorbis/build -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=OFF -DCMAKE_PREFIX_PATH="$PWD/reference/libogg/install"
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DBUILD_SHARED_LIBS=OFF -DCMAKE_PREFIX_PATH="$PWD/reference/libogg/install"
 cmake --build reference/libvorbis/build --target vorbis vorbisfile -j4
 
 reference_checkout reference/alac https://github.com/macosforge/alac.git c38887c5c5e64a4b31108733bd79ca9b2496d987
@@ -90,7 +91,7 @@ c++ -O3 -I reference/alac/codec reference/alac/convert-utility/main.cpp \
 
 reference_checkout reference/wavpack/src https://github.com/dbry/WavPack.git 5803634a030e2a11dba602ba057b89cc34486c67
 cmake -S reference/wavpack/src -B reference/wavpack/build -DCMAKE_BUILD_TYPE=Release \
-    -DWAVPACK_BUILD_DOCS=OFF -DWAVPACK_ENABLE_LIBCRYPTO=OFF -DBUILD_TESTING=OFF
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DWAVPACK_BUILD_DOCS=OFF -DWAVPACK_ENABLE_LIBCRYPTO=OFF -DBUILD_TESTING=OFF
 cmake --build reference/wavpack/build --target wavpackapp wvunpack -j4
 
 ape_sdk=reference/ape/MAC_1327_SDK.zip
@@ -109,7 +110,8 @@ PY
 if [[ ! -d reference/ape/sdk ]]; then
     unzip -q "$ape_sdk" -d reference/ape/sdk
 fi
-cmake -S reference/ape/sdk -B reference/ape/build -DCMAKE_BUILD_TYPE=Release
+cmake -S reference/ape/sdk -B reference/ape/build -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_POLICY_VERSION_MINIMUM=3.5
 cmake --build reference/ape/build --target macutil -j4
 
 # libtta is LGPL: it is built and run as a program, and its source is never opened.
