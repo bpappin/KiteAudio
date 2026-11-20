@@ -272,9 +272,8 @@ internal object Mp4Codecs {
         // before the configuration itself.
         if (box.size < 4) throw CorruptStreamException("the ALAC configuration box is too short", entry.offset)
         val config = AlacConfig.parse(box.copyOfRange(4, box.size), entry.offset)
-        if (entry.channels != 0 && entry.channels != config.channels) {
-            throw CorruptStreamException("the track says ${entry.channels} channels and its ALAC configuration ${config.channels}", entry.offset)
-        }
+        // The configuration decides the channel count. Apple's afconvert states 2 channels
+        // in the sample entry of a mono file.
         // A sample entry cannot state a rate past 65535 Hz; the configuration can.
         val rate = if (config.sampleRate in 1..Int.MAX_VALUE.toLong()) config.sampleRate.toInt() else entry.sampleRate
         if (rate < 1) throw CorruptStreamException("an ALAC track states no sample rate", entry.offset)
