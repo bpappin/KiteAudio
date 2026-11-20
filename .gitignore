@@ -2,6 +2,7 @@ build/
 *.iml
 .idea/
 local.properties
+*.hprof
 .DS_Store
 
 # Reference source trees are for porting/study only — never distributed.

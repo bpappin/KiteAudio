@@ -1,0 +1,90 @@
+public final class io/github/yuroyami/kitemidi/io/JvmMidiDevicesKt {
+	public static final fun jvmMidiDevices (Lkotlinx/coroutines/CoroutineScope;)Lio/github/yuroyami/kitemidi/io/MidiDevices;
+}
+
+public abstract interface class io/github/yuroyami/kitemidi/io/MidiDevices {
+	public abstract fun close ()V
+	public abstract fun getPorts ()Lkotlinx/coroutines/flow/StateFlow;
+	public abstract fun openInput (Lio/github/yuroyami/kitemidi/io/MidiPort;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun openOutput (Lio/github/yuroyami/kitemidi/io/MidiPort;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun refresh ()V
+}
+
+public final class io/github/yuroyami/kitemidi/io/MidiDirection : java/lang/Enum {
+	public static final field INPUT Lio/github/yuroyami/kitemidi/io/MidiDirection;
+	public static final field OUTPUT Lio/github/yuroyami/kitemidi/io/MidiDirection;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitemidi/io/MidiDirection;
+	public static fun values ()[Lio/github/yuroyami/kitemidi/io/MidiDirection;
+}
+
+public abstract interface class io/github/yuroyami/kitemidi/io/MidiInput {
+	public abstract fun close ()V
+	public abstract fun getPort ()Lio/github/yuroyami/kitemidi/io/MidiPort;
+}
+
+public abstract interface class io/github/yuroyami/kitemidi/io/MidiOutput {
+	public abstract fun close ()V
+	public abstract fun getPort ()Lio/github/yuroyami/kitemidi/io/MidiPort;
+	public abstract fun send (Lio/github/yuroyami/kitemidi/MidiMessage;)V
+	public abstract fun sendRaw ([B)V
+}
+
+public final class io/github/yuroyami/kitemidi/io/MidiPort {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kitemidi/io/MidiDirection;Lio/github/yuroyami/kitemidi/io/MidiTransport;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Lio/github/yuroyami/kitemidi/io/MidiDirection;
+	public final fun component5 ()Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kitemidi/io/MidiDirection;Lio/github/yuroyami/kitemidi/io/MidiTransport;)Lio/github/yuroyami/kitemidi/io/MidiPort;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kitemidi/io/MidiPort;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lio/github/yuroyami/kitemidi/io/MidiDirection;Lio/github/yuroyami/kitemidi/io/MidiTransport;ILjava/lang/Object;)Lio/github/yuroyami/kitemidi/io/MidiPort;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDirection ()Lio/github/yuroyami/kitemidi/io/MidiDirection;
+	public final fun getDisplayName ()Ljava/lang/String;
+	public final fun getId ()Ljava/lang/String;
+	public final fun getManufacturer ()Ljava/lang/String;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getTransport ()Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitemidi/io/MidiPortException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class io/github/yuroyami/kitemidi/io/MidiStreamParser {
+	public fun <init> (ILkotlin/jvm/functions/Function1;)V
+	public synthetic fun <init> (ILkotlin/jvm/functions/Function1;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lkotlin/jvm/functions/Function1;)V
+	public final fun feed ([BII)V
+	public static synthetic fun feed$default (Lio/github/yuroyami/kitemidi/io/MidiStreamParser;[BIIILjava/lang/Object;)V
+	public final fun reset ()V
+}
+
+public final class io/github/yuroyami/kitemidi/io/MidiTransport : java/lang/Enum {
+	public static final field BLUETOOTH Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static final field NETWORK Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static final field UNKNOWN Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static final field USB Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static final field VIRTUAL Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitemidi/io/MidiTransport;
+	public static fun values ()[Lio/github/yuroyami/kitemidi/io/MidiTransport;
+}
+
+public final class io/github/yuroyami/kitemidi/io/TimedMidiMessage {
+	public fun <init> (Lio/github/yuroyami/kitemidi/MidiMessage;J)V
+	public final fun component1 ()Lio/github/yuroyami/kitemidi/MidiMessage;
+	public final fun component2 ()J
+	public final fun copy (Lio/github/yuroyami/kitemidi/MidiMessage;J)Lio/github/yuroyami/kitemidi/io/TimedMidiMessage;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kitemidi/io/TimedMidiMessage;Lio/github/yuroyami/kitemidi/MidiMessage;JILjava/lang/Object;)Lio/github/yuroyami/kitemidi/io/TimedMidiMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Lio/github/yuroyami/kitemidi/MidiMessage;
+	public final fun getTimestampNanos ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
