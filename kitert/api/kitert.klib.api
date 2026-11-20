@@ -1,0 +1,179 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64, macosArm64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.yuroyami:kitert>
+final enum class io.github.yuroyami.kitert/ChannelLayout : kotlin/Enum<io.github.yuroyami.kitert/ChannelLayout> { // io.github.yuroyami.kitert/ChannelLayout|null[0]
+    enum entry Mono // io.github.yuroyami.kitert/ChannelLayout.Mono|null[0]
+    enum entry Stereo // io.github.yuroyami.kitert/ChannelLayout.Stereo|null[0]
+
+    final val channels // io.github.yuroyami.kitert/ChannelLayout.channels|{}channels[0]
+        final fun <get-channels>(): kotlin/Int // io.github.yuroyami.kitert/ChannelLayout.channels.<get-channels>|<get-channels>(){}[0]
+    final val entries // io.github.yuroyami.kitert/ChannelLayout.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kitert/ChannelLayout> // io.github.yuroyami.kitert/ChannelLayout.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kitert/ChannelLayout // io.github.yuroyami.kitert/ChannelLayout.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kitert/ChannelLayout> // io.github.yuroyami.kitert/ChannelLayout.values|values#static(){}[0]
+
+    final object Companion { // io.github.yuroyami.kitert/ChannelLayout.Companion|null[0]
+        final fun of(kotlin/Int): io.github.yuroyami.kitert/ChannelLayout // io.github.yuroyami.kitert/ChannelLayout.Companion.of|of(kotlin.Int){}[0]
+    }
+}
+
+final enum class io.github.yuroyami.kitert/LatencyQuality : kotlin/Enum<io.github.yuroyami.kitert/LatencyQuality> { // io.github.yuroyami.kitert/LatencyQuality|null[0]
+    enum entry Estimated // io.github.yuroyami.kitert/LatencyQuality.Estimated|null[0]
+    enum entry Measured // io.github.yuroyami.kitert/LatencyQuality.Measured|null[0]
+    enum entry Unknown // io.github.yuroyami.kitert/LatencyQuality.Unknown|null[0]
+
+    final val entries // io.github.yuroyami.kitert/LatencyQuality.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kitert/LatencyQuality> // io.github.yuroyami.kitert/LatencyQuality.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kitert/LatencyQuality // io.github.yuroyami.kitert/LatencyQuality.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kitert/LatencyQuality> // io.github.yuroyami.kitert/LatencyQuality.values|values#static(){}[0]
+}
+
+abstract fun interface io.github.yuroyami.kitert/AudioRenderCallback { // io.github.yuroyami.kitert/AudioRenderCallback|null[0]
+    abstract fun render(kotlin/FloatArray, kotlin/Int): kotlin/Int // io.github.yuroyami.kitert/AudioRenderCallback.render|render(kotlin.FloatArray;kotlin.Int){}[0]
+}
+
+abstract interface io.github.yuroyami.kitert/AudioSink { // io.github.yuroyami.kitert/AudioSink|null[0]
+    abstract val format // io.github.yuroyami.kitert/AudioSink.format|{}format[0]
+        abstract fun <get-format>(): io.github.yuroyami.kitert/AudioFormat // io.github.yuroyami.kitert/AudioSink.format.<get-format>|<get-format>(){}[0]
+    abstract val isRunning // io.github.yuroyami.kitert/AudioSink.isRunning|{}isRunning[0]
+        abstract fun <get-isRunning>(): kotlin/Boolean // io.github.yuroyami.kitert/AudioSink.isRunning.<get-isRunning>|<get-isRunning>(){}[0]
+    abstract val latency // io.github.yuroyami.kitert/AudioSink.latency|{}latency[0]
+        abstract fun <get-latency>(): io.github.yuroyami.kitert/Latency // io.github.yuroyami.kitert/AudioSink.latency.<get-latency>|<get-latency>(){}[0]
+
+    abstract fun close() // io.github.yuroyami.kitert/AudioSink.close|close(){}[0]
+    abstract fun start(io.github.yuroyami.kitert/AudioRenderCallback) // io.github.yuroyami.kitert/AudioSink.start|start(io.github.yuroyami.kitert.AudioRenderCallback){}[0]
+    abstract fun stop() // io.github.yuroyami.kitert/AudioSink.stop|stop(){}[0]
+}
+
+sealed interface io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent|null[0]
+    final class DeviceLost : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost|null[0]
+        constructor <init>(kotlin/String) // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.<init>|<init>(kotlin.String){}[0]
+
+        final val reason // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.DeviceLost.toString|toString(){}[0]
+    }
+
+    final class Failed : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.Failed|null[0]
+        constructor <init>(kotlin/String, kotlin/Throwable? = ...) // io.github.yuroyami.kitert/AudioSinkEvent.Failed.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+
+        final val cause // io.github.yuroyami.kitert/AudioSinkEvent.Failed.cause|{}cause[0]
+            final fun <get-cause>(): kotlin/Throwable? // io.github.yuroyami.kitert/AudioSinkEvent.Failed.cause.<get-cause>|<get-cause>(){}[0]
+        final val reason // io.github.yuroyami.kitert/AudioSinkEvent.Failed.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Failed.reason.<get-reason>|<get-reason>(){}[0]
+
+        final fun component1(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Failed.component1|component1(){}[0]
+        final fun component2(): kotlin/Throwable? // io.github.yuroyami.kitert/AudioSinkEvent.Failed.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Throwable? = ...): io.github.yuroyami.kitert/AudioSinkEvent.Failed // io.github.yuroyami.kitert/AudioSinkEvent.Failed.copy|copy(kotlin.String;kotlin.Throwable?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Failed.toString|toString(){}[0]
+    }
+
+    final class Overrun : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.Overrun|null[0]
+        constructor <init>(kotlin/Long, kotlin/Long) // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
+
+        final val deadlineMicros // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.deadlineMicros|{}deadlineMicros[0]
+            final fun <get-deadlineMicros>(): kotlin/Long // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.deadlineMicros.<get-deadlineMicros>|<get-deadlineMicros>(){}[0]
+        final val tookMicros // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.tookMicros|{}tookMicros[0]
+            final fun <get-tookMicros>(): kotlin/Long // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.tookMicros.<get-tookMicros>|<get-tookMicros>(){}[0]
+
+        final fun component1(): kotlin/Long // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.component2|component2(){}[0]
+        final fun copy(kotlin/Long = ..., kotlin/Long = ...): io.github.yuroyami.kitert/AudioSinkEvent.Overrun // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.copy|copy(kotlin.Long;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Overrun.toString|toString(){}[0]
+    }
+
+    final class Started : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.Started|null[0]
+        constructor <init>(io.github.yuroyami.kitert/AudioFormat, io.github.yuroyami.kitert/Latency) // io.github.yuroyami.kitert/AudioSinkEvent.Started.<init>|<init>(io.github.yuroyami.kitert.AudioFormat;io.github.yuroyami.kitert.Latency){}[0]
+
+        final val format // io.github.yuroyami.kitert/AudioSinkEvent.Started.format|{}format[0]
+            final fun <get-format>(): io.github.yuroyami.kitert/AudioFormat // io.github.yuroyami.kitert/AudioSinkEvent.Started.format.<get-format>|<get-format>(){}[0]
+        final val latency // io.github.yuroyami.kitert/AudioSinkEvent.Started.latency|{}latency[0]
+            final fun <get-latency>(): io.github.yuroyami.kitert/Latency // io.github.yuroyami.kitert/AudioSinkEvent.Started.latency.<get-latency>|<get-latency>(){}[0]
+
+        final fun component1(): io.github.yuroyami.kitert/AudioFormat // io.github.yuroyami.kitert/AudioSinkEvent.Started.component1|component1(){}[0]
+        final fun component2(): io.github.yuroyami.kitert/Latency // io.github.yuroyami.kitert/AudioSinkEvent.Started.component2|component2(){}[0]
+        final fun copy(io.github.yuroyami.kitert/AudioFormat = ..., io.github.yuroyami.kitert/Latency = ...): io.github.yuroyami.kitert/AudioSinkEvent.Started // io.github.yuroyami.kitert/AudioSinkEvent.Started.copy|copy(io.github.yuroyami.kitert.AudioFormat;io.github.yuroyami.kitert.Latency){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.Started.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Started.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Started.toString|toString(){}[0]
+    }
+
+    final class Underrun : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.Underrun|null[0]
+        constructor <init>(kotlin/Int) // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.<init>|<init>(kotlin.Int){}[0]
+
+        final val frames // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.frames|{}frames[0]
+            final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.frames.<get-frames>|<get-frames>(){}[0]
+
+        final fun component1(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): io.github.yuroyami.kitert/AudioSinkEvent.Underrun // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Underrun.toString|toString(){}[0]
+    }
+
+    final object Stopped : io.github.yuroyami.kitert/AudioSinkEvent { // io.github.yuroyami.kitert/AudioSinkEvent.Stopped|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioSinkEvent.Stopped.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioSinkEvent.Stopped.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioSinkEvent.Stopped.toString|toString(){}[0]
+    }
+}
+
+final class io.github.yuroyami.kitert/AudioFormat { // io.github.yuroyami.kitert/AudioFormat|null[0]
+    constructor <init>(kotlin/Int, io.github.yuroyami.kitert/ChannelLayout = ...) // io.github.yuroyami.kitert/AudioFormat.<init>|<init>(kotlin.Int;io.github.yuroyami.kitert.ChannelLayout){}[0]
+
+    final val channels // io.github.yuroyami.kitert/AudioFormat.channels|{}channels[0]
+        final fun <get-channels>(): kotlin/Int // io.github.yuroyami.kitert/AudioFormat.channels.<get-channels>|<get-channels>(){}[0]
+    final val layout // io.github.yuroyami.kitert/AudioFormat.layout|{}layout[0]
+        final fun <get-layout>(): io.github.yuroyami.kitert/ChannelLayout // io.github.yuroyami.kitert/AudioFormat.layout.<get-layout>|<get-layout>(){}[0]
+    final val sampleRate // io.github.yuroyami.kitert/AudioFormat.sampleRate|{}sampleRate[0]
+        final fun <get-sampleRate>(): kotlin/Int // io.github.yuroyami.kitert/AudioFormat.sampleRate.<get-sampleRate>|<get-sampleRate>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kitert/AudioFormat.component1|component1(){}[0]
+    final fun component2(): io.github.yuroyami.kitert/ChannelLayout // io.github.yuroyami.kitert/AudioFormat.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., io.github.yuroyami.kitert/ChannelLayout = ...): io.github.yuroyami.kitert/AudioFormat // io.github.yuroyami.kitert/AudioFormat.copy|copy(kotlin.Int;io.github.yuroyami.kitert.ChannelLayout){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/AudioFormat.equals|equals(kotlin.Any?){}[0]
+    final fun framesToMicros(kotlin/Int): kotlin/Long // io.github.yuroyami.kitert/AudioFormat.framesToMicros|framesToMicros(kotlin.Int){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/AudioFormat.hashCode|hashCode(){}[0]
+    final fun microsToFrames(kotlin/Long): kotlin/Int // io.github.yuroyami.kitert/AudioFormat.microsToFrames|microsToFrames(kotlin.Long){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kitert/AudioFormat.toString|toString(){}[0]
+}
+
+final class io.github.yuroyami.kitert/Latency { // io.github.yuroyami.kitert/Latency|null[0]
+    constructor <init>(kotlin/Int, io.github.yuroyami.kitert/LatencyQuality) // io.github.yuroyami.kitert/Latency.<init>|<init>(kotlin.Int;io.github.yuroyami.kitert.LatencyQuality){}[0]
+
+    final val frames // io.github.yuroyami.kitert/Latency.frames|{}frames[0]
+        final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kitert/Latency.frames.<get-frames>|<get-frames>(){}[0]
+    final val quality // io.github.yuroyami.kitert/Latency.quality|{}quality[0]
+        final fun <get-quality>(): io.github.yuroyami.kitert/LatencyQuality // io.github.yuroyami.kitert/Latency.quality.<get-quality>|<get-quality>(){}[0]
+
+    final fun component1(): kotlin/Int // io.github.yuroyami.kitert/Latency.component1|component1(){}[0]
+    final fun component2(): io.github.yuroyami.kitert/LatencyQuality // io.github.yuroyami.kitert/Latency.component2|component2(){}[0]
+    final fun copy(kotlin/Int = ..., io.github.yuroyami.kitert/LatencyQuality = ...): io.github.yuroyami.kitert/Latency // io.github.yuroyami.kitert/Latency.copy|copy(kotlin.Int;io.github.yuroyami.kitert.LatencyQuality){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kitert/Latency.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kitert/Latency.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kitert/Latency.toString|toString(){}[0]
+
+    final object Companion { // io.github.yuroyami.kitert/Latency.Companion|null[0]
+        final val Unknown // io.github.yuroyami.kitert/Latency.Companion.Unknown|{}Unknown[0]
+            final fun <get-Unknown>(): io.github.yuroyami.kitert/Latency // io.github.yuroyami.kitert/Latency.Companion.Unknown.<get-Unknown>|<get-Unknown>(){}[0]
+    }
+}
+
+final fun io.github.yuroyami.kitert/audioOutputAvailable(): kotlin/Boolean // io.github.yuroyami.kitert/audioOutputAvailable|audioOutputAvailable(){}[0]
+final fun io.github.yuroyami.kitert/openAudioSink(io.github.yuroyami.kitert/AudioFormat = ..., kotlin/Int = ..., kotlin/Function1<io.github.yuroyami.kitert/AudioSinkEvent, kotlin/Unit> = ...): io.github.yuroyami.kitert/AudioSink // io.github.yuroyami.kitert/openAudioSink|openAudioSink(io.github.yuroyami.kitert.AudioFormat;kotlin.Int;kotlin.Function1<io.github.yuroyami.kitert.AudioSinkEvent,kotlin.Unit>){}[0]
