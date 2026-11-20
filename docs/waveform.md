@@ -1,6 +1,6 @@
 # Draw a waveform
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](index.md#install).
 
 Drawing a waveform means reducing millions of samples to a few thousand
 buckets, each with the lowest and highest sample and the root mean square

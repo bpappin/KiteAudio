@@ -1,6 +1,6 @@
 # Read tags
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](../index.md#install).
 
 `readTags` returns the title, artist, album and every other field a file states, from
 whichever tag format it uses: ID3 in MP3, WAV and AIFF, Vorbis comments in FLAC and Ogg, MP4

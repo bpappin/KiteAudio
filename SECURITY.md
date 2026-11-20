@@ -5,6 +5,9 @@
 Report a vulnerability through GitHub's private advisory form on this
 repository. Please do not open a public issue for one.
 
+This policy covers every module in the repository. The sections below describe the
+codec module, `kiteaudio-codec`, which the code calls AudioKodec.
+
 ## What counts
 
 AudioKodec parses files that arrive from anywhere, so the interesting failures

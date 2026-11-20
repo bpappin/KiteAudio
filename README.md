@@ -1,14 +1,37 @@
-# AudioKodec
+# KiteAudio
 
-Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform: decode 22
-containers to Float32 PCM, write FLAC, WavPack, WAV, AIFF, AU, Apple Lossless, Ogg Vorbis,
-Ogg Opus and MP3, and edit tags without touching the audio, with the same code on every target.
+Audio libraries written in Kotlin for Kotlin Multiplatform. KiteAudio decodes and encodes
+audio files, reads and writes MIDI, renders SoundFont instruments to PCM and plays PCM on an
+output device. Each library is a separate artifact, so a project adds only the parts it needs.
 
 <sub>AI tools wrote much of the code, tests and documentation in this project, under the
 direction and review of its author.</sub>
 
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
+
+## Modules
+
+Every artifact has the group `io.github.yuroyami` and the version 0.3.0.
+
+| Artifact | What it does | Targets |
+|---|---|---|
+| `kiteaudio-codec` | Audio containers, codecs and tags. Depends on kotlin-stdlib only. | 22: JVM, Android, JS, wasmJs, wasmWasi, Apple, Linux, Windows, Android Native |
+| `kiteaudio-codec-io` | The kotlinx-io bridge of the codec: reads a `Path` or `RawSource` and writes to a `Sink` or a `Path`. | The same 22 |
+| [`kiteaudio-midi`](kiteaudio-midi/README.md) | Standard MIDI Files, typed MIDI messages, a tempo map and note pairing. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS |
+| `kiteaudio-midi-devices` | MIDI ports through MidiManager on Android, CoreMIDI on Apple and `javax.sound.midi` on the JVM. | JVM, Android, iOS, macOS |
+| `kiteaudio-midi-coremidi` | CoreMIDI ports for a macOS desktop JVM, through the foreign function API. Needs JDK 22 or later at runtime. | JVM |
+| [`kiteaudio-synth`](kiteaudio-synth/README.md) | SoundFont reading and writing, and a sample-based synthesiser that renders Float32 PCM. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS |
+| [`kiteaudio-output`](kiteaudio-output/README.md) | Callback-based mono and stereo audio output through Java Sound, AudioTrack and AudioQueue. | JVM, Android, iOS, macOS |
+
+The README of each MIDI, synth and output module describes that module. The rest of this page
+describes the two codec modules. Their code calls the codec AudioKodec.
+
+## The codec
+
+Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform: decode 22
+containers to Float32 PCM, write FLAC, WavPack, WAV, AIFF, AU, Apple Lossless, Ogg Vorbis,
+Ogg Opus and MP3, and edit tags without touching the audio, with the same code on every target.
 
 **[Documentation](docs/index.md)**: a guide per task, a page for each format, and the full
 support tables.
@@ -24,15 +47,15 @@ the codec's own reference decoder.
 
 ## Install
 
-0.1.0 is not published to Maven Central yet. These are the coordinates it will use:
+0.3.0 is not published to Maven Central yet. These are the coordinates it will use:
 
 With Gradle:
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:kiteaudio-codec:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec:0.3.0")
     // Optional, for files through kotlinx-io:
-    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.3.0")
 }
 ```
 
@@ -40,9 +63,9 @@ With the Kotlin Toolchain, in `module.yaml`:
 
 ```yaml
 dependencies:
-  - io.github.yuroyami:kiteaudio-codec:0.1.0
+  - io.github.yuroyami:kiteaudio-codec:0.3.0
   # Optional, for files through kotlinx-io:
-  - io.github.yuroyami:kiteaudio-codec-io:0.1.0
+  - io.github.yuroyami:kiteaudio-codec-io:0.3.0
 ```
 
 The JVM artifacts need Java 21 or newer.

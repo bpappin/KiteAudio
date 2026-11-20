@@ -5,7 +5,7 @@ The core module never touches the filesystem, which lets it build for every Kotl
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.3.0")
 }
 ```
 

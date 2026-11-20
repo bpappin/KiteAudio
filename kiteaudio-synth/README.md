@@ -51,7 +51,7 @@ The result is 512 **frames**, each containing a left and a right sample. Creatin
 and prepares its regions; a callback should reuse that synth and its output buffer.
 
 > [!NOTE]
-> The source version is `0.2.0`. The API is still evolving; [CHANGELOG.md](../CHANGELOG.md) lists the
+> The source version is `0.3.0`. The API is still evolving; [CHANGELOG.md](../CHANGELOG.md) lists the
 > breaking changes from `0.1`. As of 29 September 2026, this repository has no GitHub releases
 > and the `io.github.yuroyami:kiteaudio-synth` Maven Central metadata endpoint returns 404. The source
 > version is not a verified Maven Central release.
@@ -73,7 +73,7 @@ repositories of the consuming project, then add the dependency to your shared co
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.yuroyami:kiteaudio-synth:0.2.0")
+            implementation("io.github.yuroyami:kiteaudio-synth:0.3.0")
         }
     }
 }
@@ -84,11 +84,11 @@ block. With the Kotlin Toolchain, add it to `module.yaml`:
 
 ```yaml
 dependencies:
-  - io.github.yuroyami:kiteaudio-synth:0.2.0
+  - io.github.yuroyami:kiteaudio-synth:0.3.0
 ```
 
-The coordinates are `io.github.yuroyami:kiteaudio-synth:0.2.0`. The version is `publishing.version` in
-`kiteaudio-synth/module.yaml`.
+The coordinates are `io.github.yuroyami:kiteaudio-synth:0.3.0`. The version is `publishing.version` in
+`library.module-template.yaml`.
 
 ## A quick tour
 

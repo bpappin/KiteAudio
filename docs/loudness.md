@@ -1,6 +1,6 @@
 # Measure loudness
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](index.md#install).
 
 `LoudnessMeter` measures loudness as EBU R 128 defines it, from
 Recommendation ITU-R BS.1770: the integrated loudness of a whole program,

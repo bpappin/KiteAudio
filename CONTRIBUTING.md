@@ -80,6 +80,19 @@ toolchain downloads its own JDK, Kotlin/Native, Node.js and Chrome. `./kotlin bu
 builds every module, and `./kotlin test` runs the tests. Android steps need the
 Android SDK in `ANDROID_HOME`.
 
+The MIDI, synth and output modules have their own JVM tests:
+
+```sh
+./kotlin test -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -p jvm
+./kotlin test -m kiteaudio-synth -p jvm
+./kotlin test -m kiteaudio-output -p jvm
+python3 kiteaudio-output/verification/android/run.py --java-home "$JAVA_HOME"
+```
+
+The `kiteaudio-output` JVM tests open the default output device and play a quiet tone.
+Set `KITEAUDIO_MIDI_CORPUS` to a folder of `.mid` files to run the MIDI corpus tests.
+The rest of this section is about the codec modules.
+
 To regenerate every JVM fixture and record the exact tool versions, executable
 SHA-256, argument arrays, caller recipes and input/output hashes, run:
 

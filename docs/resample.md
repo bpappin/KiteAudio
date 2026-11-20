@@ -1,6 +1,6 @@
 # Change the sample rate
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](index.md#install).
 
 A decoded file comes out at the rate it was encoded at, and an output
 device usually wants one fixed rate. `Resampler` converts interleaved float

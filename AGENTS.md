@@ -6,6 +6,9 @@ next person does not pay for them twice.
 
 ## Gotchas
 
+- Every module sits one level below the repository root. Many codec tests find
+  their fixtures through `user.dir` and its parent, so a module one level deeper
+  breaks them.
 - Multichannel decoders must reorder channels into the canonical order before
   emitting a frame. Vorbis, Opus and AAC each use their own speaker order, and
   getting it wrong is silent: the audio plays, from the wrong speakers. Test it

@@ -34,7 +34,7 @@ with [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth
 [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) to read MIDI messages.
 
 > [!NOTE]
-> The configured project version is `0.1.0`. The API is early and can change. A Maven Central
+> The configured project version is `0.3.0`. The API is early and can change. A Maven Central
 > release is not available at the time of this README update; use a source checkout.
 
 ## Install from source
@@ -55,7 +55,7 @@ repositories of your application, then add the dependency in a Kotlin Multiplatf
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.yuroyami:kiteaudio-output:0.1.0")
+            implementation("io.github.yuroyami:kiteaudio-output:0.3.0")
         }
     }
 }
@@ -66,7 +66,7 @@ block. With the Kotlin Toolchain, add it to `module.yaml`:
 
 ```yaml
 dependencies:
-  - io.github.yuroyami:kiteaudio-output:0.1.0
+  - io.github.yuroyami:kiteaudio-output:0.3.0
 ```
 
 ## A quick tour

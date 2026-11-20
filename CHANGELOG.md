@@ -1,11 +1,37 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## Unreleased 0.3.0
 
-First release. The uncompressed family end to end, plus FLAC, Vorbis, MPEG
-audio and Ogg.
+The first release of KiteAudio. KiteAudio holds the codec, MIDI, synth and output
+libraries in one repository. Each library is its own artifact, and all seven artifacts
+have version 0.3.0. No earlier version of any of them is on Maven Central.
 
-### Added
+### Changed in the merge
+
+The artifacts and packages have new names:
+
+| Artifact before | Artifact now | Package now |
+|---|---|---|
+| `io.github.yuroyami:audiokodec` | `io.github.yuroyami:kiteaudio-codec` | `io.github.yuroyami.kiteaudio.codec` |
+| `io.github.yuroyami:audiokodec-io` | `io.github.yuroyami:kiteaudio-codec-io` | `io.github.yuroyami.kiteaudio.codec.io` |
+| `io.github.yuroyami:kitemidi` | `io.github.yuroyami:kiteaudio-midi` | `io.github.yuroyami.kiteaudio.midi` |
+| `io.github.yuroyami:kitemidi-io` | `io.github.yuroyami:kiteaudio-midi-devices` | `io.github.yuroyami.kiteaudio.midi.devices` |
+| `io.github.yuroyami:kitemidi-io-coremidi` | `io.github.yuroyami:kiteaudio-midi-coremidi` | `io.github.yuroyami.kiteaudio.midi.coremidi` |
+| `io.github.yuroyami:kitesynth` | `io.github.yuroyami:kiteaudio-synth` | `io.github.yuroyami.kiteaudio.synth` |
+| `io.github.yuroyami:kitert` | `io.github.yuroyami:kiteaudio-output` | `io.github.yuroyami.kiteaudio.output` |
+
+- The public types and objects keep their names, for example `AudioKodec`, `KiteMidi`,
+  `KiteSynth` and `AudioKodecException`. The `AUDIOKODEC_*` environment variables and the
+  Apple framework names also stay.
+- The klib names follow the artifact names, for example `io.github.yuroyami:kiteaudio-codec`.
+- The temporary files of the codec use the prefix `kiteaudio-codec-`. The benchmark reads the
+  system property `kiteaudio-codec.benchmark.cache`.
+- The MIDI corpus test reads its folder from the environment variable `KITEAUDIO_MIDI_CORPUS`.
+
+### Added in the codec
+
+The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
+
 
 - Read and write WAV, including WAVE_FORMAT_EXTENSIBLE, RF64 and BW64.
 - Read and write AIFF and AIFF-C, and Sun AU.
@@ -213,3 +239,59 @@ audio and Ogg.
 
 - The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle,
   on Kotlin 2.4.21.
+
+## KiteSynth before the merge
+
+These entries come from the changelog of the KiteSynth repository. They name the
+artifact `kitesynth`, which is `kiteaudio-synth` now.
+
+### After 0.2.0
+
+Build:
+
+- The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle, on Kotlin 2.4.21.
+- Android builds compile against API level 37.2.
+
+### 0.2.0
+
+Breaking changes:
+
+- `SampleHeader` holds its own frames in `data`. `start` and `end` are gone, and loop points count from the first frame of the sample.
+- `SoundFont.sampleData` is gone. `SoundFont` gains `info`, the INFO text of the file.
+- `Voice.start` no longer takes a sample pool.
+- Channel 9 is a drum channel from the start. When the font has no kit, it is silent instead of playing the first preset.
+- Controller 121, Reset All Controllers, keeps volume, pan, bank, program and the effect sends, as General MIDI says. `Synth.reset(channel)` still resets everything except program and bank.
+- `referenceA4` now tunes every melodic note. A note keeps the table tuning and A4 it started with; pitch bend and RPN tuning still move it.
+- Controller values are 7-bit, as MIDI's are. A bank select above 127 no longer reaches bank 128: use `setPercussion` for drums.
+- `SoundFont.voicesFor(bank, program, ...)` picks a preset the way a channel does. Bank 128 is drums, and a missing bank tries bank 0 before the first preset.
+- A note plays its zone's filter, modulation envelope, LFOs and modulators. A font now sounds as its author programmed it, which is often darker and moves more than in 0.1.
+- Volume (controller 7) and expression (controller 11) follow the concave curve of the SoundFont default modulators. A middle value is quieter than before.
+- `VoicePlan` has two more constructor parameters, `generators` and `modulators`. Both have defaults.
+
+Added:
+
+- `SoundFontWriter`, which writes a font that reads back unchanged.
+- `SoundFont.merged` and `SoundFont.pruned`. The merged font is pruned. Both keep stereo and linked samples together, and a link to a missing sample becomes a mono sample.
+- Modulators on every zone.
+- Percussion channels with `setPercussion` and `isPercussion`, and bank 128 kits.
+- `presetOn`, `bankOn`, `programOn`, `controller`, `bendRangeSemitones`, `channelPressure` and `polyPressure` on `Synth`.
+- Pitch bend range, fine tune and coarse tune through RPN data entry.
+- The sostenuto pedal, pan from controller 10 for new notes, and channel and key pressure.
+- Pitch bend moves notes that are already sounding.
+- The volume envelope moves in decibels, as the format means it. The attack rises in amplitude, and the key number scales hold and decay around middle C.
+- A resonant low-pass filter on every voice, `LowPassFilter`.
+- The modulation envelope and both LFOs, `Lfo`. Vibrato, tremolo and filter sweeps now sound.
+- Modulators change the sound. `DefaultModulators` holds the SoundFont 2.04 defaults. A zone's own modulator adds to them, or replaces the default it matches.
+- Controllers, channel pressure, key pressure and the pitch wheel move notes that are already sounding, through the modulators that read them.
+- Reverb and chorus sends on every voice, and a stereo chorus on `Synth.chorus`. Controllers 91 and 93 set each channel's sends.
+- Cubic interpolation, on by default. `Synth.interpolation = Interpolation.Linear` costs less.
+- `Units.gainOf`, which turns centibels into a gain from a table.
+- SF3 fonts. `KiteSynth.readFont(bytes, keepCompressed = true)` keeps each sample's Ogg Vorbis bytes in `SampleHeader.compressed`. `SoundFont.decoded` turns them into frames with a decoder you pass in, and `SoundFontWriter` writes a font that is still compressed as an SF3 file. KiteSynth still depends on nothing.
+
+Fixed:
+
+- A sample header that claims frames past the data is cut to the frames that exist.
+- An SF3 font read without `keepCompressed` is refused with a message instead of playing noise. A `Synth` refuses a font whose samples are still compressed.
+- A NaN or an infinity in a voice or in the room's input comes out as silence and no longer stays in the filter or the reverb. A value that overflows inside the room empties it.
+- The reverb stops working once its input and its tail both stay under -120 dB, and empties itself. A silent room then costs almost nothing and gives out exact zeros.
+- A released note ends once its sound stays under -90 dB for 50 ms. Before, it ran until its envelope alone had fallen 96 dB, often seconds after anyone could hear it.

@@ -87,11 +87,11 @@ KiteMIDI provides MIDI data and device I/O. Audio synthesis, playback scheduling
 Compose UI belong to the application or another library.
 
 > [!NOTE]
-> The source version is `0.2.0`. The API is still evolving and may change between minor versions.
+> The source version is `0.3.0`. The API is still evolving and may change between minor versions.
 
 ## Install
 
-This checkout declares three modules at `0.2.0`. Published Maven Central artifacts and
+This checkout declares three modules at `0.3.0`. Published Maven Central artifacts and
 GitHub releases were not available when checked on 29 September 2026. Publish the source
 checkout to your local Maven repository first, as [Build and test](#build-and-test) shows,
 and add `mavenLocal()` to the repositories of your application.
@@ -102,13 +102,13 @@ Then add the modules you need:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.yuroyami:kiteaudio-midi:0.2.0")
+            implementation("io.github.yuroyami:kiteaudio-midi:0.3.0")
             // Optional: real device access. Also brings in kiteaudio-midi.
-            implementation("io.github.yuroyami:kiteaudio-midi-devices:0.2.0")
+            implementation("io.github.yuroyami:kiteaudio-midi-devices:0.3.0")
         }
         jvmMain.dependencies {
             // Optional: CoreMIDI on the desktop JVM, for macOS.
-            implementation("io.github.yuroyami:kiteaudio-midi-coremidi:0.2.0")
+            implementation("io.github.yuroyami:kiteaudio-midi-coremidi:0.3.0")
         }
     }
 }
@@ -119,8 +119,8 @@ A plain JVM or Android app can put the applicable dependencies in its usual
 
 ```yaml
 dependencies:
-  - io.github.yuroyami:kiteaudio-midi:0.2.0
-  - io.github.yuroyami:kiteaudio-midi-devices:0.2.0
+  - io.github.yuroyami:kiteaudio-midi:0.3.0
+  - io.github.yuroyami:kiteaudio-midi-devices:0.3.0
 ```
 
 | Module | What it adds |
@@ -388,10 +388,10 @@ meta events, tempo maps, timelines and stream parsing. JVM device tests use the 
 software synthesizer and sequencer. Apple and desktop CoreMIDI tests create virtual MIDI
 sources; they do not verify a physical keyboard, USB connection or Bluetooth transport.
 
-The optional corpus tests read a hard-coded directory outside this repository. They
-return successfully when that directory is absent, so a green clone does not establish
-corpus coverage. There are no Android device tests in this checkout. The repository
-currently contains no CI workflow. Commands above describe available checks; consult
+The optional corpus tests read the folder that the environment variable
+`KITEAUDIO_MIDI_CORPUS` names. They return successfully when the variable is unset or the
+folder is absent, so a green clone does not establish corpus coverage. There are no Android
+device tests in this checkout. The CI workflow does not run the MIDI modules yet. Commands above describe available checks; consult
 their actual output for the targets and tests that ran.
 
 Known defects, open proposals and platform limits are tracked as

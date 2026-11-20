@@ -1,6 +1,6 @@
 # Edit tags without touching the audio
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](../index.md#install).
 
 `writeTags` writes a new copy of a file with new tags and the audio copied across byte for
 byte. Nothing is decoded or re-encoded, so it is safe on MP3, AAC and every other lossy

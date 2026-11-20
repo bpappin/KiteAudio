@@ -8,7 +8,8 @@ toolchain's own Kotlin/Native compiler on those klibs, as the Kotlin Gradle plug
   release frameworks <module>/build/bin/<platform>/releaseFramework/<Name>.framework
   XCFrameworks       <module>/build/XCFrameworks/<debug|release>/<Name>.xcframework
 
-Each framework also gets the LICENSE and NOTICE files of the repository in its Resources folder.
+Each codec framework also gets the LICENSE and NOTICE files of the repository in its Resources folder.
+Each framework links only the platforms that its module builds for.
 Run `./kotlin build -p <platform> ...` first, for every platform you link.
 """
 import argparse
@@ -22,11 +23,19 @@ import sys
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "darwin" else ".cache/JetBrains/Kotlin")
 
-# Framework name -> module and the libraries whose API the framework re-exports to Swift.
+# Framework name -> module, the libraries whose API the framework re-exports to Swift, the
+# platforms that the framework links, and whether it carries LICENSE and NOTICE.
 # An export entry is a module name or a Maven artifact name without the platform suffix.
+IOS = ("iosArm64", "iosSimulatorArm64", "iosX64")
+APPLE = IOS + ("macosArm64",)
 FRAMEWORKS = {
-    "AudioKodec": {"module": "kiteaudio-codec", "export": []},
-    "AudioKodecIO": {"module": "kiteaudio-codec-io", "export": []},
+    "AudioKodec": {"module": "kiteaudio-codec", "export": [], "platforms": IOS, "attribution": True},
+    "AudioKodecIO": {"module": "kiteaudio-codec-io", "export": [], "platforms": IOS, "attribution": True},
+    "KiteMIDI": {"module": "kiteaudio-midi", "export": [], "platforms": APPLE, "attribution": False},
+    "KiteMIDIIO": {"module": "kiteaudio-midi-devices", "export": ["kiteaudio-midi"], "platforms": APPLE,
+                   "attribution": False},
+    "KiteSynth": {"module": "kiteaudio-synth", "export": [], "platforms": APPLE, "attribution": False},
+    "KiteRT": {"module": "kiteaudio-output", "export": [], "platforms": APPLE, "attribution": False},
 }
 # The file that holds settings.kotlin.version.
 KOTLIN_VERSION_FILE = "library.module-template.yaml"
@@ -35,6 +44,7 @@ PLATFORMS = {
     "iosArm64": ("ios_arm64", "ios"),
     "iosSimulatorArm64": ("ios_simulator_arm64", "ios-simulator"),
     "iosX64": ("ios_x64", "ios-simulator"),
+    "macosArm64": ("macos_arm64", "macos"),
 }
 
 
@@ -104,10 +114,11 @@ def link(name, spec, platform, build_type, compiler):
     args += ["-g"] if build_type == "debug" else ["-opt"]
     run(*args)
     framework = out_dir / f"{name}.framework"
-    resources = framework / "Resources"
-    resources.mkdir(exist_ok=True)
-    for attribution in ("LICENSE", "NOTICE"):
-        shutil.copyfile(ROOT / attribution, resources / attribution)
+    if spec["attribution"]:
+        resources = framework / "Resources"
+        resources.mkdir(exist_ok=True)
+        for attribution in ("LICENSE", "NOTICE"):
+            shutil.copyfile(ROOT / attribution, resources / attribution)
     return framework
 
 
@@ -131,14 +142,19 @@ def fat_framework(frameworks, destination):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--platforms", default=",".join(PLATFORMS), help="comma-separated toolchain platforms")
+    parser.add_argument("--frameworks", default=",".join(FRAMEWORKS), help="comma-separated framework names")
     parser.add_argument("--build-type", choices=("debug", "release"), default="release")
     parser.add_argument("--no-xcframework", action="store_true", help="only link the per-platform frameworks")
     args = parser.parse_args()
     platforms = [p for p in args.platforms.split(",") if p]
+    names = [n for n in args.frameworks.split(",") if n]
+    unknown = [n for n in names if n not in FRAMEWORKS]
+    if unknown:
+        raise RuntimeError(f"Unknown frameworks {unknown}. Known: {list(FRAMEWORKS)}")
     compiler = konanc(kotlin_version())
-    for name, spec in FRAMEWORKS.items():
-        linked = {p: link(name, spec, p, args.build_type, compiler) for p in platforms}
-        if args.no_xcframework:
+    for name, spec in ((n, FRAMEWORKS[n]) for n in names):
+        linked = {p: link(name, spec, p, args.build_type, compiler) for p in platforms if p in spec["platforms"]}
+        if args.no_xcframework or not linked:
             continue
         slices = {}
         for platform, framework in linked.items():

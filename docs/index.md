@@ -6,13 +6,13 @@ without touching the audio. The same code runs on every target.
 
 ## Install
 
-0.1.0 is not published to Maven Central yet. These are the coordinates it will use:
+0.3.0 is not published to Maven Central yet. These are the coordinates it will use:
 
 ```kotlin
 dependencies {
-    implementation("io.github.yuroyami:kiteaudio-codec:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec:0.3.0")
     // Optional, for files through kotlinx-io:
-    implementation("io.github.yuroyami:kiteaudio-codec-io:0.1.0")
+    implementation("io.github.yuroyami:kiteaudio-codec-io:0.3.0")
 }
 ```
 

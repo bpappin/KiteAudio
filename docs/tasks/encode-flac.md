@@ -1,6 +1,6 @@
 # Encode FLAC
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](../index.md#install).
 
 FLAC is lossless: once the samples are at the bit depth you choose, the file decodes to
 exactly those samples. Give `encode` interleaved Float32 samples, their format and a

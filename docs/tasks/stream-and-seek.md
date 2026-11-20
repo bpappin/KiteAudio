@@ -1,6 +1,6 @@
 # Stream and seek through a long file
 
-**Depends on** `io.github.yuroyami:kiteaudio-codec:0.1.0`. See [Install](../index.md#install).
+**Depends on** `io.github.yuroyami:kiteaudio-codec:0.3.0`. See [Install](../index.md#install).
 
 A decoder hands back one block of samples at a time, so a file of any length plays in the
 memory of a few blocks. `seek` moves it to an exact frame.
