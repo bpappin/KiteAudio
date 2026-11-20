@@ -1,13 +1,13 @@
 modules:
-  - kiteaudio-codec
-  - kiteaudio-codec-io
   - build-plugins/abi-check
   - build-plugins/attribution
   - build-plugins/dokka
   - docs-samples
+  - kiteaudio-codec
+  - kiteaudio-codec-io
   - kiteaudio-midi
-  - kiteaudio-midi-devices
   - kiteaudio-midi-coremidi
+  - kiteaudio-midi-devices
   - kiteaudio-output
   - kiteaudio-synth
   - sample
