@@ -147,9 +147,10 @@ class AlacEncodeOracleTest {
             file.writeBytes(AudioKodec.encode(samples, AudioFormat(44_100, layout), bits, EncodeTarget.alac(bits)))
             val back = temp("afconvert_${channels}_$bits.wav")
             back.delete()
-            run(listOf(afconvert!!, "-f", "WAVE", "-d", "LEI$bits", file.path, back.path))
-            // afconvert writes WAV in WAV's speaker order, which for these
-            // layouts is AudioKodec's.
+            // Without a layout, afconvert keeps ALAC's channel order for 5.1. The tag asks
+            // for WAV's speaker order, which is AudioKodec's.
+            val order = if (layout == ChannelLayout.SURROUND_5_1) listOf("-l", "MPEG_5_1_A") else emptyList()
+            run(listOf(afconvert!!, "-f", "WAVE", "-d", "LEI$bits") + order + listOf(file.path, back.path))
             assertContentEquals(samples, readWavSamples(back), "$layout, $bits-bit")
         }
     }
