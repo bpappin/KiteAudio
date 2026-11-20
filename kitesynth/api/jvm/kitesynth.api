@@ -1,0 +1,426 @@
+public final class io/github/yuroyami/kitesynth/Chorus {
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public final fun getLevel ()D
+	public final fun process ([F[FII)V
+	public final fun setLevel (D)V
+}
+
+public final class io/github/yuroyami/kitesynth/EnvelopeSpec {
+	public static final field Companion Lio/github/yuroyami/kitesynth/EnvelopeSpec$Companion;
+	public fun <init> (IIIIII)V
+	public final fun getAttackTimecents ()I
+	public final fun getDecayTimecents ()I
+	public final fun getDelayTimecents ()I
+	public final fun getHoldTimecents ()I
+	public final fun getReleaseTimecents ()I
+	public final fun getSustainCb ()I
+}
+
+public final class io/github/yuroyami/kitesynth/EnvelopeSpec$Companion {
+	public final fun getDefault ()Lio/github/yuroyami/kitesynth/EnvelopeSpec;
+}
+
+public final class io/github/yuroyami/kitesynth/EnvelopeStage : java/lang/Enum {
+	public static final field Attack Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Decay Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Delay Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Finished Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Hold Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Release Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static final field Sustain Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public static fun values ()[Lio/github/yuroyami/kitesynth/EnvelopeStage;
+}
+
+public final class io/github/yuroyami/kitesynth/Generator : java/lang/Enum {
+	public static final field AttackModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field AttackVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ChorusEffectsSend Lio/github/yuroyami/kitesynth/Generator;
+	public static final field CoarseTune Lio/github/yuroyami/kitesynth/Generator;
+	public static final field Companion Lio/github/yuroyami/kitesynth/Generator$Companion;
+	public static final field DecayModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field DecayVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field DelayModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field DelayModLfo Lio/github/yuroyami/kitesynth/Generator;
+	public static final field DelayVibLfo Lio/github/yuroyami/kitesynth/Generator;
+	public static final field DelayVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field EndAddrsCoarseOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field EndAddrsOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field EndLoopAddrsCoarseOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field EndLoopAddrsOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ExclusiveClass Lio/github/yuroyami/kitesynth/Generator;
+	public static final field FineTune Lio/github/yuroyami/kitesynth/Generator;
+	public static final field FreqModLfo Lio/github/yuroyami/kitesynth/Generator;
+	public static final field FreqVibLfo Lio/github/yuroyami/kitesynth/Generator;
+	public static final field HoldModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field HoldVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field InitialAttenuation Lio/github/yuroyami/kitesynth/Generator;
+	public static final field InitialFilterFc Lio/github/yuroyami/kitesynth/Generator;
+	public static final field InitialFilterQ Lio/github/yuroyami/kitesynth/Generator;
+	public static final field Instrument Lio/github/yuroyami/kitesynth/Generator;
+	public static final field KeyRange Lio/github/yuroyami/kitesynth/Generator;
+	public static final field Keynum Lio/github/yuroyami/kitesynth/Generator;
+	public static final field KeynumToModEnvDecay Lio/github/yuroyami/kitesynth/Generator;
+	public static final field KeynumToModEnvHold Lio/github/yuroyami/kitesynth/Generator;
+	public static final field KeynumToVolEnvDecay Lio/github/yuroyami/kitesynth/Generator;
+	public static final field KeynumToVolEnvHold Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ModEnvToFilterFc Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ModEnvToPitch Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ModLfoToFilterFc Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ModLfoToPitch Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ModLfoToVolume Lio/github/yuroyami/kitesynth/Generator;
+	public static final field OverridingRootKey Lio/github/yuroyami/kitesynth/Generator;
+	public static final field Pan Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ReleaseModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ReleaseVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ReverbEffectsSend Lio/github/yuroyami/kitesynth/Generator;
+	public static final field SampleId Lio/github/yuroyami/kitesynth/Generator;
+	public static final field SampleModes Lio/github/yuroyami/kitesynth/Generator;
+	public static final field ScaleTuning Lio/github/yuroyami/kitesynth/Generator;
+	public static final field StartAddrsCoarseOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field StartAddrsOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field StartLoopAddrsCoarseOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field StartLoopAddrsOffset Lio/github/yuroyami/kitesynth/Generator;
+	public static final field SustainModEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field SustainVolEnv Lio/github/yuroyami/kitesynth/Generator;
+	public static final field VelRange Lio/github/yuroyami/kitesynth/Generator;
+	public static final field Velocity Lio/github/yuroyami/kitesynth/Generator;
+	public static final field VibLfoToPitch Lio/github/yuroyami/kitesynth/Generator;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getId ()I
+	public final fun getSigned ()Z
+	public final fun read (I)I
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitesynth/Generator;
+	public static fun values ()[Lio/github/yuroyami/kitesynth/Generator;
+}
+
+public final class io/github/yuroyami/kitesynth/Generator$Companion {
+	public final fun of (I)Lio/github/yuroyami/kitesynth/Generator;
+}
+
+public final class io/github/yuroyami/kitesynth/GeneratorSet {
+	public fun <init> ()V
+	public fun <init> (Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun all ()Ljava/util/Map;
+	public final fun contains (Lio/github/yuroyami/kitesynth/Generator;)Z
+	public final fun get (Lio/github/yuroyami/kitesynth/Generator;)Ljava/lang/Integer;
+	public final fun get (Lio/github/yuroyami/kitesynth/Generator;I)I
+	public final fun getSize ()I
+	public final fun over (Lio/github/yuroyami/kitesynth/GeneratorSet;)Lio/github/yuroyami/kitesynth/GeneratorSet;
+	public final fun raw (Lio/github/yuroyami/kitesynth/Generator;)Ljava/lang/Integer;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/Instrument {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;)V
+	public final fun getName ()Ljava/lang/String;
+	public final fun getZones ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/InstrumentZone {
+	public fun <init> (Lio/github/yuroyami/kitesynth/GeneratorSet;Lio/github/yuroyami/kitesynth/Span;Lio/github/yuroyami/kitesynth/Span;Ljava/lang/Integer;Ljava/util/List;)V
+	public synthetic fun <init> (Lio/github/yuroyami/kitesynth/GeneratorSet;Lio/github/yuroyami/kitesynth/Span;Lio/github/yuroyami/kitesynth/Span;Ljava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getGenerators ()Lio/github/yuroyami/kitesynth/GeneratorSet;
+	public final fun getKeys ()Lio/github/yuroyami/kitesynth/Span;
+	public final fun getModulators ()Ljava/util/List;
+	public final fun getSampleId ()Ljava/lang/Integer;
+	public final fun getVelocities ()Lio/github/yuroyami/kitesynth/Span;
+}
+
+public final class io/github/yuroyami/kitesynth/Interpolation : java/lang/Enum {
+	public static final field Cubic Lio/github/yuroyami/kitesynth/Interpolation;
+	public static final field Linear Lio/github/yuroyami/kitesynth/Interpolation;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitesynth/Interpolation;
+	public static fun values ()[Lio/github/yuroyami/kitesynth/Interpolation;
+}
+
+public final class io/github/yuroyami/kitesynth/KiteSynth {
+	public static final field INSTANCE Lio/github/yuroyami/kitesynth/KiteSynth;
+	public final fun readFont ([BZ)Lio/github/yuroyami/kitesynth/SoundFont;
+	public final fun readFont ([BZJ)Lio/github/yuroyami/kitesynth/SoundFont;
+	public static synthetic fun readFont$default (Lio/github/yuroyami/kitesynth/KiteSynth;[BZILjava/lang/Object;)Lio/github/yuroyami/kitesynth/SoundFont;
+	public static synthetic fun readFont$default (Lio/github/yuroyami/kitesynth/KiteSynth;[BZJILjava/lang/Object;)Lio/github/yuroyami/kitesynth/SoundFont;
+}
+
+public final class io/github/yuroyami/kitesynth/Lfo {
+	public static final field Companion Lio/github/yuroyami/kitesynth/Lfo$Companion;
+	public fun <init> ()V
+	public final fun advance (I)D
+	public final fun getValue ()D
+	public final fun start (IDI)V
+}
+
+public final class io/github/yuroyami/kitesynth/Lfo$Companion {
+	public final fun hertzOf (I)D
+}
+
+public final class io/github/yuroyami/kitesynth/LoopMode : java/lang/Enum {
+	public static final field Companion Lio/github/yuroyami/kitesynth/LoopMode$Companion;
+	public static final field Continuous Lio/github/yuroyami/kitesynth/LoopMode;
+	public static final field NoLoop Lio/github/yuroyami/kitesynth/LoopMode;
+	public static final field UntilRelease Lio/github/yuroyami/kitesynth/LoopMode;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kitesynth/LoopMode;
+	public static fun values ()[Lio/github/yuroyami/kitesynth/LoopMode;
+}
+
+public final class io/github/yuroyami/kitesynth/LoopMode$Companion {
+	public final fun of (I)Lio/github/yuroyami/kitesynth/LoopMode;
+}
+
+public final class io/github/yuroyami/kitesynth/LowPassFilter {
+	public fun <init> ()V
+	public final fun getBypassed ()Z
+	public final fun process (F)F
+	public final fun reset ()V
+	public final fun set (DDI)V
+}
+
+public final class io/github/yuroyami/kitesynth/Modulator {
+	public fun <init> (IIIII)V
+	public final fun getAmount ()I
+	public final fun getAmountSource ()I
+	public final fun getDestination ()Lio/github/yuroyami/kitesynth/Generator;
+	public final fun getDestinationId ()I
+	public final fun getSource ()I
+	public final fun getTransform ()I
+	public final fun sameAs (Lio/github/yuroyami/kitesynth/Modulator;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/ModulatorsKt {
+	public static final fun getDefaultModulators ()Ljava/util/List;
+	public static final fun sourceCurve (II)D
+}
+
+public final class io/github/yuroyami/kitesynth/Preset {
+	public fun <init> (Ljava/lang/String;IILjava/util/List;)V
+	public final fun getBank ()I
+	public final fun getName ()Ljava/lang/String;
+	public final fun getProgram ()I
+	public final fun getZones ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/PresetZone {
+	public fun <init> (Lio/github/yuroyami/kitesynth/GeneratorSet;Lio/github/yuroyami/kitesynth/Span;Lio/github/yuroyami/kitesynth/Span;Ljava/lang/Integer;Ljava/util/List;)V
+	public synthetic fun <init> (Lio/github/yuroyami/kitesynth/GeneratorSet;Lio/github/yuroyami/kitesynth/Span;Lio/github/yuroyami/kitesynth/Span;Ljava/lang/Integer;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getGenerators ()Lio/github/yuroyami/kitesynth/GeneratorSet;
+	public final fun getInstrumentId ()Ljava/lang/Integer;
+	public final fun getKeys ()Lio/github/yuroyami/kitesynth/Span;
+	public final fun getModulators ()Ljava/util/List;
+	public final fun getVelocities ()Lio/github/yuroyami/kitesynth/Span;
+}
+
+public final class io/github/yuroyami/kitesynth/Reverb {
+	public static final field Companion Lio/github/yuroyami/kitesynth/Reverb$Companion;
+	public fun <init> ()V
+	public fun <init> (I)V
+	public synthetic fun <init> (IILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun clear ()V
+	public final fun getDamping ()D
+	public final fun getDry ()D
+	public final fun getRoomSize ()D
+	public final fun getWet ()D
+	public final fun getWidth ()D
+	public final fun process ([FI)V
+	public final fun process ([F[FII)V
+	public final fun setDamping (D)V
+	public final fun setDry (D)V
+	public final fun setRoomSize (D)V
+	public final fun setWet (D)V
+	public final fun setWidth (D)V
+}
+
+public final class io/github/yuroyami/kitesynth/Reverb$Companion {
+	public final fun dryRoom (I)Lio/github/yuroyami/kitesynth/Reverb;
+	public final fun hall (I)Lio/github/yuroyami/kitesynth/Reverb;
+	public final fun room (I)Lio/github/yuroyami/kitesynth/Reverb;
+}
+
+public final class io/github/yuroyami/kitesynth/SampleHeader {
+	public fun <init> (Ljava/lang/String;[SIIIIIII[B)V
+	public synthetic fun <init> (Ljava/lang/String;[SIIIIIII[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCompressed ()[B
+	public final fun getCorrectionCents ()I
+	public final fun getData ()[S
+	public final fun getFrameCount ()I
+	public final fun getHasUsableLoop ()Z
+	public final fun getLink ()I
+	public final fun getLoopEnd ()I
+	public final fun getLoopStart ()I
+	public final fun getName ()Ljava/lang/String;
+	public final fun getOriginalKey ()I
+	public final fun getSampleRate ()I
+	public final fun getType ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/SoundFont {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/util/List;Ljava/util/List;Ljava/util/List;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun decoded (Lkotlin/jvm/functions/Function1;)Lio/github/yuroyami/kitesynth/SoundFont;
+	public final fun getDefaultPreset ()Lio/github/yuroyami/kitesynth/Preset;
+	public final fun getInfo ()Ljava/util/Map;
+	public final fun getInstruments ()Ljava/util/List;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getPresets ()Ljava/util/List;
+	public final fun getSamples ()Ljava/util/List;
+	public final fun preset (II)Lio/github/yuroyami/kitesynth/Preset;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/SoundFontFormatException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;ILjava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getOffset ()I
+}
+
+public final class io/github/yuroyami/kitesynth/SoundFontKt {
+	public static final fun merged (Lio/github/yuroyami/kitesynth/SoundFont;Lio/github/yuroyami/kitesynth/SoundFont;Ljava/lang/String;)Lio/github/yuroyami/kitesynth/SoundFont;
+	public static synthetic fun merged$default (Lio/github/yuroyami/kitesynth/SoundFont;Lio/github/yuroyami/kitesynth/SoundFont;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yuroyami/kitesynth/SoundFont;
+	public static final fun pruned (Lio/github/yuroyami/kitesynth/SoundFont;)Lio/github/yuroyami/kitesynth/SoundFont;
+}
+
+public final class io/github/yuroyami/kitesynth/SoundFontWriter {
+	public static final field INSTANCE Lio/github/yuroyami/kitesynth/SoundFontWriter;
+	public final fun write (Lio/github/yuroyami/kitesynth/SoundFont;)[B
+}
+
+public final class io/github/yuroyami/kitesynth/Span {
+	public static final field Companion Lio/github/yuroyami/kitesynth/Span$Companion;
+	public fun <init> (II)V
+	public final fun component1 ()I
+	public final fun component2 ()I
+	public final fun contains (I)Z
+	public final fun copy (II)Lio/github/yuroyami/kitesynth/Span;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kitesynth/Span;IIILjava/lang/Object;)Lio/github/yuroyami/kitesynth/Span;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHigh ()I
+	public final fun getLow ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/Span$Companion {
+	public final fun getFull ()Lio/github/yuroyami/kitesynth/Span;
+	public final fun ofPacked (I)Lio/github/yuroyami/kitesynth/Span;
+}
+
+public final class io/github/yuroyami/kitesynth/Synth {
+	public fun <init> (Lio/github/yuroyami/kitesynth/SoundFont;II)V
+	public fun <init> (Lio/github/yuroyami/kitesynth/SoundFont;IIIIJ)V
+	public synthetic fun <init> (Lio/github/yuroyami/kitesynth/SoundFont;IIIIJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lio/github/yuroyami/kitesynth/SoundFont;IIILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun allNotesOff (I)V
+	public final fun allSoundOff ()V
+	public final fun allSoundOff (I)V
+	public final fun bankOn (I)I
+	public final fun bendRangeSemitones (I)D
+	public final fun channelPressure (I)I
+	public final fun controlChange (IIII)V
+	public static synthetic fun controlChange$default (Lio/github/yuroyami/kitesynth/Synth;IIIIILjava/lang/Object;)V
+	public final fun controller (II)I
+	public final fun currentFont ()Lio/github/yuroyami/kitesynth/SoundFont;
+	public final fun enqueue (IIII)V
+	public final fun getActiveVoices ()I
+	public final fun getChorus ()Lio/github/yuroyami/kitesynth/Chorus;
+	public final fun getFont ()Lio/github/yuroyami/kitesynth/SoundFont;
+	public final fun getInterpolation ()Lio/github/yuroyami/kitesynth/Interpolation;
+	public final fun getMaxPreparedModulators ()I
+	public final fun getMaxPreparedPairs ()J
+	public final fun getMaxPreparedRegions ()I
+	public final fun getMaxVoices ()I
+	public final fun getReferenceA4 ()D
+	public final fun getRejectedEvents ()J
+	public final fun getReverb ()Lio/github/yuroyami/kitesynth/Reverb;
+	public final fun getSampleRate ()I
+	public final fun getSoundingKeys ()Ljava/util/List;
+	public final fun getTuningCents ()[D
+	public final fun isPercussion (I)Z
+	public final fun noteOff (III)V
+	public static synthetic fun noteOff$default (Lio/github/yuroyami/kitesynth/Synth;IIIILjava/lang/Object;)V
+	public final fun noteOn (IIII)V
+	public static synthetic fun noteOn$default (Lio/github/yuroyami/kitesynth/Synth;IIIIILjava/lang/Object;)V
+	public final fun pitchBend (III)V
+	public static synthetic fun pitchBend$default (Lio/github/yuroyami/kitesynth/Synth;IIIILjava/lang/Object;)V
+	public final fun polyPressure (II)I
+	public final fun presetOn (I)Lio/github/yuroyami/kitesynth/Preset;
+	public final fun programChange (III)V
+	public static synthetic fun programChange$default (Lio/github/yuroyami/kitesynth/Synth;IIIILjava/lang/Object;)V
+	public final fun programOn (I)I
+	public final fun render ([FI)V
+	public final fun replaceFont (Lio/github/yuroyami/kitesynth/SoundFont;)V
+	public final fun reset (I)V
+	public final fun setFont (Lio/github/yuroyami/kitesynth/SoundFont;)V
+	public final fun setInterpolation (Lio/github/yuroyami/kitesynth/Interpolation;)V
+	public final fun setPercussion (IZ)V
+	public final fun setReferenceA4 (D)V
+	public final fun tryEnqueue (IIII)Z
+}
+
+public final class io/github/yuroyami/kitesynth/Units {
+	public static final field INSTANCE Lio/github/yuroyami/kitesynth/Units;
+	public static final field SILENCE_CB I
+	public final fun centibelsToGain (I)D
+	public final fun centsToRatio (D)D
+	public final fun gainOf (D)D
+	public final fun keyCents (IIII)D
+	public final fun timecentsToSeconds (I)D
+}
+
+public final class io/github/yuroyami/kitesynth/Voice {
+	public fun <init> ()V
+	public final fun getActive ()Z
+	public final fun getAge ()J
+	public final fun getChannel ()I
+	public final fun getCurrentGain ()D
+	public final fun getExclusiveClass ()I
+	public final fun getKey ()I
+	public final fun getReleasing ()Z
+	public final fun getStage ()Lio/github/yuroyami/kitesynth/EnvelopeStage;
+	public final fun kill ()V
+	public final fun release ()V
+	public final fun render ([FIID)V
+	public static synthetic fun render$default (Lio/github/yuroyami/kitesynth/Voice;[FIIDILjava/lang/Object;)V
+	public final fun start (Lio/github/yuroyami/kitesynth/VoicePlan;IIJD)V
+	public static synthetic fun start$default (Lio/github/yuroyami/kitesynth/Voice;Lio/github/yuroyami/kitesynth/VoicePlan;IIJDILjava/lang/Object;)V
+}
+
+public final class io/github/yuroyami/kitesynth/VoicePlan {
+	public fun <init> (Lio/github/yuroyami/kitesynth/SampleHeader;IILio/github/yuroyami/kitesynth/LoopMode;IIIIIIIIILio/github/yuroyami/kitesynth/EnvelopeSpec;I[ILjava/util/List;)V
+	public synthetic fun <init> (Lio/github/yuroyami/kitesynth/SampleHeader;IILio/github/yuroyami/kitesynth/LoopMode;IIIIIIIIILio/github/yuroyami/kitesynth/EnvelopeSpec;I[ILjava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun get (Lio/github/yuroyami/kitesynth/Generator;)I
+	public final fun getAttenuationCb ()I
+	public final fun getEndFrame ()I
+	public final fun getExclusiveClass ()I
+	public final fun getGenerators ()[I
+	public final fun getKey ()I
+	public final fun getLoopEndFrame ()I
+	public final fun getLoopMode ()Lio/github/yuroyami/kitesynth/LoopMode;
+	public final fun getLoopStartFrame ()I
+	public final fun getModulators ()Ljava/util/List;
+	public final fun getPan ()I
+	public final fun getRootKey ()I
+	public final fun getSample ()Lio/github/yuroyami/kitesynth/SampleHeader;
+	public final fun getScaleTuning ()I
+	public final fun getStartFrame ()I
+	public final fun getTuneCents ()I
+	public final fun getVelocity ()I
+	public final fun getVolumeEnvelope ()Lio/github/yuroyami/kitesynth/EnvelopeSpec;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kitesynth/VoicePlanKt {
+	public static final fun defaultGenerators ()[I
+	public static final fun voicesFor (Lio/github/yuroyami/kitesynth/SoundFont;IIII)Ljava/util/List;
+	public static final fun voicesFor (Lio/github/yuroyami/kitesynth/SoundFont;Lio/github/yuroyami/kitesynth/Preset;II)Ljava/util/List;
+}
+
