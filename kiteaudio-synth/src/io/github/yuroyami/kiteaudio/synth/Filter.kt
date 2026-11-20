@@ -8,8 +8,9 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
- * A two-pole resonant low-pass, the one every SoundFont synthesiser has, with FluidSynth's
- * coefficients. Its state belongs to one voice; its coefficients change at the control rate.
+ * A two-pole resonant low-pass, the one every SoundFont synthesiser has. The coefficients are
+ * the standard biquad low-pass. Its state belongs to one voice; its coefficients change at the
+ * control rate.
  */
 public class LowPassFilter {
     private var b0 = 1.0
