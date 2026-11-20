@@ -65,6 +65,8 @@ jobs:
     steps:
       # git comes first, so the checkout below is a real clone that the scripts can query.
       - name: Install the build tools and the codec oracles
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
           apt-get update
           apt-get install -y ca-certificates git curl unzip zstd python3 python3-venv ffmpeg flac lame libopusfile0 libmpg123-dev libimage-exiftool-perl cmake build-essential musepack-tools speex libogg-dev
