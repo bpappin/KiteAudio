@@ -11,6 +11,7 @@ import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
 import kotlinx.io.files.SystemFileSystem
+import kotlinx.io.files.SystemPathSeparator
 import kotlinx.io.readByteArray
 import kotlin.random.Random
 import kotlin.test.Test
@@ -127,7 +128,10 @@ class SeekableAudioFileTest {
     private fun read(path: Path): ByteArray = SystemFileSystem.source(path).buffered().use { it.readByteArray() }
 
     private inline fun withFile(block: (Path) -> Unit) {
-        val directory = Path(".kiteaudio-codec-seekable-東京-${Random.nextLong().toULong().toString(16)}")
+        // kotlinx-io 0.9.3 creates files through the ANSI calls on Windows, so it cannot make a path
+        // outside the ANSI code page there. The reader under test uses the wide calls.
+        val script = if (SystemPathSeparator == '\\') "tokyo" else "東京"
+        val directory = Path(".kiteaudio-codec-seekable-$script-${Random.nextLong().toULong().toString(16)}")
         SystemFileSystem.createDirectories(directory, mustCreate = true)
         val path = Path(directory, "recording.wav")
         try { block(path) } finally {
