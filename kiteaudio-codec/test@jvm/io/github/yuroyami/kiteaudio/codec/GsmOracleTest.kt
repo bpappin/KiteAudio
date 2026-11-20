@@ -48,8 +48,10 @@ class GsmOracleTest {
     fun wavFilesFfmpegWritesDecodeToExactlyTheReferenceSamples() {
         val tools = tools()
         val ffmpeg = findOnPath("ffmpeg")!!
-        val encoders = ProcessBuilder(ffmpeg, "-hide_banner", "-encoders").redirectErrorStream(true).oracleStart()
-            .inputStream.bufferedReader().readText()
+        val listing = ProcessBuilder(ffmpeg, "-hide_banner", "-encoders").redirectErrorStream(true).oracleStart()
+        val encoders = listing.inputStream.bufferedReader().readText()
+        // The fixture recording needs the end of every process that it saw start.
+        assertTrue(listing.waitFor(30, TimeUnit.SECONDS), "ffmpeg -encoders did not finish")
         assumeTrue("ffmpeg's libgsm_ms encoder is required for ffmpeg's own WAV files", encoders.contains("libgsm_ms"))
         for ((name, expression) in signals) {
             val wav = File(workDirectory, "${name}_ffmpeg.wav")
