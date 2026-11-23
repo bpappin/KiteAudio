@@ -241,7 +241,8 @@ All production code is common Kotlin in `kiteaudio-synth/src`. These are the tar
 | iOS devices | `iosArm64`; a dynamic framework named `KiteSynth` is configured. |
 | iOS simulators | `iosSimulatorArm64` and `iosX64`; both configure the same framework name. |
 | macOS Native | `macosArm64`. |
-| Other Native and web | Linux Native, Windows Native, macOS x64, tvOS, watchOS, Android Native, JS and Wasm are not declared. |
+| Web | `js` and `wasmJs`. Rendering is the same common code; sending the samples to Web Audio is the app's job. |
+| Other Native | Linux Native, Windows Native, macOS x64, tvOS, watchOS and Android Native are not declared. |
 
 A declared target establishes build intent. It does not establish device latency, callback safety,
 audio fidelity or runtime parity. `readFont`, `Synth` construction and `replaceFont` export their

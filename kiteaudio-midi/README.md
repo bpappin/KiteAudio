@@ -304,7 +304,7 @@ instrument testing.
 
 | Module / backend | Platforms | Requirements and behavior |
 | --- | --- | --- |
-| `kiteaudio-midi` | Android, JVM, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64` | Android minSdk 23. Core file operations are synchronous computation over byte arrays. |
+| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64` | Android minSdk 23. Core file operations are synchronous computation over byte arrays. |
 | `kiteaudio-midi-devices` Android | Android | minSdk 23; uses the byte-stream MIDI transport. Devices without MIDI support produce no ports. |
 | `kiteaudio-midi-devices` JVM | JVM on macOS, Linux or Windows with an available Java MIDI provider | Uses `javax.sound.midi`; scans once per second. Physical transport is reported as `UNKNOWN`. Provider availability varies by runtime and OS. |
 | `kiteaudio-midi-devices` Apple | iOS device and simulator targets above, native macOS arm64 | CoreMIDI platform bindings; callbacks arrive on CoreMIDI threads. |
