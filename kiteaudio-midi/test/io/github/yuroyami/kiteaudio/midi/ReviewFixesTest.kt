@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 
 /**
@@ -40,22 +41,25 @@ class ReviewFixesTest {
     }
 
     @Test
-    fun aTimeSignatureExponentTooLargeToShiftIsRejectedCleanly() {
+    fun aTimeSignatureExponentTooLargeToShiftStaysRawBytes() {
         // 1 shl 31 wraps negative and 1 shl 32 silently becomes 1, because Kotlin masks the
-        // shift count to five bits. Both must be refused, and refused as the documented type.
+        // shift count to five bits. Neither may become a TimeSignature, and the file still loads.
         for (exponent in listOf(0x1F, 0x20, 0xFF)) {
             val track = bytesOf(0x00, 0xFF, 0x58, 0x04, 0x04, exponent, 0x18, 0x08, 0x00, 0xFF, 0x2F, 0x00)
-            assertFailsWith<MidiFormatException>("exponent $exponent") { KiteMidi.read(smfOf(track)) }
+            val file = KiteMidi.read(smfOf(track))
+            assertIs<UnknownMeta>(file.tracks[0].events[0].event, "exponent $exponent")
+            assertContentEquals(smfOf(track), KiteMidi.write(file), "exponent $exponent")
         }
     }
 
     @Test
-    fun everyMalformedValueThrowsTheDocumentedTypeAndNothingElse() {
+    fun everyTooShortPayloadThrowsTheDocumentedTypeAndNothingElse() {
         // The README promises MidiFormatException is the only thing the reader throws.
         val cases = listOf(
-            "key signature with 9 sharps" to bytesOf(0x00, 0xFF, 0x59, 0x02, 0x09, 0x00, 0x00, 0xFF, 0x2F, 0x00),
-            "tempo of zero" to bytesOf(0x00, 0xFF, 0x51, 0x03, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x2F, 0x00),
-            "time signature numerator zero" to bytesOf(0x00, 0xFF, 0x58, 0x04, 0x00, 0x02, 0x18, 0x08, 0x00, 0xFF, 0x2F, 0x00),
+            "tempo of two bytes" to bytesOf(0x00, 0xFF, 0x51, 0x02, 0x07, 0xA1, 0x00, 0xFF, 0x2F, 0x00),
+            "smpte offset of four bytes" to bytesOf(0x00, 0xFF, 0x54, 0x04, 0x01, 0x02, 0x03, 0x04, 0x00, 0xFF, 0x2F, 0x00),
+            "time signature of three bytes" to bytesOf(0x00, 0xFF, 0x58, 0x03, 0x04, 0x02, 0x18, 0x00, 0xFF, 0x2F, 0x00),
+            "key signature of one byte" to bytesOf(0x00, 0xFF, 0x59, 0x01, 0x02, 0x00, 0xFF, 0x2F, 0x00),
         )
         for ((name, track) in cases) {
             val thrown = assertFailsWith<Throwable>(name) { KiteMidi.read(smfOf(track)) }

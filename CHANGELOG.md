@@ -28,6 +28,21 @@ The artifacts and packages have new names:
   system property `kiteaudio-codec.benchmark.cache`.
 - The MIDI corpus test reads its folder from the environment variable `KITEAUDIO_MIDI_CORPUS`.
 
+### Changed in the MIDI module
+
+- `SequenceNumber`, `ChannelPrefix`, `PortPrefix`, `SmpteOffset` and `TempoEntry` reject values that a
+  Standard MIDI File cannot store. They throw `IllegalArgumentException`, and the message names the range.
+- `TimeSignature` also rejects a `clocksPerClick` or a `thirtySecondsPerQuarter` outside 0 to 255. Before,
+  the writer cut these values to one byte.
+- `SmpteOffset` has a new last parameter, `framesPerSecond`, with a default of 24. It takes the values of
+  `Division.Smpte.framesPerSecond`, and the file stores it in bits 5 and 6 of the hours byte.
+- The reader keeps a meta event whose values the typed model cannot hold as `UnknownMeta` with its raw
+  bytes, so the file loads and the event writes back unchanged. Before, a tempo of 0, a key signature
+  of more than 7 sharps or a time signature that `TimeSignature` rejects failed the file. A channel prefix
+  above 15 lost its high bits, and a key signature mode above 1 was written back as 1.
+- A payload that is too short still fails with `MidiFormatException`.
+- `TempoMap.microsToTick` can no longer divide by zero, because `TempoEntry` rejects a tempo of 0.
+
 ### Added in the codec
 
 The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.

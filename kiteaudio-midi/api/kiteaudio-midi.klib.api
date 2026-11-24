@@ -508,10 +508,12 @@ final class io.github.yuroyami.kiteaudio.midi/SmfTrack { // io.github.yuroyami.k
 }
 
 final class io.github.yuroyami.kiteaudio.midi/SmpteOffset : io.github.yuroyami.kiteaudio.midi/MetaEvent { // io.github.yuroyami.kiteaudio.midi/SmpteOffset|null[0]
-    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int) // io.github.yuroyami.kiteaudio.midi/SmpteOffset.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int = ...) // io.github.yuroyami.kiteaudio.midi/SmpteOffset.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
 
     final val frames // io.github.yuroyami.kiteaudio.midi/SmpteOffset.frames|{}frames[0]
         final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.frames.<get-frames>|<get-frames>(){}[0]
+    final val framesPerSecond // io.github.yuroyami.kiteaudio.midi/SmpteOffset.framesPerSecond|{}framesPerSecond[0]
+        final fun <get-framesPerSecond>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.framesPerSecond.<get-framesPerSecond>|<get-framesPerSecond>(){}[0]
     final val hours // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hours|{}hours[0]
         final fun <get-hours>(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hours.<get-hours>|<get-hours>(){}[0]
     final val minutes // io.github.yuroyami.kiteaudio.midi/SmpteOffset.minutes|{}minutes[0]
@@ -528,7 +530,8 @@ final class io.github.yuroyami.kiteaudio.midi/SmpteOffset : io.github.yuroyami.k
     final fun component3(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component3|component3(){}[0]
     final fun component4(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component4|component4(){}[0]
     final fun component5(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component5|component5(){}[0]
-    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SmpteOffset // io.github.yuroyami.kiteaudio.midi/SmpteOffset.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
+    final fun component6(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.component6|component6(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ...): io.github.yuroyami.kiteaudio.midi/SmpteOffset // io.github.yuroyami.kiteaudio.midi/SmpteOffset.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.midi/SmpteOffset.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.midi/SmpteOffset.hashCode|hashCode(){}[0]
     final fun payload(): kotlin/ByteArray // io.github.yuroyami.kiteaudio.midi/SmpteOffset.payload|payload(){}[0]

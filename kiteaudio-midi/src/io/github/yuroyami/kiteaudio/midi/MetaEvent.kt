@@ -26,30 +26,48 @@ public sealed interface MetaEvent : MidiEvent {
     }
 
     public companion object {
-        /** Builds the right subtype for [type], falling back to [UnknownMeta] rather than throwing. */
+        /**
+         * Builds the right subtype for [type].
+         *
+         * Returns [UnknownMeta] with the raw bytes for a type this library does not name, and for a
+         * payload whose values the subtype cannot hold. Throws [MidiFormatException] when a payload
+         * is too short for its type.
+         */
         public fun parse(type: Int, data: ByteArray): MetaEvent = asFormatProblem(type) {
             TextKind.entries.firstOrNull { it.type == type }?.let {
                 return@asFormatProblem TextEvent(it, data)
             }
             when (type) {
                 0x00 -> SequenceNumber(if (data.size >= 2) ((data[0].toInt() and 0xFF) shl 8) or (data[1].toInt() and 0xFF) else 0)
-                0x20 -> ChannelPrefix(if (data.isNotEmpty()) data[0].toInt() and 0x0F else 0)
-                0x21 -> PortPrefix(if (data.isNotEmpty()) data[0].toInt() and 0xFF else 0)
+                0x20 -> orUnknown(type, data) { ChannelPrefix(if (data.isNotEmpty()) data[0].toInt() and 0xFF else 0) }
+                0x21 -> orUnknown(type, data) { PortPrefix(if (data.isNotEmpty()) data[0].toInt() and 0xFF else 0) }
                 0x2F -> EndOfTrack
                 0x51 -> {
                     if (data.size < 3) throw MidiFormatException("set tempo needs three bytes, got ${data.size}")
-                    SetTempo(
-                        ((data[0].toInt() and 0xFF) shl 16) or
-                            ((data[1].toInt() and 0xFF) shl 8) or
-                            (data[2].toInt() and 0xFF),
-                    )
+                    orUnknown(type, data) {
+                        SetTempo(
+                            ((data[0].toInt() and 0xFF) shl 16) or
+                                ((data[1].toInt() and 0xFF) shl 8) or
+                                (data[2].toInt() and 0xFF),
+                        )
+                    }
                 }
                 0x54 -> {
                     if (data.size < 5) throw MidiFormatException("smpte offset needs five bytes, got ${data.size}")
-                    SmpteOffset(
-                        data[0].toInt() and 0xFF, data[1].toInt() and 0xFF, data[2].toInt() and 0xFF,
-                        data[3].toInt() and 0xFF, data[4].toInt() and 0xFF,
-                    )
+                    // The hours byte is 0rrhhhhh. Bit 7 stays in hours, so a set bit fails the range check.
+                    val hoursByte = data[0].toInt() and 0xFF
+                    val framesPerSecond = when ((hoursByte shr 5) and 0x03) {
+                        0 -> 24
+                        1 -> 25
+                        2 -> 29
+                        else -> 30
+                    }
+                    orUnknown(type, data) {
+                        SmpteOffset(
+                            hoursByte and 0x9F, data[1].toInt() and 0xFF, data[2].toInt() and 0xFF,
+                            data[3].toInt() and 0xFF, data[4].toInt() and 0xFF, framesPerSecond,
+                        )
+                    }
                 }
                 0x58 -> {
                     if (data.size < 4) throw MidiFormatException("time signature needs four bytes, got ${data.size}")
@@ -57,21 +75,33 @@ public sealed interface MetaEvent : MidiEvent {
                     // the low five bits of its count, so an exponent of 32 would silently become
                     // 1 and 31 would wrap negative. No real denominator is anywhere near that.
                     val exponent = data[1].toInt() and 0xFF
-                    if (exponent > 30) throw MidiFormatException("time signature denominator 2^$exponent does not fit a positive Int")
-                    TimeSignature(
-                        numerator = data[0].toInt() and 0xFF,
-                        denominator = 1 shl exponent,
-                        clocksPerClick = data[2].toInt() and 0xFF,
-                        thirtySecondsPerQuarter = data[3].toInt() and 0xFF,
-                    )
+                    if (exponent > 30) return@asFormatProblem UnknownMeta(type, data)
+                    orUnknown(type, data) {
+                        TimeSignature(
+                            numerator = data[0].toInt() and 0xFF,
+                            denominator = 1 shl exponent,
+                            clocksPerClick = data[2].toInt() and 0xFF,
+                            thirtySecondsPerQuarter = data[3].toInt() and 0xFF,
+                        )
+                    }
                 }
                 0x59 -> {
                     if (data.size < 2) throw MidiFormatException("key signature needs two bytes, got ${data.size}")
-                    KeySignature(sharps = data[0].toInt(), minor = data[1].toInt() != 0)
+                    // The mode byte is 0 for major and 1 for minor. Any other value stays raw, so it writes back unchanged.
+                    val mode = data[1].toInt() and 0xFF
+                    if (mode > 1) return@asFormatProblem UnknownMeta(type, data)
+                    orUnknown(type, data) { KeySignature(sharps = data[0].toInt(), minor = mode == 1) }
                 }
                 0x7F -> SequencerSpecific(data)
                 else -> UnknownMeta(type, data)
             }
+        }
+
+        /** Keeps the raw bytes of a payload whose values the typed model rejects, so the file still loads. */
+        private inline fun orUnknown(type: Int, data: ByteArray, block: () -> MetaEvent): MetaEvent = try {
+            block()
+        } catch (e: IllegalArgumentException) {
+            UnknownMeta(type, data)
         }
 
         /**
@@ -133,18 +163,21 @@ public class TextEvent(public val kind: TextKind, public val bytes: ByteArray) :
 
 /** The sequence number, used to pick a track out of a format 2 file. */
 public data class SequenceNumber(public val number: Int) : MetaEvent {
+    init { require(number in 0..0xFFFF) { "sequence number must be 0 to 65535, got $number" } }
     override val type: Int get() = 0x00
     override fun payload(): ByteArray = byteArrayOf(((number shr 8) and 0xFF).toByte(), (number and 0xFF).toByte())
 }
 
 /** Says which channel the following meta events describe. */
 public data class ChannelPrefix(public val channel: Int) : MetaEvent {
+    init { require(channel in 0..15) { "channel must be 0 to 15, got $channel" } }
     override val type: Int get() = 0x20
     override fun payload(): ByteArray = byteArrayOf(channel.toByte())
 }
 
 /** Says which port the following events are for. Not in the original specification, but common. */
 public data class PortPrefix(public val port: Int) : MetaEvent {
+    init { require(port in 0..127) { "port must be 0 to 127, got $port" } }
     override val type: Int get() = 0x21
     override fun payload(): ByteArray = byteArrayOf(port.toByte())
 }
@@ -172,17 +205,40 @@ public data class SetTempo(public val microsPerQuarter: Int) : MetaEvent {
     public val beatsPerMinute: Double get() = 60_000_000.0 / microsPerQuarter
 }
 
-/** Where the piece sits on a timecode reel. */
+/**
+ * Where the piece sits on a timecode reel.
+ *
+ * [framesPerSecond] takes the values of [Division.Smpte.framesPerSecond]: 24, 25, 29 or 30, where 29
+ * means 30 drop-frame. The file stores it in bits 5 and 6 of the hours byte. [subFrames] counts
+ * hundredths of a frame.
+ */
 public data class SmpteOffset(
     public val hours: Int,
     public val minutes: Int,
     public val seconds: Int,
     public val frames: Int,
     public val subFrames: Int,
+    public val framesPerSecond: Int = 24,
 ) : MetaEvent {
+    init {
+        require(framesPerSecond in listOf(24, 25, 29, 30)) { "frames per second must be 24, 25, 29 or 30, got $framesPerSecond" }
+        require(hours in 0..23) { "hours must be 0 to 23, got $hours" }
+        require(minutes in 0..59) { "minutes must be 0 to 59, got $minutes" }
+        require(seconds in 0..59) { "seconds must be 0 to 59, got $seconds" }
+        val frameCount = if (framesPerSecond == 29) 30 else framesPerSecond
+        require(frames in 0 until frameCount) { "frames must be 0 to ${frameCount - 1} at $framesPerSecond frames a second, got $frames" }
+        require(subFrames in 0..99) { "fractional frames must be 0 to 99, got $subFrames" }
+    }
     override val type: Int get() = 0x54
-    override fun payload(): ByteArray =
-        byteArrayOf(hours.toByte(), minutes.toByte(), seconds.toByte(), frames.toByte(), subFrames.toByte())
+    override fun payload(): ByteArray {
+        val rateBits = when (framesPerSecond) {
+            24 -> 0
+            25 -> 1
+            29 -> 2
+            else -> 3
+        }
+        return byteArrayOf(((rateBits shl 5) or hours).toByte(), minutes.toByte(), seconds.toByte(), frames.toByte(), subFrames.toByte())
+    }
 }
 
 /**
@@ -202,6 +258,8 @@ public data class TimeSignature(
         require(denominator > 0 && (denominator and (denominator - 1)) == 0) {
             "denominator must be a power of two, got $denominator"
         }
+        require(clocksPerClick in 0..255) { "clocks per click must be 0 to 255, got $clocksPerClick" }
+        require(thirtySecondsPerQuarter in 0..255) { "thirty-seconds per quarter must be 0 to 255, got $thirtySecondsPerQuarter" }
     }
     override val type: Int get() = 0x58
     override fun payload(): ByteArray {

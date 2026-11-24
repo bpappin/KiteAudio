@@ -1,7 +1,12 @@
 package io.github.yuroyami.kiteaudio.midi
 
 /** A tempo in force from [tick] until the next entry. */
-public data class TempoEntry(public val tick: Long, public val microsPerQuarter: Int)
+public data class TempoEntry(public val tick: Long, public val microsPerQuarter: Int) {
+    init {
+        require(tick >= 0) { "tick must be 0 or more, got $tick" }
+        require(microsPerQuarter in 1..0xFFFFFF) { "microseconds per quarter must be 1 to 16777215, got $microsPerQuarter" }
+    }
+}
 
 /**
  * Converts between ticks and microseconds, both ways.
