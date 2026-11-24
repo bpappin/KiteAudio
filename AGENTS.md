@@ -60,4 +60,4 @@ next person does not pay for them twice.
 - Do not add a `Co-Authored-By` trailer to commits.
 - No em dashes anywhere: source, comments, documentation, commit messages.
   Rewrite the sentence rather than substituting another symbol.
-- Spelling is British throughout the repository.
+- Spelling is American throughout the repository.
