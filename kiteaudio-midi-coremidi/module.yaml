@@ -34,6 +34,8 @@ settings:
         MIDI ports for desktop JVM applications, with JDK 22 or later required at runtime.
 
 plugins:
+  abi-check:
+    enabled: true
   dokka:
     enabled: true
     moduleName: kiteaudio-midi-coremidi

@@ -1,0 +1,9 @@
+public final class io/github/yuroyami/kiteaudio/midi/coremidi/CoreMidiAvailabilityKt {
+	public static final fun coreMidiAvailable ()Z
+}
+
+public final class io/github/yuroyami/kiteaudio/midi/coremidi/CoreMidiDevicesKt {
+	public static final fun coreMidiDevices (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiDevices;
+	public static synthetic fun coreMidiDevices$default (Lkotlinx/coroutines/CoroutineScope;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/midi/devices/MidiDevices;
+}
+

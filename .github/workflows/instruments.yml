@@ -67,10 +67,9 @@ jobs:
       - name: JVM tests
         run: ./kotlin test -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -m kiteaudio-synth -m kiteaudio-output -p jvm
 
-      # The CoreMIDI module has no committed API dump.
       - name: Public API check
         if: ${{ !cancelled() }}
-        run: ./kotlin check abi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output
+        run: ./kotlin check abi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -m kiteaudio-synth -m kiteaudio-output
 
       # sdkmanager is not on PATH on the runner, so call it by its full path.
       - name: Install the required Android SDK
@@ -82,9 +81,11 @@ jobs:
         run: ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p android
 
   # The Apple source sets of the MIDI device and output modules compile only on
-  # a Mac. The klib check reads the klibs of the four Apple platforms.
+  # a Mac. This job runs the macOS tests of the four multiplatform modules and the
+  # CoreMIDI tests, which do real work only on macOS. The klib check reads the
+  # klibs of the four Apple platforms.
   apple:
-    name: Apple klibs and klib API check
+    name: macOS tests, Apple klibs and klib API check
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -106,4 +107,22 @@ jobs:
           done
 
       - name: Public klib API check
+        if: ${{ !cancelled() }}
         run: ./kotlin check klibAbi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output
+
+      # One module per call. The toolchain starts one Kotlin/Native compiler
+      # process of 3 GB per task with no limit, and the runner has 7 GB.
+      # The runner has a virtual audio output device, so the AudioQueue tests run.
+      - name: macOS tests
+        if: ${{ !cancelled() }}
+        run: |
+          status=0
+          for module in kiteaudio-midi kiteaudio-midi-devices kiteaudio-synth kiteaudio-output; do
+            ./kotlin test -m "$module" -p macosArm64 || status=1
+          done
+          exit "$status"
+
+      # CoreMIDI exists only on macOS, so this is the only job where these tests do real work.
+      - name: CoreMIDI tests
+        if: ${{ !cancelled() }}
+        run: ./kotlin test -m kiteaudio-midi-coremidi -p jvm
