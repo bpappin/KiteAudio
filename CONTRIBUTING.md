@@ -137,6 +137,7 @@ executables only and their implementation source stays unopened.
 For tests without provenance recording:
 
 ```
+./kotlin test -m kiteaudio-core -p jvm
 ./kotlin test -m kiteaudio-codec -p jvm
 ./kotlin test -m kiteaudio-codec -p macosArm64
 python3 .github/scripts/web-tests/run.py

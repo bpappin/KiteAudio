@@ -1,6 +1,6 @@
 name: Docs
 
-# Builds the API reference of all seven modules and the guides. It starts when
+# Builds the API reference of every published module and the guides. It starts when
 # library sources, the guides or the docs tooling change.
 on:
   push:

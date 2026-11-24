@@ -229,5 +229,5 @@ plugins:
     sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-codec/src
     # `./kotlin do dokkaSite` merges the pages of these modules into build/dokka/html.
     siteName: KiteAudio
-    siteModules: [ kiteaudio-codec, kiteaudio-codec-io, kiteaudio-midi, kiteaudio-midi-devices, kiteaudio-midi-coremidi, kiteaudio-synth, kiteaudio-output ]
+    siteModules: [ kiteaudio-core, kiteaudio-codec, kiteaudio-codec-io, kiteaudio-midi, kiteaudio-midi-devices, kiteaudio-midi-coremidi, kiteaudio-synth, kiteaudio-output ]
     siteIncludes: [ ../kiteaudio-codec-io/Module.md ]

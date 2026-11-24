@@ -20,6 +20,7 @@ HERE = Path(__file__).resolve().parent
 PLATFORMS = ("js", "wasmJs", "wasmWasi")
 # Each module with web tests, and the web platforms it builds for.
 MODULES = {
+    "kiteaudio-core": PLATFORMS,
     "kiteaudio-codec": PLATFORMS,
     "kiteaudio-codec-io": PLATFORMS,
     "kiteaudio-midi": ("js", "wasmJs"),

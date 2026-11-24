@@ -5,6 +5,7 @@ modules:
   - docs-samples
   - kiteaudio-codec
   - kiteaudio-codec-io
+  - kiteaudio-core
   - kiteaudio-midi
   - kiteaudio-midi-coremidi
   - kiteaudio-midi-devices

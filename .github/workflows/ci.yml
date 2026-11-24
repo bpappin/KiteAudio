@@ -8,6 +8,7 @@ on:
     paths:
       - 'kiteaudio-codec/**'
       - 'kiteaudio-codec-io/**'
+      - 'kiteaudio-core/**'
       - 'sample/**'
       - 'docs-samples/**'
       - 'test-data/**'
@@ -27,6 +28,7 @@ on:
     paths:
       - 'kiteaudio-codec/**'
       - 'kiteaudio-codec-io/**'
+      - 'kiteaudio-core/**'
       - 'sample/**'
       - 'docs-samples/**'
       - 'test-data/**'
@@ -145,11 +147,16 @@ jobs:
       # only in a browser with a 30-second limit. The script links all three and
       # runs them in Node. instruments.yml runs it for the other modules.
       - name: Core tests (JS, wasmJs and wasmWasi in Node)
-        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-codec --module kiteaudio-codec-io
+        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-core --module kiteaudio-codec --module kiteaudio-codec-io
+
+      # The JVM tests of the codec modules run in the reference comparison job.
+      - name: Core module tests (JVM)
+        if: ${{ !cancelled() }}
+        run: ./kotlin test -m kiteaudio-core -p jvm
 
       - name: Core tests (native)
         if: ${{ !cancelled() }}
-        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p linuxX64
+        run: ./kotlin test -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p linuxX64
 
       - name: Sample module tests and documentation samples
         if: ${{ !cancelled() }}
@@ -157,7 +164,7 @@ jobs:
 
       - name: Public API check
         if: ${{ !cancelled() }}
-        run: ./kotlin check abi -m kiteaudio-codec -m kiteaudio-codec-io
+        run: ./kotlin check abi -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io
 
       - name: Upload test reports
         if: failure()
@@ -184,9 +191,14 @@ jobs:
           key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin.bat', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
           restore-keys: kotlin-toolchain-${{ runner.os }}-
 
-      # The file module runs first and alone, with a time limit. If one of its tests
+      - name: MinGW x64 tests of the core module
+        timeout-minutes: 15
+        run: .\kotlin.bat test -m kiteaudio-core -p mingwX64
+
+      # The file module runs alone, with a time limit. If one of its tests
       # hangs, the step ends with its log, and the codec tests still run.
       - name: MinGW x64 tests of the file module
+        if: ${{ !cancelled() }}
         timeout-minutes: 15
         run: .\kotlin.bat test -m kiteaudio-codec-io -p mingwX64
 
@@ -252,19 +264,19 @@ jobs:
       - name: Native tests
         if: ${{ !cancelled() }}
         run: |
-          ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p macosArm64
-          ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p iosSimulatorArm64
+          ./kotlin test -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p macosArm64
+          ./kotlin test -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p iosSimulatorArm64
 
       # The klib check reads the klibs of every native, JS and wasm platform,
       # and only macOS builds the Apple ones.
       - name: Public klib API check
         if: ${{ !cancelled() }}
         run: |
-          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p js -p wasmJs -p wasmWasi
+          ./kotlin build -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p js -p wasmJs -p wasmWasi
           for platform in iosArm64 iosSimulatorArm64 iosX64 macosArm64 tvosArm64 tvosSimulatorArm64 watchosArm32 watchosArm64 watchosDeviceArm64 watchosSimulatorArm64 linuxX64 linuxArm64 mingwX64 androidNativeArm32 androidNativeArm64 androidNativeX86 androidNativeX64; do
-            ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
+            ./kotlin build -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
           done
-          ./kotlin check klibAbi -m kiteaudio-codec -m kiteaudio-codec-io
+          ./kotlin check klibAbi -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io
 
       - name: Check framework attribution
         if: ${{ !cancelled() }}
@@ -307,16 +319,16 @@ jobs:
         run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"'
 
       - name: Android host tests
-        run: ./kotlin test -m kiteaudio-codec -m kiteaudio-codec-io -p android
+        run: ./kotlin test -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p android
 
       # One Kotlin/Native platform per call. The toolchain starts one compiler
       # process of 3 GB per native task with no limit, and twelve platforms in
       # one call ran the runner out of memory.
       - name: Build every target that Linux can build
         run: |
-          ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p jvm -p android -p js -p wasmJs -p wasmWasi
+          ./kotlin build -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p jvm -p android -p js -p wasmJs -p wasmWasi
           for platform in linuxX64 linuxArm64 mingwX64 androidNativeArm32 androidNativeArm64 androidNativeX86 androidNativeX64; do
-            ./kotlin build -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
+            ./kotlin build -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -p "$platform"
           done
 
       - name: Check jar and Android attribution

@@ -1,0 +1,221 @@
+# The audio format types that the other KiteAudio modules share.
+product:
+  type: kmp/lib
+  platforms:
+    - jvm
+    - android
+    - js
+    - wasmJs
+    - wasmWasi
+    - iosArm64
+    - iosSimulatorArm64
+    - iosX64
+    - macosArm64
+    - tvosArm64
+    - tvosSimulatorArm64
+    - watchosArm32
+    - watchosArm64
+    - watchosDeviceArm64
+    - watchosSimulatorArm64
+    - linuxX64
+    - linuxArm64
+    - mingwX64
+    - androidNativeArm32
+    - androidNativeArm64
+    - androidNativeX86
+    - androidNativeX64
+
+apply:
+  - ../library.module-template.yaml
+  - ../kmp.module-template.yaml
+
+# No dependencies. The core module depends on kotlin-stdlib only.
+
+settings:
+  android:
+    namespace: io.github.yuroyami.kiteaudio.core
+    minSdk: 21
+  publishing:
+    pom:
+      name: KiteAudio Core
+      description: >-
+        The shared audio format types of the KiteAudio modules: the sample rate, the channel layout and a pull-based
+        stream of Float32 PCM. Depends on kotlin-stdlib only.
+
+# Pin the klib name to "io.github.yuroyami:kiteaudio-core", the group and artifact name.
+# The committed klib ABI dump records this name. The web test runner finds the test klib
+# by the test name below. Set it per platform: on @native, it also renames the klibs of
+# shared native code, which must keep their own names.
+settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-core ]
+
+settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-core ]
+
+settings@wasmWasi:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-core ]
+
+settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@tvosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@tvosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@watchosArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@watchosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@watchosDeviceArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@watchosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@androidNativeArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@androidNativeArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@androidNativeX86:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+settings@androidNativeX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-core, -Xshort-module-name=kiteaudio-core ]
+
+# Tests compile into their own klib, which needs a different name. The test blocks name the
+# same platforms as the blocks above, so the toolchain applies them last.
+test-settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=kiteaudio-core_test ]
+
+test-settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=kiteaudio-core_test ]
+
+test-settings@wasmWasi:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=kiteaudio-core_test ]
+
+test-settings@iosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@iosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@iosX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@macosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@tvosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@tvosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@watchosArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@watchosArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@watchosDeviceArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@watchosSimulatorArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@androidNativeArm32:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@androidNativeArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@androidNativeX86:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+test-settings@androidNativeX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-core_test, -Xshort-module-name=kiteaudio-core_test ]
+
+plugins:
+  abi-check:
+    enabled: true
+    # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
+    klibPlatforms: [ androidNativeArm32, androidNativeArm64, androidNativeX64, androidNativeX86, iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, mingwX64, tvosArm64, tvosSimulatorArm64, wasmJs, wasmWasi, watchosArm32, watchosArm64, watchosDeviceArm64, watchosSimulatorArm64 ]
+  dokka:
+    enabled: true
+    moduleName: kiteaudio-core
+    includes: [ Module.md ]
+    footerMessage: Apache-2.0 · KiteAudio is part of the Kite family.
+    sourceLinkUrl: https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-core/src

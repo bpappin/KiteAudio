@@ -1,0 +1,72 @@
+public final class io/github/yuroyami/kiteaudio/core/AudioChannel : java/lang/Enum {
+	public static final field BACK_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field BACK_LEFT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field BACK_RIGHT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field FRONT_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field FRONT_LEFT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field FRONT_LEFT_OF_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field FRONT_RIGHT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field FRONT_RIGHT_OF_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field LOW_FREQUENCY Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field SIDE_LEFT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field SIDE_RIGHT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_BACK_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_BACK_LEFT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_BACK_RIGHT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_FRONT_CENTER Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_FRONT_LEFT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field TOP_FRONT_RIGHT Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static final field UNKNOWN Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public final fun getWaveMaskBit ()I
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+	public static fun values ()[Lio/github/yuroyami/kiteaudio/core/AudioChannel;
+}
+
+public final class io/github/yuroyami/kiteaudio/core/AudioFormat {
+	public fun <init> (II)V
+	public fun <init> (ILio/github/yuroyami/kiteaudio/core/ChannelLayout;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun framesToMicros (I)J
+	public final fun framesToMicros (J)J
+	public final fun getChannelLayout ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getChannels ()I
+	public final fun getSampleRate ()I
+	public fun hashCode ()I
+	public final fun microsToFrames (J)J
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kiteaudio/core/ChannelLayout {
+	public static final field Companion Lio/github/yuroyami/kiteaudio/core/ChannelLayout$Companion;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChannels ()Ljava/util/List;
+	public final fun getCount ()I
+	public final fun getWaveMask ()I
+	public fun hashCode ()I
+	public final fun isPositional ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/yuroyami/kiteaudio/core/ChannelLayout$Companion {
+	public final fun canonical (I)Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun fromWaveMask (II)Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getMONO ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getQUAD ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getSTEREO ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getSURROUND_3_0 ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getSURROUND_5_0 ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getSURROUND_5_1 ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun getSURROUND_7_1 ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun of (Ljava/util/List;)Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun of ([Lio/github/yuroyami/kiteaudio/core/AudioChannel;)Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+	public final fun unknown (I)Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
+}
+
+public abstract interface class io/github/yuroyami/kiteaudio/core/PcmSource {
+	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
+	public abstract fun getFrameCount ()Ljava/lang/Long;
+	public abstract fun read ([FII)I
+}
+
