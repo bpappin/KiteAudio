@@ -3,7 +3,7 @@
 ## Unreleased 0.3.0
 
 The first release of KiteAudio. KiteAudio holds the codec, MIDI, synth and output
-libraries in one repository. Each library is its own artifact, and all seven artifacts
+libraries in one repository. Each library is its own artifact, and all eight artifacts
 have version 0.3.0. No earlier version of any of them is on Maven Central.
 
 ### Changed in the merge
@@ -27,6 +27,22 @@ The artifacts and packages have new names:
 - The temporary files of the codec use the prefix `kiteaudio-codec-`. The benchmark reads the
   system property `kiteaudio-codec.benchmark.cache`.
 - The MIDI corpus test reads its folder from the environment variable `KITEAUDIO_MIDI_CORPUS`.
+
+### Added: the core module
+
+- The new artifact `io.github.yuroyami:kiteaudio-core` holds the audio format types that the codec and the
+  output module share: `AudioChannel`, `ChannelLayout`, `AudioFormat` and the `PcmSource` interface. Its
+  package is `io.github.yuroyami.kiteaudio.core`. It depends on kotlin-stdlib only and builds for the 22
+  targets of the codec.
+- The codec and the output module depend on `kiteaudio-core` and expose it, so a project does not add it
+  itself.
+- These four types moved out of the codec package. Change their imports from
+  `io.github.yuroyami.kiteaudio.codec` to `io.github.yuroyami.kiteaudio.core`.
+- `AudioFormat` has `framesToMicros`, for an `Int` and for a `Long` frame count, and `microsToFrames`. They
+  round down. They throw `IllegalArgumentException` for a negative value and for a result that does not fit
+  a `Long`.
+- `AudioFormat.floatFrameBytes` is removed. Nothing used it.
+- The output takes a decoded format with no conversion: `openAudioOutput(decoded.format)`.
 
 ### Changed in the MIDI module
 
@@ -56,10 +72,17 @@ The artifacts and packages have new names:
 
 ### Changed in the output module
 
+- The device API has new names: `AudioSink` is now `AudioOutput`, `AudioSinkEvent` is now `AudioOutputEvent`
+  and `openAudioSink` is now `openAudioOutput`. `AudioSink` stays the name of the byte sink of the codec.
+- The module's own `AudioFormat` and `ChannelLayout` are removed. The module uses the types of
+  `kiteaudio-core`. `ChannelLayout.Mono` and `ChannelLayout.Stereo` are now `ChannelLayout.MONO` and
+  `ChannelLayout.STEREO`, and `AudioFormat.layout` is now `AudioFormat.channelLayout`.
+- `AudioFormat` has no default layout. Write `AudioFormat(48_000, ChannelLayout.STEREO)` or
+  `AudioFormat(48_000, 2)`.
+- `openAudioOutput` plays a layout of one or two channels and ignores the speaker positions. A layout of
+  more channels throws `IllegalArgumentException`.
 - `AudioFormat.microsToFrames` returns `Long`. Before, it returned `Int` and gave a negative or zero frame
-  count for a long duration, for example 13 hours at 48 kHz. The result rounds down and is exact at sample
-  rates up to 1,000,000 Hz.
-- `AudioFormat.microsToFrames` throws `IllegalArgumentException` for a negative duration.
+  count for a long duration, for example 13 hours at 48 kHz.
 
 ### Added in the codec
 

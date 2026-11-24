@@ -1,14 +1,15 @@
 # The code samples that the documentation includes. Not published.
 # Each sample is a test that runs and checks its result. docs/ includes the marked regions of
-# these files. The module sees the two codec modules and kiteaudio-core, which they export, and
-# nothing else. So a sample can only use what a reader's project can. The JVM test runner only
-# picks classes whose names end in Test, so each sample class does, while the file keeps the
-# name that docs/ includes.
+# these files. The module sees the two codec modules, the output module and kiteaudio-core, which
+# they export, and nothing else. So a sample can only use what a reader's project can. The JVM
+# test runner only picks classes whose names end in Test, so each sample class does, while the
+# file keeps the name that docs/ includes.
 product: jvm/lib
 
 test-dependencies:
   - //kiteaudio-codec
   - //kiteaudio-codec-io
+  - //kiteaudio-output
 
 settings:
   kotlin:

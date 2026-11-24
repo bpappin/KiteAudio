@@ -75,6 +75,11 @@ jobs:
         if: ${{ !cancelled() }}
         run: ./kotlin check abi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -m kiteaudio-synth -m kiteaudio-output
 
+      # One documentation sample plays a decoded file through the output module.
+      - name: Documentation samples
+        if: ${{ !cancelled() }}
+        run: ./kotlin test -m docs-samples
+
       # sdkmanager is not on PATH on the runner, so call it by its full path.
       - name: Install the required Android SDK
         if: ${{ !cancelled() }}
