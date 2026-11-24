@@ -98,7 +98,7 @@ internal class JvmMidiDevices(
             } catch (error: Throwable) {
                 if (handle != null) handle?.close() else {
                     runCatching { transmitter?.close() }
-                    release(held.key)
+                    release(held)
                 }
                 throw MidiPortException("could not read from ${port.name}", error)
             }
@@ -118,7 +118,7 @@ internal class JvmMidiDevices(
                     register(it)
                 }
             } catch (error: Throwable) {
-                if (handle != null) handle?.close() else release(held.key)
+                if (handle != null) handle?.close() else release(held)
                 throw MidiPortException("could not write to ${port.name}", error)
             }
         }
@@ -144,18 +144,23 @@ internal class JvmMidiDevices(
 
     private fun rescan() {
         try {
-            val found = scanPorts()
-            synchronized(lock) { if (!closed.get()) portsState.value = found }
+            // One lock for the reading and the loss check, so an open between them cannot see a mix.
+            synchronized(lock) {
+                val infos = deviceInfos()
+                val found = scanPorts(infos)
+                loseVanishedDevices(infos)
+                if (!closed.get()) portsState.value = found
+            }
         } catch (error: Exception) {
             // A reading that fails leaves the previous list alone. The next one will try again.
         }
         scansState.update { it + 1 }
     }
 
-    private fun scanPorts(): List<MidiPort> {
+    private fun scanPorts(infos: Array<MidiDevice.Info>): List<MidiPort> {
         val found = ArrayList<MidiPort>()
         val ordinals = HashMap<String, Int>()
-        for (info in deviceInfos()) {
+        for (info in infos) {
             // The key is counted before the lookup, so a device that fails to answer does not
             // shift the numbering of the ones after it.
             val key = deviceKey(info, ordinals)
@@ -178,6 +183,28 @@ internal class JvmMidiDevices(
     }
 
     /**
+     * Marks an open device as lost when its key is gone or its group of identical devices got smaller.
+     *
+     * When the device count changes, the JDK reuses the first old Info with equal strings and its
+     * device object, so it cannot say which twin left. Closing the javax device lets the next open
+     * reach the hardware that is there now.
+     */
+    private fun loseVanishedDevices(infos: Array<MidiDevice.Info>) {
+        val groupSizes = HashMap<String, Int>()
+        val keys = infos.mapTo(HashSet()) { deviceKey(it, groupSizes) }
+        for (open in openDevices.values.toList()) {
+            val size = groupSizes[groupOf(open.key)] ?: 0
+            if (open.key in keys && size >= open.groupSize) {
+                open.groupSize = size
+                continue
+            }
+            open.lost = true
+            openDevices.remove(open.key)
+            runCatching { open.device.close() }
+        }
+    }
+
+    /**
      * Finds and opens the device behind [port], counting how many handles are on it.
      *
      * One device can carry both an input and an output port, and javax closes the whole device
@@ -191,25 +218,26 @@ internal class JvmMidiDevices(
             already.handles++
             already
         } else {
-            val device = resolve(port, key)
+            val (device, groupSize) = resolve(port, key)
             try {
                 device.open()
             } catch (error: Exception) {
                 throw MidiPortException("could not open ${port.name}", error)
             }
-            val opened = OpenDevice(key, device)
+            val opened = OpenDevice(key, device, groupSize)
             opened.handles = 1
             openDevices[key] = opened
             opened
         }
     }
 
-    private fun release(key: String) {
+    // A lost device is already closed and out of the map, where a newer device may now use its key.
+    private fun release(open: OpenDevice) {
         synchronized(lock) {
-            val open = openDevices[key] ?: return
+            if (open.lost) return
             open.handles--
             if (open.handles > 0) return
-            openDevices.remove(key)
+            openDevices.remove(open.key)
             runCatching { open.device.close() }
         }
     }
@@ -220,25 +248,27 @@ internal class JvmMidiDevices(
      * A `MidiDevice.Info` must never be kept between two readings. The JDK rebuilds its cache
      * only when the number of devices changes, and marks an Info whose device has gone as dead,
      * after which asking for its device throws.
+     *
+     * Also returns the size of the device's group of identical devices in that list.
      */
-    private fun resolve(port: MidiPort, key: String): MidiDevice {
+    private fun resolve(port: MidiPort, key: String): Pair<MidiDevice, Int> {
         val ordinals = HashMap<String, Int>()
+        var match: MidiDevice.Info? = null
         for (info in deviceInfos()) {
-            val candidate = deviceKey(info, ordinals)
-            if (candidate != key) continue
-            val device = try {
-                deviceFor(info)
-            } catch (error: Exception) {
-                throw MidiPortException("${port.name} is listed but cannot be reached", error)
-            }
-            val supported = when (port.direction) {
-                MidiDirection.INPUT -> device.maxTransmitters != 0
-                MidiDirection.OUTPUT -> device.maxReceivers != 0
-            }
-            if (!supported) throw MidiPortException("${port.name} cannot act as an ${port.direction}")
-            return device
+            if (deviceKey(info, ordinals) == key) match = info
         }
-        throw MidiPortException("no device on this machine matches port ${port.id}")
+        val info = match ?: throw MidiPortException("no device on this machine matches port ${port.id}")
+        val device = try {
+            deviceFor(info)
+        } catch (error: Exception) {
+            throw MidiPortException("${port.name} is listed but cannot be reached", error)
+        }
+        val supported = when (port.direction) {
+            MidiDirection.INPUT -> device.maxTransmitters != 0
+            MidiDirection.OUTPUT -> device.maxReceivers != 0
+        }
+        if (!supported) throw MidiPortException("${port.name} cannot act as an ${port.direction}")
+        return device to (ordinals[groupOf(key)] ?: 0)
     }
 
     private fun register(handle: AutoCloseable) {
@@ -252,9 +282,12 @@ internal class JvmMidiDevices(
         synchronized(lock) { openHandles -= handle }
     }
 
-    /** One javax device that at least one open port is using. */
-    private class OpenDevice(val key: String, val device: MidiDevice) {
+    /** One javax device that at least one open port is using. Guarded by [lock]. */
+    private class OpenDevice(val key: String, val device: MidiDevice, var groupSize: Int) {
         var handles: Int = 0
+
+        // Handles read this without the lock, on every send and every incoming message.
+        @Volatile var lost: Boolean = false
     }
 
     private inner class JvmMidiInput(
@@ -267,18 +300,21 @@ internal class JvmMidiDevices(
         private val parserLock = Any()
         private var arrivedAtNanos: Long = 0L
 
+        // Guarded by parserLock, so close() cannot slip in between this check and a callback.
+        private var shut = false
+
         // javax hands over whole messages, so no reassembly is needed here. The bytes go
         // through the parser anyway, so every platform reaches a MidiMessage the same way.
         private val parser = MidiStreamParser { message ->
-            onMessage(TimedMidiMessage(message, arrivedAtNanos))
+            if (!shut && !device.lost) onMessage(TimedMidiMessage(message, arrivedAtNanos))
         }
-        private val shut = AtomicBoolean(false)
 
         init {
             transmitter.receiver = object : Receiver {
                 override fun send(message: JavaxMidiMessage, timeStamp: Long) {
                     val bytes = message.message ?: return
                     synchronized(parserLock) {
+                        if (shut || device.lost) return
                         // The host clock: javax only offers getMicrosecondPosition, which
                         // returns -1 for a device with no clock. The parser calls back inside
                         // feed, so it sees this stamp.
@@ -292,9 +328,12 @@ internal class JvmMidiDevices(
         }
 
         override fun close() {
-            if (!shut.compareAndSet(false, true)) return
+            synchronized(parserLock) {
+                if (shut) return
+                shut = true
+            }
             runCatching { transmitter.close() }
-            release(device.key)
+            release(device)
             unregister(this)
         }
     }
@@ -312,16 +351,26 @@ internal class JvmMidiDevices(
         }
 
         override fun sendRaw(bytes: ByteArray) {
-            // After close there is nothing to write to. Dropping beats throwing at a caller who
-            // cannot know a device was pulled out a moment ago.
-            if (shut.get() || bytes.isEmpty()) return
-            receiver.send(RawMidiMessage(bytes.copyOf()), SEND_NOW)
+            if (shut.get()) throw MidiPortException("the output to ${port.name} is closed")
+            if (device.lost) throw lostError()
+            if (bytes.isEmpty()) return
+            try {
+                receiver.send(RawMidiMessage(bytes.copyOf()), SEND_NOW)
+            } catch (error: IllegalStateException) {
+                // javax throws this when the device closed under the send: a loss, or a close() on another thread.
+                if (device.lost) throw lostError(error)
+                if (shut.get()) throw MidiPortException("the output to ${port.name} is closed", error)
+                throw error
+            }
         }
+
+        private fun lostError(cause: Throwable? = null) =
+            MidiPortException("the device behind ${port.name} was lost", cause)
 
         override fun close() {
             if (!shut.compareAndSet(false, true)) return
             runCatching { receiver.close() }
-            release(device.key)
+            release(device)
             unregister(this)
         }
     }
@@ -344,6 +393,9 @@ private fun portId(deviceKey: String, direction: MidiDirection): String =
     "$deviceKey|${if (direction == MidiDirection.INPUT) "in" else "out"}"
 
 private fun keyOf(port: MidiPort): String = port.id.substringBeforeLast('|')
+
+/** The key without its ordinal: what identical devices share. */
+private fun groupOf(deviceKey: String): String = deviceKey.substringBeforeLast('|')
 
 /**
  * javax never says how a port is attached, so a real socket can only be [MidiTransport.UNKNOWN].

@@ -16,6 +16,7 @@ import javax.sound.sampled.DataLine
 import javax.sound.sampled.SourceDataLine
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
 
@@ -105,8 +106,8 @@ class JvmMidiDevicesTest {
             val output = devices.openOutput(port)
             output.close()
             output.close()
-            // Sending after the close is dropped rather than thrown.
-            output.send(NoteOn(0, 60, 100))
+            // Sending after the close throws, so a caller cannot lose notes without knowing.
+            assertFailsWith<MidiPortException> { output.send(NoteOn(0, 60, 100)) }
         } finally {
             devices.close()
             scope.cancel()

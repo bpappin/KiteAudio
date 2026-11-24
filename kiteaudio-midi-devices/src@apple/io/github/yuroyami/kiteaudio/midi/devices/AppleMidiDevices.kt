@@ -295,8 +295,9 @@ private class AppleMidiDevices(private val scope: CoroutineScope) : MidiDevices 
         }, onDisposed)
     }
 
-    fun sendIfOpen(action: () -> Unit) = lifecycle.locked {
-        if (closed.value) throw MidiPortException("CoreMIDI is closed")
+    // Closing these devices closes every output, so the message names the output.
+    fun sendIfOpen(port: MidiPort, action: () -> Unit) = lifecycle.locked {
+        if (closed.value) throw MidiPortException("the output to ${port.displayName} is closed")
         action()
     }
 
@@ -395,8 +396,8 @@ private class AppleMidiInput(
      *
      * This runs on CoreMIDI's high-priority delivery thread. A per-input lock serializes
      * parser state and timestamp updates; callbacks run inside that lock and must return
-     * promptly. Close marks the input closed immediately and defers disposal to the client
-     * loop, so a callback may close its own input without waiting for itself.
+     * promptly. Close sets the closed flag inside the same lock, so it waits for a callback on
+     * another thread. The lock is recursive, so a callback may still close its own input.
      */
     fun onPackets(list: CPointer<MIDIPacketList>?) = parserLock.locked {
         if (list == null || closed.value) return@locked
@@ -421,7 +422,8 @@ private class AppleMidiInput(
     }
 
     override fun close() {
-        if (!closed.compareAndSet(expect = false, update = true)) return
+        // Inside the parser lock, so no callback starts after close() returns.
+        if (!parserLock.locked { closed.compareAndSet(expect = false, update = true) }) return
         owner.disposeInput(portRef, endpoint) {
             portRef = 0u
             // No owner lock is held while disposal waits for callbacks or while this lock drains.
@@ -447,14 +449,14 @@ private class AppleMidiOutput(
     override fun send(message: MidiMessage): Unit = sendRaw(message.toBytes())
 
     /**
-     * Sends [bytes] as one packet. An empty array is ignored.
+     * Sends [bytes] as one packet. An empty array on an open output sends nothing.
      *
      * @throws MidiPortException when this output is closed, when the bytes are too many for a
      *   single packet, or when CoreMIDI rejects the send.
      */
-    override fun sendRaw(bytes: ByteArray) = owner.sendIfOpen {
+    override fun sendRaw(bytes: ByteArray) = owner.sendIfOpen(port) {
+        if (closed.value) throw MidiPortException("the output to ${port.displayName} is closed")
         if (bytes.isEmpty()) return@sendIfOpen
-        if (closed.value) throw MidiPortException("${port.displayName} is closed")
         if (bytes.size > 65_520) throw MidiPortException("a CoreMIDI send supports at most 65520 bytes; split large SysEx transfers")
         memScoped {
             val listBytes = (PACKET_LIST_OVERHEAD + bytes.size + 3) and 3.inv()

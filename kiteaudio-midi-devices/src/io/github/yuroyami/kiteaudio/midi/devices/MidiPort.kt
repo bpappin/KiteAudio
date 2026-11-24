@@ -25,6 +25,10 @@ public enum class MidiTransport { USB, BLUETOOTH, VIRTUAL, NETWORK, UNKNOWN }
  *
  * @param id stable for as long as the device stays attached. Platform-specific, and not worth
  *   storing between runs: match on [name] to recognise a device the user chose before.
+ *   On the JVM, identical devices are numbered by their position in the device list. Their ids
+ *   can swap after a device is added or removed. When a group of identical devices gets smaller,
+ *   every open port of that group is lost. This also ends a port whose device still works, because
+ *   the JDK gives no way to tell the devices apart.
  */
 public data class MidiPort(
     public val id: String,

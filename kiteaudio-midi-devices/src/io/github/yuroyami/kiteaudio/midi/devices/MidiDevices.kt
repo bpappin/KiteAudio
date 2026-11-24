@@ -4,24 +4,47 @@ import io.github.yuroyami.kiteaudio.midi.MidiMessage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.StateFlow
 
-/** An open input. Closing it stops the callback. */
+/**
+ * An open input.
+ *
+ * No callback starts after [close] returns. A callback that already runs may finish, and [close]
+ * waits for it when it runs on another thread. So do not call [close] while you hold a lock that
+ * the callback needs. A callback may close its own input.
+ */
 public interface MidiInput {
     public val port: MidiPort
+
+    /** Stops the callback. Closing twice is safe. */
     public fun close()
 }
 
-/** An open output. */
+/**
+ * An open output.
+ *
+ * [send] and [sendRaw] on a closed output throw [MidiPortException], also for an empty array.
+ * On the `javax.sound.midi` backend for the JVM, they also throw when the device behind the
+ * output was lost.
+ */
 public interface MidiOutput {
     public val port: MidiPort
 
-    /** Sends one message, as soon as the platform can. */
+    /**
+     * Sends one message, as soon as the platform can.
+     *
+     * @throws MidiPortException when this output is closed or the platform rejects the send.
+     */
     @Throws(MidiPortException::class)
     public fun send(message: MidiMessage)
 
-    /** Sends bytes already encoded. Useful for a message this library does not model. */
+    /**
+     * Sends bytes already encoded. Useful for a message this library does not model.
+     *
+     * @throws MidiPortException when this output is closed or the platform rejects the send.
+     */
     @Throws(MidiPortException::class)
     public fun sendRaw(bytes: ByteArray)
 
+    /** Closes the output. Closing twice is safe. */
     public fun close()
 }
 

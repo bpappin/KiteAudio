@@ -373,15 +373,29 @@ private fun MidiDevice.openWritePort(ref: PortRef): MidiInputPort {
 /** Feeds what the framework delivers into a parser and passes on whole messages. */
 private class ParsingReceiver(onMessage: (TimedMidiMessage) -> Unit) : MidiReceiver() {
 
+    private val lock = Any()
     private var arrival: Long = 0L
-    private val parser = MidiStreamParser { message -> onMessage(TimedMidiMessage(message, arrival)) }
+
+    // Guarded by lock. The dispatcher can still call onSend after disconnect returns.
+    private var shut = false
+    private val parser = MidiStreamParser { message ->
+        if (!shut) onMessage(TimedMidiMessage(message, arrival))
+    }
 
     override fun onSend(msg: ByteArray, offset: Int, count: Int, timestamp: Long) {
-        // The framework's timestamp is a System.nanoTime() reading, which is what
-        // TimedMidiMessage wants. The parser calls back from inside feed, so setting the field
-        // first is enough to give every message the right moment.
-        arrival = if (timestamp == 0L) System.nanoTime() else timestamp
-        parser.feed(msg, offset, count)
+        synchronized(lock) {
+            if (shut) return
+            // The framework's timestamp is a System.nanoTime() reading, which is what
+            // TimedMidiMessage wants. The parser calls back from inside feed, so setting the field
+            // first is enough to give every message the right moment.
+            arrival = if (timestamp == 0L) System.nanoTime() else timestamp
+            parser.feed(msg, offset, count)
+        }
+    }
+
+    /** Stops delivery. Waits for a callback that runs on another thread. */
+    fun stopDelivery() {
+        synchronized(lock) { shut = true }
     }
 }
 
@@ -389,13 +403,15 @@ private class AndroidMidiInput(
     override val port: MidiPort,
     private val device: MidiDevice,
     private val readPort: MidiOutputPort,
-    private val receiver: MidiReceiver,
+    private val receiver: ParsingReceiver,
     private val onClosed: (AutoCloseable) -> Unit,
 ) : MidiInput, AutoCloseable {
 
     private val closed = AtomicBoolean(false)
 
     override fun close() {
+        // Before the flag, so even a second close() returns only after delivery has stopped.
+        receiver.stopDelivery()
         if (!closed.compareAndSet(false, true)) return
         readPort.disconnect(receiver)
         readPort.closeQuietly()
@@ -418,14 +434,20 @@ private class AndroidMidiOutput(
     }
 
     override fun sendRaw(bytes: ByteArray) {
+        if (closed.get()) throw closedError()
         try {
             // 0L means "now". The framework has no public name for it: its own source carries a
             // TODO about adding one. send splits anything too long for the port, onSend does not.
             writePort.send(bytes, 0, bytes.size, 0L)
         } catch (error: IOException) {
+            // A close() on another thread shuts the port under this send.
+            if (closed.get()) throw closedError(error)
             throw MidiPortException("lost ${port.displayName} while sending", error)
         }
     }
+
+    private fun closedError(cause: Throwable? = null) =
+        MidiPortException("the output to ${port.displayName} is closed", cause)
 
     override fun close() {
         if (!closed.compareAndSet(false, true)) return

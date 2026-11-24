@@ -2,6 +2,8 @@ package io.github.yuroyami.kiteaudio.midi.coremidi
 
 import io.github.yuroyami.kiteaudio.midi.NoteOn
 import io.github.yuroyami.kiteaudio.midi.devices.MidiDirection
+import io.github.yuroyami.kiteaudio.midi.devices.MidiPort
+import io.github.yuroyami.kiteaudio.midi.devices.MidiTransport
 import java.lang.foreign.Arena
 import java.lang.foreign.MemorySegment
 import java.lang.foreign.ValueLayout
@@ -88,6 +90,24 @@ class CoreMidiDevicesTest {
             assertTrue(packet.byteSize() <= 65_536)
             assertFailsWith<MidiPortException> { CoreMidi.packetList(arena, ByteArray(65_521)) }
             assertFailsWith<MidiPortException> { CoreMidi.packetList(arena, ByteArray(65_536)) }
+        }
+    }
+
+    @Test
+    fun sendOnAClosedOutputThrowsAlsoForAnEmptyArray() = runBlocking(Dispatchers.Default) {
+        if (!coreMidiAvailable()) return@runBlocking
+        val devices = CoreMidiDevices(this, "KiteMIDI closed output test")
+        try {
+            // Sending is never reached, so the output needs no real destination.
+            val port = MidiPort("out:test", "KiteMIDI closed output", null, MidiDirection.OUTPUT, MidiTransport.VIRTUAL)
+            val output = CoreMidiOutput(devices, port, 0)
+            output.sendRaw(ByteArray(0))
+            output.close()
+            val error = assertFailsWith<MidiPortException> { output.send(NoteOn(0, 60, 100)) }
+            assertTrue("closed" in error.message.orEmpty(), error.message)
+            assertFailsWith<MidiPortException> { output.sendRaw(ByteArray(0)) }
+        } finally {
+            devices.close()
         }
     }
 

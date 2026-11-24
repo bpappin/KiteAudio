@@ -266,7 +266,8 @@ internal class CoreMidiInput(
     }
 
     override fun close() {
-        if (!open.compareAndSet(true, false)) return
+        // Inside the parser lock, so no callback starts after close() returns.
+        if (!synchronized(parserLock) { open.compareAndSet(true, false) }) return
         CoreMidiCleanup.dispose("input ${port.name}", this, {
             CoreMidi.portDisconnectSource.invoke(portRef, endpoint) as Int
             CoreMidi.portDispose.invoke(portRef) as Int
@@ -302,7 +303,8 @@ internal class CoreMidiOutput(private val owner: CoreMidiDevices, override val p
 
     override fun sendRaw(bytes: ByteArray) {
         synchronized(sendLock) {
-            if (!open || bytes.isEmpty()) return
+            if (!open) throw MidiPortException("the output to ${port.name} is closed")
+            if (bytes.isEmpty()) return
             Arena.ofConfined().use { scratch ->
                 val status = CoreMidi.send.invoke(portRef, endpoint, CoreMidi.packetList(scratch, bytes)) as Int
                 if (status != 0) throw MidiPortException("CoreMIDI would not send to ${port.name} (OSStatus $status)")

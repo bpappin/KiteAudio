@@ -42,6 +42,17 @@ The artifacts and packages have new names:
   above 15 lost its high bits, and a key signature mode above 1 was written back as 1.
 - A payload that is too short still fails with `MidiFormatException`.
 - `TempoMap.microsToTick` can no longer divide by zero, because `TempoEntry` rejects a tempo of 0.
+- `MidiOutput.send` and `MidiOutput.sendRaw` on a closed output throw `MidiPortException`, also for an
+  empty array. Before, the JVM backends dropped the bytes, and the Apple backend ignored an empty array
+  before it checked for close. This applies to the JVM, Android, Apple and CoreMIDI for the JVM backends.
+- No `MidiInput` callback starts after `close()` returns. `close()` waits for a callback that already
+  runs on another thread. Before, a callback could still start just after `close()` returned.
+- On the JVM `javax.sound.midi` backend, a port of a device that is unplugged while open is lost. Its
+  `send` and `sendRaw` throw `MidiPortException`, and its input delivers nothing. Before, a handle could
+  stay on the dead device, and after one of two identical devices was unplugged, a new open of the
+  other one could reach that dead device.
+- When a group of identical devices on the JVM gets smaller, every open port of that group is lost. The
+  JDK gives no way to tell identical devices apart, so this can also end a port whose device still works.
 
 ### Added in the codec
 
