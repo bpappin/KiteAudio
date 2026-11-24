@@ -8,13 +8,14 @@ import kotlin.math.sin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 /**
  * Opens the real audio device on this machine.
  *
  * These tests make sound. They are short and quiet on purpose. If the machine has no output at
- * all they skip themselves rather than failing, because a build server with no sound card is not
- * a broken build.
+ * all they report themselves as skipped rather than failing, because a build server with no sound
+ * card is not a broken build.
  */
 class JvmAudioSinkTest {
 
@@ -28,7 +29,7 @@ class JvmAudioSinkTest {
 
     @Test
     fun aSinkPullsFromTheCallbackAndKeepsPulling() {
-        if (!available) return
+        assumeTrue(available, "no audio output device on this machine")
 
         val format = AudioFormat(48_000)
         val blocks = AtomicInteger(0)
@@ -70,7 +71,7 @@ class JvmAudioSinkTest {
 
     @Test
     fun stoppingASinkStopsThePulling() {
-        if (!available) return
+        assumeTrue(available, "no audio output device on this machine")
 
         val blocks = AtomicInteger(0)
         val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512)
@@ -93,7 +94,7 @@ class JvmAudioSinkTest {
 
     @Test
     fun stoppingTwiceIsNotAnError() {
-        if (!available) return
+        assumeTrue(available, "no audio output device on this machine")
         val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512)
         sink.stop()
         sink.stop()
@@ -103,7 +104,7 @@ class JvmAudioSinkTest {
 
     @Test
     fun aCallbackThatThrowsIsReportedAndDoesNotTakeTheDeviceDown() {
-        if (!available) return
+        assumeTrue(available, "no audio output device on this machine")
 
         val events = mutableListOf<AudioSinkEvent>()
         val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512) {
@@ -126,7 +127,7 @@ class JvmAudioSinkTest {
 
     @Test
     fun theSinkReportsALatencyAndSaysHowMuchItIsWorth() {
-        if (!available) return
+        assumeTrue(available, "no audio output device on this machine")
         val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512)
         try {
             // An estimate, and it says so. A number the app lines picture up with has to carry

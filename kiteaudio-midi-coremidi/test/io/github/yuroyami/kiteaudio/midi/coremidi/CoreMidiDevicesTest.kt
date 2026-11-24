@@ -20,6 +20,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertFailsWith
 import io.github.yuroyami.kiteaudio.midi.devices.MidiPortException
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 /** A virtual source is the test's way of being a piano: CoreMIDI lists it like any other. */
 private class VirtualSource(name: String) {
@@ -83,7 +84,7 @@ class CoreMidiDevicesTest {
 
     @Test
     fun packetLengthRejectsOversizedSendsBeforeNarrowing() {
-        if (!coreMidiAvailable()) return
+        assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         Arena.ofConfined().use { arena ->
             val packet = CoreMidi.packetList(arena, ByteArray(65_520))
             assertEquals(65_520, packet.get(ValueLayout.JAVA_SHORT.withByteAlignment(1), 12).toInt() and 0xffff)
@@ -94,8 +95,8 @@ class CoreMidiDevicesTest {
     }
 
     @Test
-    fun sendOnAClosedOutputThrowsAlsoForAnEmptyArray() = runBlocking(Dispatchers.Default) {
-        if (!coreMidiAvailable()) return@runBlocking
+    fun sendOnAClosedOutputThrowsAlsoForAnEmptyArray() = runBlocking<Unit>(Dispatchers.Default) {
+        assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = CoreMidiDevices(this, "KiteMIDI closed output test")
         try {
             // Sending is never reached, so the output needs no real destination.
@@ -113,7 +114,7 @@ class CoreMidiDevicesTest {
 
     @Test
     fun aCallbackCanCloseItsInputAndOwnerAndDisableFurtherDelivery() = runBlocking(Dispatchers.Default) {
-        if (!coreMidiAvailable()) return@runBlocking
+        assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
         val virtual = VirtualSource("KiteMIDI FFM callback close source")
         val input = AtomicReference<MidiInput?>()
@@ -147,7 +148,7 @@ class CoreMidiDevicesTest {
 
     @Test
     fun aVirtualSourceIsListedAndItsNoteComesThrough() = runBlocking(Dispatchers.Default) {
-        if (!coreMidiAvailable()) return@runBlocking
+        assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
         val virtual = VirtualSource("KiteMIDI test source")
         try {
@@ -173,7 +174,7 @@ class CoreMidiDevicesTest {
 
     @Test
     fun aSourceThatAppearsLaterIsSeenWithoutRefresh() = runBlocking(Dispatchers.Default) {
-        if (!coreMidiAvailable()) return@runBlocking
+        assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
         try {
             val virtual = VirtualSource("KiteMIDI late source")

@@ -389,7 +389,7 @@ software synthesizer and sequencer. Apple and desktop CoreMIDI tests create virt
 sources; they do not verify a physical keyboard, USB connection or Bluetooth transport.
 
 The optional corpus tests read the folder that the environment variable
-`KITEAUDIO_MIDI_CORPUS` names. They return successfully when the variable is unset or the
+`KITEAUDIO_MIDI_CORPUS` names. They report themselves as skipped when the variable is unset or the
 folder is absent, so a green clone does not establish corpus coverage. There are no Android
 device tests in this checkout. The CI workflow does not run the MIDI modules yet. Commands above describe available checks; consult
 their actual output for the targets and tests that ran.

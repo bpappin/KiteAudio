@@ -48,7 +48,7 @@ env:
 
 jobs:
   # The JVM tests cover the common code of all five modules. The device tests of
-  # the MIDI and output modules return early on a runner that has no device.
+  # the MIDI and output modules report themselves as skipped on a runner that has no device.
   jvm:
     name: JVM tests, API check and Android build
     runs-on: ubuntu-latest

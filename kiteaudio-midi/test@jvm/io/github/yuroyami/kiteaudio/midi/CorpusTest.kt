@@ -4,6 +4,7 @@ import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 /**
  * Reads real files nobody here wrote.
@@ -14,8 +15,8 @@ import kotlin.test.assertTrue
  * difference.
  *
  * The corpus is not part of this repository. Set `KITEAUDIO_MIDI_CORPUS` to a folder of `.mid`
- * files to run these tests. When it is unset or the folder is missing, the test reports that and
- * passes, so a clone on another machine stays green.
+ * files to run these tests. When it is unset or the folder is missing, the tests report themselves
+ * as skipped, so a clone on another machine stays green.
  */
 class CorpusTest {
 
@@ -29,10 +30,7 @@ class CorpusTest {
     @Test
     fun everyFileInTheCorpusReadsAndRoundTrips() {
         val files = corpus()
-        if (files.isEmpty()) {
-            println("corpus not present on this machine, skipping")
-            return
-        }
+        assumeTrue(files.isNotEmpty(), "corpus not present on this machine, set KITEAUDIO_MIDI_CORPUS")
 
         val failures = ArrayList<String>()
         var notes = 0L
@@ -65,7 +63,7 @@ class CorpusTest {
     @Test
     fun everyCorpusFileHasNotesAndASensibleDuration() {
         val files = corpus()
-        if (files.isEmpty()) return
+        assumeTrue(files.isNotEmpty(), "corpus not present on this machine, set KITEAUDIO_MIDI_CORPUS")
 
         for (file in files) {
             val timeline = KiteMidi.readTimeline(file.readBytes())
@@ -91,7 +89,7 @@ class CorpusTest {
     @Test
     fun truncatingAnyCorpusFileRaisesTheTypedFailureAndNothingElse() {
         val files = corpus()
-        if (files.isEmpty()) return
+        assumeTrue(files.isNotEmpty(), "corpus not present on this machine, set KITEAUDIO_MIDI_CORPUS")
 
         var checked = 0
         for (file in files) {
@@ -117,7 +115,7 @@ class CorpusTest {
     @Test
     fun corruptingAnyCorpusFileRaisesTheTypedFailureAndNothingElse() {
         val files = corpus()
-        if (files.isEmpty()) return
+        assumeTrue(files.isNotEmpty(), "corpus not present on this machine, set KITEAUDIO_MIDI_CORPUS")
 
         val random = kotlin.random.Random(seed = 20260823)
         var checked = 0
@@ -147,7 +145,7 @@ class CorpusTest {
     @Test
     fun aFormatOneCorpusFileHasATempoMapAndSeveralTracks() {
         val files = corpus()
-        if (files.isEmpty()) return
+        assumeTrue(files.isNotEmpty(), "corpus not present on this machine, set KITEAUDIO_MIDI_CORPUS")
 
         val formatOne = files.map { KiteMidi.read(it.readBytes()) }.filter { it.format == 1 }
         assertTrue(formatOne.isNotEmpty(), "the corpus has no format 1 file to check")

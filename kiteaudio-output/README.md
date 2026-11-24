@@ -242,7 +242,7 @@ also include live tests that open output and play a quiet tone:
 ./kotlin test -p macosArm64
 ```
 
-JVM audio tests return early if the default Java Sound format is unsupported; that is
+JVM audio tests report themselves as skipped if the default Java Sound format is unsupported; that is
 not proof of successful playback. macOS audio tests require a working output. Neither
 suite establishes Android or physical iOS behavior. The repository currently has no GitHub
 Actions workflow. Fake-driver results establish tested control flow, not hardware playback.

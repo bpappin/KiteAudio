@@ -19,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
+import org.junit.jupiter.api.Assumptions.assumeTrue
 
 /**
  * Runs against the devices this JDK really has, with no stand-ins.
@@ -28,8 +29,8 @@ import kotlin.time.Duration.Companion.seconds
  * machine, plugged-in hardware or not.
  *
  * Gervill is listed on every machine, but it opens only where there is audio output, because
- * it plays into an audio line. The tests that open it return early on a machine with no sound
- * card, such as a build server.
+ * it plays into an audio line. The tests that open it report themselves as skipped on a machine
+ * with no sound card, such as a build server.
  */
 class JvmMidiDevicesTest {
 
@@ -80,7 +81,7 @@ class JvmMidiDevicesTest {
 
     @Test
     fun sendingNotesToGervillCompletes() = runTest(timeout = 60.seconds) {
-        if (!gervillCanOpen) return@runTest
+        assumeTrue(gervillCanOpen, "Gervill cannot open an audio line on this machine")
         val scope = pollingScope()
         val devices = jvmMidiDevices(scope)
         try {
@@ -98,7 +99,7 @@ class JvmMidiDevicesTest {
 
     @Test
     fun closingAnOutputTwiceIsSafe() = runTest(timeout = 60.seconds) {
-        if (!gervillCanOpen) return@runTest
+        assumeTrue(gervillCanOpen, "Gervill cannot open an audio line on this machine")
         val scope = pollingScope()
         val devices = jvmMidiDevices(scope)
         try {
