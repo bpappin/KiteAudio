@@ -7,10 +7,33 @@ import android.os.Build
 import android.os.Process
 import io.github.yuroyami.kiteaudio.core.AudioFormat
 
+/** The calls that [AndroidAudioOutput] makes on the platform. Tests drive the output with a fake. */
+internal interface AndroidPcmTrack {
+    val bufferSizeInFrames: Int
+    fun play()
+    fun pause()
+    fun flush()
+    fun release()
+    fun write(data: ShortArray, offset: Int, count: Int): Int
+
+    /** Runs once on the worker thread before the first block. */
+    fun raiseWorkerPriority()
+}
+
+private class PlatformPcmTrack(private val track: AudioTrack) : AndroidPcmTrack {
+    override val bufferSizeInFrames: Int get() = track.bufferSizeInFrames
+    override fun play() = track.play()
+    override fun pause() = track.pause()
+    override fun flush() = track.flush()
+    override fun release() = track.release()
+    override fun write(data: ShortArray, offset: Int, count: Int): Int = track.write(data, offset, count)
+    override fun raiseWorkerPriority() = Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
+}
+
 /** Blocking platform output with one owned, independently cancellable render generation. */
-private class AndroidAudioOutput(
+internal class AndroidAudioOutput(
     override val format: AudioFormat,
-    private val track: AudioTrack,
+    private val track: AndroidPcmTrack,
     private val bufferFrames: Int,
     private val onEvent: (AudioOutputEvent) -> Unit,
 ) : AudioOutput {
@@ -61,7 +84,7 @@ private class AndroidAudioOutput(
 
     private fun pump(current: Generation, callback: AudioRenderCallback) {
         try {
-            Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
+            track.raiseWorkerPriority()
             val floats = FloatArray(bufferFrames * format.channels)
             val pcm = ShortArray(floats.size)
             val observer: (AudioOutputEvent) -> Unit = { event ->
@@ -199,7 +222,7 @@ public actual fun openAudioOutput(
         throw UnsupportedOperationException("AudioTrack would not initialise")
     }
 
-    return AndroidAudioOutput(preferredFormat, track, bufferFrames, onEvent)
+    return AndroidAudioOutput(preferredFormat, PlatformPcmTrack(track), bufferFrames, onEvent)
 }
 
 /**

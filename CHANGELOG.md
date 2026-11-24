@@ -298,6 +298,7 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
 - `kiteaudio-midi` and `kiteaudio-synth` also build for `js` and `wasmJs`, and
   their tests run there in Node through `.github/scripts/web-tests/run.py` (#164).
 - `kiteaudio-output` builds for `js` and `wasmJs` and plays in the browser through a Web Audio worklet, or through scheduled `AudioBuffer`s where a page cannot run one, through `openAudioOutput` and no other new API. A context the browser suspends or interrupts while playing ends the stream with `DeviceLost`. Its tests run in Node the same way, and `kiteaudio-output/verification/web` checks playback in a browser.
+- The tests of the Android output run on the host JVM through `./kotlin test -m kiteaudio-output -p android`, and CI runs them.
 
 ## KiteSynth before the merge
 

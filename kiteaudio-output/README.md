@@ -247,12 +247,12 @@ Deterministic lifecycle and transfer regressions use fake JVM/native drivers wit
 ```sh
 ./kotlin test -p jvm --include-classes='*RegressionTest'
 ./kotlin test -p macosArm64 --include-classes='*RegressionTest'
-python3 kiteaudio-output/verification/android/run.py
+./kotlin test -p android --include-classes='*RegressionTest'
 ```
 
-The Android harness compiles the production source against small API fakes using cached Kotlin
-compiler artifacts. Its README documents setup and limits. The unfiltered JVM and macOS suites
-also include live tests that open output and play a quiet tone:
+The Android tests run on the host JVM and need the Android SDK in `ANDROID_HOME`. They drive the
+production Android output with a fake track, so they do not open a device or check real playback.
+The unfiltered JVM and macOS suites also include live tests that open output and play a quiet tone:
 
 ```sh
 ./kotlin test -p jvm
