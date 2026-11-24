@@ -54,6 +54,13 @@ The artifacts and packages have new names:
 - When a group of identical devices on the JVM gets smaller, every open port of that group is lost. The
   JDK gives no way to tell identical devices apart, so this can also end a port whose device still works.
 
+### Changed in the output module
+
+- `AudioFormat.microsToFrames` returns `Long`. Before, it returned `Int` and gave a negative or zero frame
+  count for a long duration, for example 13 hours at 48 kHz. The result rounds down and is exact at sample
+  rates up to 1,000,000 Hz.
+- `AudioFormat.microsToFrames` throws `IllegalArgumentException` for a negative duration.
+
 ### Added in the codec
 
 The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.

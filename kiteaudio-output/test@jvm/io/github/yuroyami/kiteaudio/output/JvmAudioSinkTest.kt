@@ -142,7 +142,7 @@ class JvmAudioSinkTest {
     fun aFormatKnowsHowLongItsFramesLast() {
         val format = AudioFormat(48_000)
         assertEquals(10_000L, format.framesToMicros(480))
-        assertEquals(480, format.microsToFrames(10_000L))
+        assertEquals(480L, format.microsToFrames(10_000L))
         assertEquals(2, format.channels)
     }
 

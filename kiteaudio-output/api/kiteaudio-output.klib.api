@@ -150,7 +150,7 @@ final class io.github.yuroyami.kiteaudio.output/AudioFormat { // io.github.yuroy
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioFormat.equals|equals(kotlin.Any?){}[0]
     final fun framesToMicros(kotlin/Int): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioFormat.framesToMicros|framesToMicros(kotlin.Int){}[0]
     final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.hashCode|hashCode(){}[0]
-    final fun microsToFrames(kotlin/Long): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.microsToFrames|microsToFrames(kotlin.Long){}[0]
+    final fun microsToFrames(kotlin/Long): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioFormat.microsToFrames|microsToFrames(kotlin.Long){}[0]
     final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioFormat.toString|toString(){}[0]
 }
 

@@ -28,8 +28,18 @@ public data class AudioFormat @Throws(IllegalArgumentException::class) public co
     /** How long a number of frames lasts, in microseconds. */
     public fun framesToMicros(frames: Int): Long = frames.toLong() * 1_000_000L / sampleRate
 
-    /** How many frames a duration holds. */
-    public fun microsToFrames(micros: Long): Int = (micros * sampleRate / 1_000_000L).toInt()
+    /**
+     * How many frames a duration holds.
+     *
+     * The result rounds down to a whole frame. A negative duration throws [IllegalArgumentException].
+     * The result is exact for every duration at sample rates up to 1,000,000 Hz.
+     */
+    @Throws(IllegalArgumentException::class)
+    public fun microsToFrames(micros: Long): Long {
+        require(micros >= 0) { "duration must not be negative, got $micros microseconds" }
+        // Whole seconds and the rest apart, so the product cannot overflow.
+        return micros / 1_000_000L * sampleRate + micros % 1_000_000L * sampleRate / 1_000_000L
+    }
 }
 
 /**

@@ -11,7 +11,7 @@ public final class io/github/yuroyami/kiteaudio/output/AudioFormat {
 	public final fun getLayout ()Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
 	public final fun getSampleRate ()I
 	public fun hashCode ()I
-	public final fun microsToFrames (J)I
+	public final fun microsToFrames (J)J
 	public fun toString ()Ljava/lang/String;
 }
 
