@@ -92,8 +92,17 @@ def main():
                         help="run one module; repeat it for more (default: all of them)")
     args = parser.parse_args()
     platforms = args.platform or PLATFORMS
+    modules = args.module or MODULES
+    # A module named on the command line that builds for none of the platforms asked for would
+    # run nothing, and a run that tests nothing must not pass.
+    idle = [module for module in modules if not any(platform in MODULES[module] for platform in platforms)]
+    if args.module and idle:
+        raise RuntimeError(f"{', '.join(idle)} has no tests on {', '.join(platforms)}; "
+                           f"it builds for {', '.join(p for m in idle for p in MODULES[m])}")
+    if len(idle) == len(modules):
+        raise RuntimeError(f"no module builds for {', '.join(platforms)}")
     executable = node()
-    for module in args.module or MODULES:
+    for module in modules:
         for platform in platforms:
             if platform not in MODULES[module]:
                 continue

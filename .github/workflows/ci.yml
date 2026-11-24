@@ -143,9 +143,9 @@ jobs:
 
       # `./kotlin test` cannot run the JS and wasmWasi tests, and it runs wasmJs
       # only in a browser with a 30-second limit. The script links all three and
-      # runs them in Node.
+      # runs them in Node. instruments.yml runs it for the other modules.
       - name: Core tests (JS, wasmJs and wasmWasi in Node)
-        run: python3 .github/scripts/web-tests/run.py
+        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-codec --module kiteaudio-codec-io
 
       - name: Core tests (native)
         if: ${{ !cancelled() }}

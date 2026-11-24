@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4.21"></a>
-  <a href="#platforms"><img src="https://img.shields.io/badge/targets-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM-1f6feb" alt="Targets: Android, iOS, macOS and JVM"></a>
+  <a href="#platforms"><img src="https://img.shields.io/badge/targets-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM%20%7C%20JS%20%7C%20Wasm-1f6feb" alt="Targets: Android, iOS, macOS, JVM, JS and Wasm"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
 </p>
 
@@ -324,9 +324,10 @@ no features. To declare MIDI support, add
 `<uses-feature android:name="android.software.midi" android:required="false" />` to the
 app manifest. On Apple, system-connected Bluetooth devices appear through CoreMIDI.
 
-The current build does not declare JS, Wasm, Linux Native, Windows Native, native
-Intel macOS, tvOS or watchOS targets. JVM support on those desktop operating systems
-is distinct from Kotlin/Native support.
+Only `kiteaudio-midi` builds for JS and wasmJs; the device modules have no web backend.
+The current build does not declare wasmWasi, Linux Native, Windows Native, native Intel
+macOS, tvOS or watchOS targets. JVM support on those desktop operating systems is
+distinct from Kotlin/Native support.
 
 ## Good to know
 
