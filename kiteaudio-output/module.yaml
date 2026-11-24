@@ -4,6 +4,8 @@ product:
   platforms:
     - jvm
     - android
+    - js
+    - wasmJs
     - iosArm64
     - iosSimulatorArm64
     - iosX64
@@ -25,11 +27,20 @@ settings:
       name: KiteAudio Output
       description: >-
         Callback-based mono and stereo audio output for Kotlin Multiplatform. Accepts interleaved Float32 samples and
-        outputs 16-bit PCM through Java Sound on the JVM, AudioTrack on Android and AudioQueue on Apple platforms.
+        outputs 16-bit PCM through Java Sound on the JVM, AudioTrack on Android and AudioQueue on Apple platforms, and
+        Float32 through a Web Audio worklet in the browser.
 
 # Pin the klib name to "io.github.yuroyami:kiteaudio-output", the group and artifact name. The committed
 # klib ABI dump records this name. Set it per platform: on @native, it also renames the
 # klibs of shared native code, which must keep their own names.
+settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-output ]
+
+settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=io.github.yuroyami:kiteaudio-output ]
+
 settings@iosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-output, -Xshort-module-name=kiteaudio-output ]
@@ -48,6 +59,14 @@ settings@macosArm64:
 
 # Tests compile into their own klib, which needs a different name. The test blocks name the
 # same platforms as the blocks above, so the toolchain applies them last.
+test-settings@js:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=kiteaudio-output_test ]
+
+test-settings@wasmJs:
+  kotlin:
+    freeCompilerArgs: [ -Xir-module-name=kiteaudio-output_test ]
+
 test-settings@iosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=kiteaudio-output_test, -Xshort-module-name=kiteaudio-output_test ]
@@ -68,7 +87,7 @@ plugins:
   abi-check:
     enabled: true
     # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
-    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, macosArm64 ]
+    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, js, macosArm64, wasmJs ]
   dokka:
     enabled: true
     moduleName: kiteaudio-output

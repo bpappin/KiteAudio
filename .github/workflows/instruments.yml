@@ -99,7 +99,7 @@ jobs:
       # the codec modules.
       - name: JS and wasmJs tests in Node
         if: ${{ !cancelled() }}
-        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth
+        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth --module kiteaudio-output
 
   # The Apple source sets of the MIDI device and output modules compile only on
   # a Mac. This job runs the macOS tests of the four multiplatform modules and the
@@ -129,7 +129,7 @@ jobs:
           done
 
       - name: Build the web klibs
-        run: ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -p js -p wasmJs
+        run: ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -m kiteaudio-output -p js -p wasmJs
 
       - name: Public klib API check
         if: ${{ !cancelled() }}

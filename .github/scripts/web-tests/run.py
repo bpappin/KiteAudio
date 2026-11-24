@@ -24,6 +24,7 @@ MODULES = {
     "kiteaudio-codec": PLATFORMS,
     "kiteaudio-codec-io": PLATFORMS,
     "kiteaudio-midi": ("js", "wasmJs"),
+    "kiteaudio-output": ("js", "wasmJs"),
     "kiteaudio-synth": ("js", "wasmJs"),
 }
 ARTIFACTS = ROOT / "build/artifacts/CompiledWebArtifact"

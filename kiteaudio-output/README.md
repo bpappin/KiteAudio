@@ -18,8 +18,9 @@
 ## What you get
 
 KiteRT provides one small output API backed by Java Sound on the JVM, `AudioTrack` on
-Android, and AudioQueue on Apple. Your renderer supplies mono or stereo `FloatArray`
-samples; each backend clamps them and converts them to signed 16-bit PCM.
+Android, AudioQueue on Apple, and Web Audio in the browser. Your renderer supplies
+mono or stereo `FloatArray` samples; the native backends clamp them and convert them to signed
+16-bit PCM, and the browser plays them as Float32.
 
 | Part | What it does |
 | --- | --- |
@@ -167,10 +168,11 @@ Neither one measures hardware underruns. An invalid frame count or render except
 | iOS arm64 | AudioQueue | Built as a dynamic `KiteRT` framework. The host app owns its audio session, activation, interruptions and background-audio policy. No iOS test sources are included. |
 | iOS simulator arm64 and x64 | AudioQueue | Framework targets are configured. Simulator support does not establish physical-device behavior. |
 | macOS arm64 | AudioQueue | Uses the system AudioToolbox platform bindings. The repository includes live audio tests. |
+| JS and wasmJs in a browser | An `AudioWorkletNode` fed from the page, or `AudioBuffer`s scheduled by a page timer | `openAudioOutput` uses the worklet where the page can, and falls back to scheduled buffers in a page that is not a secure context or whose content security policy blocks a `blob:` worklet module. `Started` arrives once the browser lets the page play sound, usually after a click or a key press; a `start()` made before then waits, and calling `start()` again from the click or key handler asks the browser once more. Node.js has no Web Audio: opening an output throws `UnsupportedOperationException` there. Checked by hand with [verification/web](verification/web/README.md) in Chrome 156, Safari 27.2 and Firefox 159 on macOS; not yet on iOS. |
 
-macOS x64, tvOS, watchOS, native Linux and Windows, JS and Wasm are not configured.
+macOS x64, tvOS, watchOS, native Linux and Windows, and wasmWasi are not configured.
 `audioOutputAvailable()` checks Java Sound support for one default format on the JVM;
-on Android and Apple it always returns `true`. It does not prove that a stream can open,
+on Android and Apple it always returns `true`; on the web it says whether the host has Web Audio. It does not prove that a stream can open,
 that a route is available, or that sound reaches a speaker.
 
 Apple uses Kotlin/Native's system AudioToolbox bindings and a block callback on a private serial
@@ -184,11 +186,17 @@ need an explicit handoff.
 - Allocate renderer state before `start()`. Keep the render path bounded: no file access,
   logging, waits or locks. Reuse buffers and keep allocation out of the callback.
 - JVM and Android render on a dedicated writer thread. Apple primes and subsequently renders
-  on one serial callback queue; dispatch may use different OS threads over time.
+  on one serial callback queue; dispatch may use different OS threads over time. The browser
+  renders on the page's main thread, so a long task elsewhere on the page can cause an underrun.
+  With the worklet it renders a block each time the worklet hands one back; with scheduled
+  buffers a timer keeps four blocks booked ahead. Browsers slow timers in a hidden tab, which
+  should play as gaps with scheduled buffers; that has not been checked yet. Four blocks are in
+  flight either way, as on the JVM.
 - Event handlers must be fast. Transfer UI work to the UI thread outside the callback.
   `stop()` and `close()` are safe from a render or event callback; they never wait for themselves.
 - `stop()` cancels the current generation. JVM/Android unblock output and wait up to 500 ms;
-  Apple schedules teardown. In-progress work may finish after return. Restart is rejected until
+  Apple schedules teardown; the browser stops at once, or when the current render returns.
+  In-progress work may finish after return. Restart is rejected until
   rendering and terminal event delivery have unwound, including the `Stopped` observer itself.
 - `close()` makes the output permanently closed and releases platform output. Always call it,
   including after startup failure. A failed native disposal retains callback ownership and
@@ -196,17 +204,19 @@ need an explicit handoff.
 - Use a positive, modest `bufferFrames` value. Bounds and multiplication are validated before
   allocation; return a frame count in `0..frames`. Partial writes are completed before the
   next block is rendered, and repeated zero-progress writes stop with `DeviceLost`.
+- In a browser, a context that closes, or that the browser suspends or interrupts once the stream has started, for a call or another app taking the audio, ends the stream with `DeviceLost` and then `Stopped`. Start it again to play, usually from a click or a key press, since the browser may want one before it resumes.
 
 ## Good to know
 
 | Topic | Current limit |
 | --- | --- |
 | Real-time guarantees | JVM thread priority and Android's audio priority are scheduling requests. Kotlin/Native garbage collection and native callback execution also affect deadlines. No backend promises a hard deadline. |
-| Latency | JVM and Android report the platform buffer capacity; Apple reports its three-buffer capacity. All are `Estimated`: capacity is not current queue occupancy or measured acoustic delay and excludes other device/route delays. |
+| Latency | JVM and Android report the platform buffer capacity; Apple reports its three-buffer capacity; the browser reports its four blocks plus the context's `baseLatency`, whichever technique it uses. All are `Estimated`: capacity is not current queue occupancy or measured acoustic delay and excludes other device/route delays. |
 | Formats | Mono and stereo only. A layout of more channels throws `IllegalArgumentException`. There is no float-device output, resampler or format-negotiation API. Unsupported sample rates can fail to open. |
 | Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
-| Precision | Float samples are clamped to `[-1, 1]` and quantized to 16-bit PCM without dithering. |
+| Precision | Native backends clamp float samples to `[-1, 1]` and quantize them to 16-bit PCM without dithering. The browser passes Float32 through unchanged. |
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |
+| Browser techniques | The worklet counts every frame of silence it plays; scheduled buffers estimate an underrun from the context clock, and allocate an `AudioBuffer` and a source node for every block. Nothing says which technique an output settled on. |
 | Input | Recording and full-duplex streams are not implemented. |
 
 See the [issue tracker](https://github.com/yuroyami/KiteAudio/issues) for defects and proposed
@@ -248,6 +258,15 @@ also include live tests that open output and play a quiet tone:
 ./kotlin test -p jvm
 ./kotlin test -p macosArm64
 ```
+
+The browser output's lifecycle runs against a stand-in for Web Audio on every platform, and its
+worklet processor runs in Node:
+
+```sh
+python3 .github/scripts/web-tests/run.py --module kiteaudio-output
+```
+
+Playback in a real browser is a manual check; [verification/web](verification/web/README.md) says how.
 
 JVM audio tests report themselves as skipped if the default Java Sound format is unsupported; that is
 not proof of successful playback. macOS audio tests require a working output. Neither

@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>KiteAudio web verification</title>
+  <style>
+    body { font: 15px/1.5 system-ui, sans-serif; margin: 16px; max-width: 760px; background: #fff; color: #111; }
+    button { font: inherit; margin: 0 8px 8px 0; padding: 6px 12px; }
+    pre { background: #f3f3f3; padding: 12px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>KiteAudio web verification</h1>
+  <p>Serve the repository root over HTTP and open this page from localhost, which counts as a secure context. Each playback button plays a quiet 440 Hz tone for three seconds, by the technique chosen.</p>
+  <p>Open the page as <code>index.html?early=js</code> or <code>?early=wasmJs</code>, with <code>&amp;mode=Buffers</code> if you like, to start an output before any click. The Play button for that platform then starts the same output again, as a click handler would.</p>
+  <p><label>Technique <select id="mode"><option>Auto</option><option>Worklet</option><option>Buffers</option></select></label></p>
+  <button data-platform="js">Play, JS</button>
+  <button data-platform="wasmJs">Play, wasmJs</button>
+  <pre id="log"></pre>
+  <script type="module">
+    import { playbackCheck } from "./modules.mjs";
+    const root = new URL("../../../", import.meta.url);
+    const log = document.getElementById("log");
+    const write = (text) => { log.textContent += text + "\n\n"; console.log(text); };
+    write(navigator.userAgent);
+    const query = new URLSearchParams(location.search);
+    const early = query.get("early");
+    let waiting = null;
+    if (early) {
+      const mode = query.get("mode") ?? "Auto";
+      document.getElementById("mode").value = mode;
+      try {
+        const { check, again } = await playbackCheck(early, root);
+        globalThis.kiteAudioOutputReport = (text) => write(`Playback, ${early}, ${mode}, started before a click\n${text}`);
+        check(3, mode);
+        waiting = again;
+        write(`${early}: started before a click; press Play, ${early} to start it again`);
+      } catch (problem) {
+        write(`${early}: ${problem.stack ?? problem}`);
+      }
+    }
+    for (const button of document.querySelectorAll("button")) {
+      button.addEventListener("click", async () => {
+        const platform = button.dataset.platform;
+        try {
+          if (waiting && platform === early) {
+            const again = waiting;
+            waiting = null;
+            again();
+            return;
+          }
+          const { check } = await playbackCheck(platform, root);
+          const mode = document.getElementById("mode").value;
+          globalThis.kiteAudioOutputReport = (text) => write(`Playback, ${platform}, ${mode}\n${text}`);
+          check(3, mode);
+        } catch (problem) {
+          write(`${platform}: ${problem.stack ?? problem}`);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
