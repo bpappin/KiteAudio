@@ -23,11 +23,14 @@ samples; each backend clamps them and converts them to signed 16-bit PCM.
 
 | Part | What it does |
 | --- | --- |
-| `AudioSink` | Opens, starts, stops and releases a platform output stream. |
+| `AudioOutput` | Opens, starts, stops and releases a platform output stream. |
 | `AudioRenderCallback` | Fills the requested frames; a short render is padded with silence. |
-| `AudioFormat` and `ChannelLayout` | Describe sample rate and mono or stereo interleaving. |
+| `AudioFormat` and `ChannelLayout` | Describe the sample rate and the channel layout. Both come from `kiteaudio-core`. An output plays one or two channels. |
 | `Latency` and `LatencyQuality` | Report a delay value and distinguish estimates from measurements. All current backends report estimates. |
-| `AudioSinkEvent` | Reports startup, deliberate stops, short renders, slow renders and some failures. Device-loss detection differs by backend. |
+| `AudioOutputEvent` | Reports startup, deliberate stops, short renders, slow renders and some failures. Device-loss detection differs by backend. |
+
+`kiteaudio-core` is the KiteAudio module that holds the audio format types that several KiteAudio modules share.
+KiteRT depends on it and exposes it, so you do not add it yourself.
 
 There is no Compose dependency, UI, audio decoder, synthesizer or input stream. Pair it
 with [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth) to generate sound and
@@ -74,27 +77,28 @@ dependencies:
 ### Render sound
 
 This renderer makes a quiet mono sine wave and writes it to every configured channel.
-Create and start it from your application's lifecycle code, and keep the returned sink
+Create and start it from your application's lifecycle code, and keep the returned output
 until playback ends.
 
 ```kotlin
-import io.github.yuroyami.kiteaudio.output.AudioFormat
-import io.github.yuroyami.kiteaudio.output.AudioSink
-import io.github.yuroyami.kiteaudio.output.openAudioSink
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.output.AudioOutput
+import io.github.yuroyami.kiteaudio.output.openAudioOutput
 import kotlin.math.PI
 import kotlin.math.sin
 
-fun startTone(): AudioSink {
-    val sink = openAudioSink(
-        preferredFormat = AudioFormat(sampleRate = 48_000), // stereo by default
+fun startTone(): AudioOutput {
+    val output = openAudioOutput(
+        preferredFormat = AudioFormat(48_000, ChannelLayout.STEREO),
         bufferFrames = 512,
     )
-    val format = sink.format
+    val format = output.format
     val step = 2.0 * PI * 440.0 / format.sampleRate
     var phase = 0.0
 
     try {
-        sink.start { out, frames ->
+        output.start { out, frames ->
             for (frame in 0 until frames) {
                 val value = (sin(phase) * 0.03).toFloat()
                 for (channel in 0 until format.channels) {
@@ -106,44 +110,47 @@ fun startTone(): AudioSink {
             frames
         }
     } catch (failure: Exception) {
-        sink.close()
+        output.close()
         throw failure
     }
-    return sink
+    return output
 }
 
-val sink = startTone()
+val output = startTone()
 // Later, from the application's control/lifecycle thread:
-sink.stop()
-sink.close()
+output.stop()
+output.close()
 ```
 
-For mono, pass `AudioFormat(48_000, ChannelLayout.Mono)`. The callback receives
-`bufferFrames * sink.format.channels` samples. Fill samples in channel order for each
+For mono, pass `AudioFormat(48_000, ChannelLayout.MONO)`. The output reads only the channel
+count of the layout and ignores the speaker positions. A layout of more than two channels throws
+`IllegalArgumentException` before any device access. The callback receives
+`bufferFrames * output.format.channels` samples. Fill samples in channel order for each
 frame and return a count in `0..frames`; returning `0` asks for silence. The array is
 reused, so do not retain it or pass it to another thread.
 
 ### Inspect timing and events
 
 ```kotlin
-import io.github.yuroyami.kiteaudio.output.AudioFormat
-import io.github.yuroyami.kiteaudio.output.AudioSinkEvent
-import io.github.yuroyami.kiteaudio.output.openAudioSink
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.output.AudioOutputEvent
+import io.github.yuroyami.kiteaudio.output.openAudioOutput
 
-val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512) { event ->
+val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 512) { event ->
     when (event) {
-        is AudioSinkEvent.Started -> Unit   // format and latency are available here
-        is AudioSinkEvent.Underrun -> Unit  // event.frames were replaced with silence
-        is AudioSinkEvent.Overrun -> Unit   // the render took event.tookMicros, past event.deadlineMicros
-        is AudioSinkEvent.DeviceLost -> Unit
-        is AudioSinkEvent.Failed -> Unit
-        AudioSinkEvent.Stopped -> Unit
+        is AudioOutputEvent.Started -> Unit   // format and latency are available here
+        is AudioOutputEvent.Underrun -> Unit  // event.frames were replaced with silence
+        is AudioOutputEvent.Overrun -> Unit   // the render took event.tookMicros, past event.deadlineMicros
+        is AudioOutputEvent.DeviceLost -> Unit
+        is AudioOutputEvent.Failed -> Unit
+        AudioOutputEvent.Stopped -> Unit
     }
 }
 
-val estimatedMicros = sink.format.framesToMicros(sink.latency.frames)
-val quality = sink.latency.quality
-sink.close()
+val estimatedMicros = output.format.framesToMicros(output.latency.frames)
+val quality = output.latency.quality
+output.close()
 ```
 
 An `Underrun` event means the renderer returned fewer frames. An `Overrun` event means a
@@ -183,7 +190,7 @@ need an explicit handoff.
 - `stop()` cancels the current generation. JVM/Android unblock output and wait up to 500 ms;
   Apple schedules teardown. In-progress work may finish after return. Restart is rejected until
   rendering and terminal event delivery have unwound, including the `Stopped` observer itself.
-- `close()` makes the sink permanently closed and releases platform output. Always call it,
+- `close()` makes the output permanently closed and releases platform output. Always call it,
   including after startup failure. A failed native disposal retains callback ownership and
   blocks restart; a later `stop()` or `close()` retries disposal.
 - Use a positive, modest `bufferFrames` value. Bounds and multiplication are validated before
@@ -196,7 +203,7 @@ need an explicit handoff.
 | --- | --- |
 | Real-time guarantees | JVM thread priority and Android's audio priority are scheduling requests. Kotlin/Native garbage collection and native callback execution also affect deadlines. No backend promises a hard deadline. |
 | Latency | JVM and Android report the platform buffer capacity; Apple reports its three-buffer capacity. All are `Estimated`: capacity is not current queue occupancy or measured acoustic delay and excludes other device/route delays. |
-| Formats | Mono and stereo only; no multichannel layout, float-device output, resampler or format-negotiation API. Unsupported sample rates can fail to open. |
+| Formats | Mono and stereo only. A layout of more channels throws `IllegalArgumentException`. There is no float-device output, resampler or format-negotiation API. Unsupported sample rates can fail to open. |
 | Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
 | Precision | Float samples are clamped to `[-1, 1]` and quantized to 16-bit PCM without dithering. |
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |

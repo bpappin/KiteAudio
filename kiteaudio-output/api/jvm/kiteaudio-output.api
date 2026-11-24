@@ -1,54 +1,33 @@
-public final class io/github/yuroyami/kiteaudio/output/AudioFormat {
-	public fun <init> (ILio/github/yuroyami/kiteaudio/output/ChannelLayout;)V
-	public synthetic fun <init> (ILio/github/yuroyami/kiteaudio/output/ChannelLayout;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public final fun component1 ()I
-	public final fun component2 ()Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-	public final fun copy (ILio/github/yuroyami/kiteaudio/output/ChannelLayout;)Lio/github/yuroyami/kiteaudio/output/AudioFormat;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioFormat;ILio/github/yuroyami/kiteaudio/output/ChannelLayout;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioFormat;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun framesToMicros (I)J
-	public final fun getChannels ()I
-	public final fun getLayout ()Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-	public final fun getSampleRate ()I
-	public fun hashCode ()I
-	public final fun microsToFrames (J)J
-	public fun toString ()Ljava/lang/String;
-}
-
-public abstract interface class io/github/yuroyami/kiteaudio/output/AudioRenderCallback {
-	public abstract fun render ([FI)I
-}
-
-public abstract interface class io/github/yuroyami/kiteaudio/output/AudioSink {
+public abstract interface class io/github/yuroyami/kiteaudio/output/AudioOutput {
 	public abstract fun close ()V
-	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/output/AudioFormat;
+	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public abstract fun getLatency ()Lio/github/yuroyami/kiteaudio/output/Latency;
 	public abstract fun isRunning ()Z
 	public abstract fun start (Lio/github/yuroyami/kiteaudio/output/AudioRenderCallback;)V
 	public abstract fun stop ()V
 }
 
-public abstract interface class io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
+public abstract interface class io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$DeviceLost : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$DeviceLost : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
 	public fun <init> (Ljava/lang/String;)V
 	public final fun component1 ()Ljava/lang/String;
-	public final fun copy (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$DeviceLost;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$DeviceLost;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$DeviceLost;
+	public final fun copy (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$DeviceLost;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$DeviceLost;Ljava/lang/String;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$DeviceLost;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getReason ()Ljava/lang/String;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Failed : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$Failed : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
 	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component2 ()Ljava/lang/Throwable;
-	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Failed;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Failed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Failed;
+	public final fun copy (Ljava/lang/String;Ljava/lang/Throwable;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Failed;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Failed;Ljava/lang/String;Ljava/lang/Throwable;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Failed;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCause ()Ljava/lang/Throwable;
 	public final fun getReason ()Ljava/lang/String;
@@ -56,12 +35,12 @@ public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Failed : i
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Overrun : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$Overrun : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
 	public fun <init> (JJ)V
 	public final fun component1 ()J
 	public final fun component2 ()J
-	public final fun copy (JJ)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Overrun;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Overrun;JJILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Overrun;
+	public final fun copy (JJ)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Overrun;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Overrun;JJILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Overrun;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getDeadlineMicros ()J
 	public final fun getTookMicros ()J
@@ -69,55 +48,45 @@ public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Overrun : 
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Started : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
-	public fun <init> (Lio/github/yuroyami/kiteaudio/output/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;)V
-	public final fun component1 ()Lio/github/yuroyami/kiteaudio/output/AudioFormat;
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$Started : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
+	public fun <init> (Lio/github/yuroyami/kiteaudio/core/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;)V
+	public final fun component1 ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public final fun component2 ()Lio/github/yuroyami/kiteaudio/output/Latency;
-	public final fun copy (Lio/github/yuroyami/kiteaudio/output/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Started;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Started;Lio/github/yuroyami/kiteaudio/output/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Started;
+	public final fun copy (Lio/github/yuroyami/kiteaudio/core/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Started;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Started;Lio/github/yuroyami/kiteaudio/core/AudioFormat;Lio/github/yuroyami/kiteaudio/output/Latency;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Started;
 	public fun equals (Ljava/lang/Object;)Z
-	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/output/AudioFormat;
+	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public final fun getLatency ()Lio/github/yuroyami/kiteaudio/output/Latency;
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Stopped : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
-	public static final field INSTANCE Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Stopped;
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$Stopped : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
+	public static final field INSTANCE Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Stopped;
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class io/github/yuroyami/kiteaudio/output/AudioSinkEvent$Underrun : io/github/yuroyami/kiteaudio/output/AudioSinkEvent {
+public final class io/github/yuroyami/kiteaudio/output/AudioOutputEvent$Underrun : io/github/yuroyami/kiteaudio/output/AudioOutputEvent {
 	public fun <init> (I)V
 	public final fun component1 ()I
-	public final fun copy (I)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Underrun;
-	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Underrun;IILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSinkEvent$Underrun;
+	public final fun copy (I)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Underrun;
+	public static synthetic fun copy$default (Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Underrun;IILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutputEvent$Underrun;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getFrames ()I
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
 }
 
+public abstract interface class io/github/yuroyami/kiteaudio/output/AudioRenderCallback {
+	public abstract fun render ([FI)I
+}
+
 public final class io/github/yuroyami/kiteaudio/output/Audio_jvmKt {
 	public static final fun audioOutputAvailable ()Z
-	public static final fun openAudioSink (Lio/github/yuroyami/kiteaudio/output/AudioFormat;ILkotlin/jvm/functions/Function1;)Lio/github/yuroyami/kiteaudio/output/AudioSink;
-	public static synthetic fun openAudioSink$default (Lio/github/yuroyami/kiteaudio/output/AudioFormat;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioSink;
-}
-
-public final class io/github/yuroyami/kiteaudio/output/ChannelLayout : java/lang/Enum {
-	public static final field Companion Lio/github/yuroyami/kiteaudio/output/ChannelLayout$Companion;
-	public static final field Mono Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-	public static final field Stereo Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-	public final fun getChannels ()I
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-	public static fun values ()[Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
-}
-
-public final class io/github/yuroyami/kiteaudio/output/ChannelLayout$Companion {
-	public final fun of (I)Lio/github/yuroyami/kiteaudio/output/ChannelLayout;
+	public static final fun openAudioOutput (Lio/github/yuroyami/kiteaudio/core/AudioFormat;ILkotlin/jvm/functions/Function1;)Lio/github/yuroyami/kiteaudio/output/AudioOutput;
+	public static synthetic fun openAudioOutput$default (Lio/github/yuroyami/kiteaudio/core/AudioFormat;ILkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/output/AudioOutput;
 }
 
 public final class io/github/yuroyami/kiteaudio/output/Latency {

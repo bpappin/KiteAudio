@@ -6,23 +6,6 @@
 // - Show declarations: true
 
 // Library unique name: <io.github.yuroyami:kiteaudio-output>
-final enum class io.github.yuroyami.kiteaudio.output/ChannelLayout : kotlin/Enum<io.github.yuroyami.kiteaudio.output/ChannelLayout> { // io.github.yuroyami.kiteaudio.output/ChannelLayout|null[0]
-    enum entry Mono // io.github.yuroyami.kiteaudio.output/ChannelLayout.Mono|null[0]
-    enum entry Stereo // io.github.yuroyami.kiteaudio.output/ChannelLayout.Stereo|null[0]
-
-    final val channels // io.github.yuroyami.kiteaudio.output/ChannelLayout.channels|{}channels[0]
-        final fun <get-channels>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/ChannelLayout.channels.<get-channels>|<get-channels>(){}[0]
-    final val entries // io.github.yuroyami.kiteaudio.output/ChannelLayout.entries|#static{}entries[0]
-        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.output/ChannelLayout> // io.github.yuroyami.kiteaudio.output/ChannelLayout.entries.<get-entries>|<get-entries>#static(){}[0]
-
-    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.output/ChannelLayout // io.github.yuroyami.kiteaudio.output/ChannelLayout.valueOf|valueOf#static(kotlin.String){}[0]
-    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.output/ChannelLayout> // io.github.yuroyami.kiteaudio.output/ChannelLayout.values|values#static(){}[0]
-
-    final object Companion { // io.github.yuroyami.kiteaudio.output/ChannelLayout.Companion|null[0]
-        final fun of(kotlin/Int): io.github.yuroyami.kiteaudio.output/ChannelLayout // io.github.yuroyami.kiteaudio.output/ChannelLayout.Companion.of|of(kotlin.Int){}[0]
-    }
-}
-
 final enum class io.github.yuroyami.kiteaudio.output/LatencyQuality : kotlin/Enum<io.github.yuroyami.kiteaudio.output/LatencyQuality> { // io.github.yuroyami.kiteaudio.output/LatencyQuality|null[0]
     enum entry Estimated // io.github.yuroyami.kiteaudio.output/LatencyQuality.Estimated|null[0]
     enum entry Measured // io.github.yuroyami.kiteaudio.output/LatencyQuality.Measured|null[0]
@@ -39,119 +22,99 @@ abstract fun interface io.github.yuroyami.kiteaudio.output/AudioRenderCallback {
     abstract fun render(kotlin/FloatArray, kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioRenderCallback.render|render(kotlin.FloatArray;kotlin.Int){}[0]
 }
 
-abstract interface io.github.yuroyami.kiteaudio.output/AudioSink { // io.github.yuroyami.kiteaudio.output/AudioSink|null[0]
-    abstract val format // io.github.yuroyami.kiteaudio.output/AudioSink.format|{}format[0]
-        abstract fun <get-format>(): io.github.yuroyami.kiteaudio.output/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioSink.format.<get-format>|<get-format>(){}[0]
-    abstract val isRunning // io.github.yuroyami.kiteaudio.output/AudioSink.isRunning|{}isRunning[0]
-        abstract fun <get-isRunning>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSink.isRunning.<get-isRunning>|<get-isRunning>(){}[0]
-    abstract val latency // io.github.yuroyami.kiteaudio.output/AudioSink.latency|{}latency[0]
-        abstract fun <get-latency>(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioSink.latency.<get-latency>|<get-latency>(){}[0]
+abstract interface io.github.yuroyami.kiteaudio.output/AudioOutput { // io.github.yuroyami.kiteaudio.output/AudioOutput|null[0]
+    abstract val format // io.github.yuroyami.kiteaudio.output/AudioOutput.format|{}format[0]
+        abstract fun <get-format>(): io.github.yuroyami.kiteaudio.core/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioOutput.format.<get-format>|<get-format>(){}[0]
+    abstract val isRunning // io.github.yuroyami.kiteaudio.output/AudioOutput.isRunning|{}isRunning[0]
+        abstract fun <get-isRunning>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutput.isRunning.<get-isRunning>|<get-isRunning>(){}[0]
+    abstract val latency // io.github.yuroyami.kiteaudio.output/AudioOutput.latency|{}latency[0]
+        abstract fun <get-latency>(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioOutput.latency.<get-latency>|<get-latency>(){}[0]
 
-    abstract fun close() // io.github.yuroyami.kiteaudio.output/AudioSink.close|close(){}[0]
-    abstract fun start(io.github.yuroyami.kiteaudio.output/AudioRenderCallback) // io.github.yuroyami.kiteaudio.output/AudioSink.start|start(io.github.yuroyami.kiteaudio.output.AudioRenderCallback){}[0]
-    abstract fun stop() // io.github.yuroyami.kiteaudio.output/AudioSink.stop|stop(){}[0]
+    abstract fun close() // io.github.yuroyami.kiteaudio.output/AudioOutput.close|close(){}[0]
+    abstract fun start(io.github.yuroyami.kiteaudio.output/AudioRenderCallback) // io.github.yuroyami.kiteaudio.output/AudioOutput.start|start(io.github.yuroyami.kiteaudio.output.AudioRenderCallback){}[0]
+    abstract fun stop() // io.github.yuroyami.kiteaudio.output/AudioOutput.stop|stop(){}[0]
 }
 
-sealed interface io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent|null[0]
-    final class DeviceLost : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost|null[0]
-        constructor <init>(kotlin/String) // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.<init>|<init>(kotlin.String){}[0]
+sealed interface io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent|null[0]
+    final class DeviceLost : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost|null[0]
+        constructor <init>(kotlin/String) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.<init>|<init>(kotlin.String){}[0]
 
-        final val reason // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.reason|{}reason[0]
-            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.reason.<get-reason>|<get-reason>(){}[0]
+        final val reason // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.reason.<get-reason>|<get-reason>(){}[0]
 
-        final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.component1|component1(){}[0]
-        final fun copy(kotlin/String = ...): io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.copy|copy(kotlin.String){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.DeviceLost.toString|toString(){}[0]
+        final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.component1|component1(){}[0]
+        final fun copy(kotlin/String = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.copy|copy(kotlin.String){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.toString|toString(){}[0]
     }
 
-    final class Failed : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed|null[0]
-        constructor <init>(kotlin/String, kotlin/Throwable? = ...) // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
+    final class Failed : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed|null[0]
+        constructor <init>(kotlin/String, kotlin/Throwable? = ...) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
 
-        final val cause // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.cause|{}cause[0]
-            final fun <get-cause>(): kotlin/Throwable? // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.cause.<get-cause>|<get-cause>(){}[0]
-        final val reason // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.reason|{}reason[0]
-            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.reason.<get-reason>|<get-reason>(){}[0]
+        final val cause // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.cause|{}cause[0]
+            final fun <get-cause>(): kotlin/Throwable? // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.cause.<get-cause>|<get-cause>(){}[0]
+        final val reason // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.reason|{}reason[0]
+            final fun <get-reason>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.reason.<get-reason>|<get-reason>(){}[0]
 
-        final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.component1|component1(){}[0]
-        final fun component2(): kotlin/Throwable? // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.component2|component2(){}[0]
-        final fun copy(kotlin/String = ..., kotlin/Throwable? = ...): io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.copy|copy(kotlin.String;kotlin.Throwable?){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Failed.toString|toString(){}[0]
+        final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.component1|component1(){}[0]
+        final fun component2(): kotlin/Throwable? // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.component2|component2(){}[0]
+        final fun copy(kotlin/String = ..., kotlin/Throwable? = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.copy|copy(kotlin.String;kotlin.Throwable?){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.toString|toString(){}[0]
     }
 
-    final class Overrun : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun|null[0]
-        constructor <init>(kotlin/Long, kotlin/Long) // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
+    final class Overrun : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun|null[0]
+        constructor <init>(kotlin/Long, kotlin/Long) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.<init>|<init>(kotlin.Long;kotlin.Long){}[0]
 
-        final val deadlineMicros // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.deadlineMicros|{}deadlineMicros[0]
-            final fun <get-deadlineMicros>(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.deadlineMicros.<get-deadlineMicros>|<get-deadlineMicros>(){}[0]
-        final val tookMicros // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.tookMicros|{}tookMicros[0]
-            final fun <get-tookMicros>(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.tookMicros.<get-tookMicros>|<get-tookMicros>(){}[0]
+        final val deadlineMicros // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.deadlineMicros|{}deadlineMicros[0]
+            final fun <get-deadlineMicros>(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.deadlineMicros.<get-deadlineMicros>|<get-deadlineMicros>(){}[0]
+        final val tookMicros // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.tookMicros|{}tookMicros[0]
+            final fun <get-tookMicros>(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.tookMicros.<get-tookMicros>|<get-tookMicros>(){}[0]
 
-        final fun component1(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.component1|component1(){}[0]
-        final fun component2(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.component2|component2(){}[0]
-        final fun copy(kotlin/Long = ..., kotlin/Long = ...): io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.copy|copy(kotlin.Long;kotlin.Long){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Overrun.toString|toString(){}[0]
+        final fun component1(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.component2|component2(){}[0]
+        final fun copy(kotlin/Long = ..., kotlin/Long = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.copy|copy(kotlin.Long;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Overrun.toString|toString(){}[0]
     }
 
-    final class Started : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started|null[0]
-        constructor <init>(io.github.yuroyami.kiteaudio.output/AudioFormat, io.github.yuroyami.kiteaudio.output/Latency) // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.<init>|<init>(io.github.yuroyami.kiteaudio.output.AudioFormat;io.github.yuroyami.kiteaudio.output.Latency){}[0]
+    final class Started : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started|null[0]
+        constructor <init>(io.github.yuroyami.kiteaudio.core/AudioFormat, io.github.yuroyami.kiteaudio.output/Latency) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.<init>|<init>(io.github.yuroyami.kiteaudio.core.AudioFormat;io.github.yuroyami.kiteaudio.output.Latency){}[0]
 
-        final val format // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.format|{}format[0]
-            final fun <get-format>(): io.github.yuroyami.kiteaudio.output/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.format.<get-format>|<get-format>(){}[0]
-        final val latency // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.latency|{}latency[0]
-            final fun <get-latency>(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.latency.<get-latency>|<get-latency>(){}[0]
+        final val format // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.format|{}format[0]
+            final fun <get-format>(): io.github.yuroyami.kiteaudio.core/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.format.<get-format>|<get-format>(){}[0]
+        final val latency // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.latency|{}latency[0]
+            final fun <get-latency>(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.latency.<get-latency>|<get-latency>(){}[0]
 
-        final fun component1(): io.github.yuroyami.kiteaudio.output/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.component1|component1(){}[0]
-        final fun component2(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.component2|component2(){}[0]
-        final fun copy(io.github.yuroyami.kiteaudio.output/AudioFormat = ..., io.github.yuroyami.kiteaudio.output/Latency = ...): io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.copy|copy(io.github.yuroyami.kiteaudio.output.AudioFormat;io.github.yuroyami.kiteaudio.output.Latency){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Started.toString|toString(){}[0]
+        final fun component1(): io.github.yuroyami.kiteaudio.core/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.component1|component1(){}[0]
+        final fun component2(): io.github.yuroyami.kiteaudio.output/Latency // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.component2|component2(){}[0]
+        final fun copy(io.github.yuroyami.kiteaudio.core/AudioFormat = ..., io.github.yuroyami.kiteaudio.output/Latency = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.copy|copy(io.github.yuroyami.kiteaudio.core.AudioFormat;io.github.yuroyami.kiteaudio.output.Latency){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Started.toString|toString(){}[0]
     }
 
-    final class Underrun : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun|null[0]
-        constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.<init>|<init>(kotlin.Int){}[0]
+    final class Underrun : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun|null[0]
+        constructor <init>(kotlin/Int) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.<init>|<init>(kotlin.Int){}[0]
 
-        final val frames // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.frames|{}frames[0]
-            final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.frames.<get-frames>|<get-frames>(){}[0]
+        final val frames // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.frames|{}frames[0]
+            final fun <get-frames>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.frames.<get-frames>|<get-frames>(){}[0]
 
-        final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.component1|component1(){}[0]
-        final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.copy|copy(kotlin.Int){}[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Underrun.toString|toString(){}[0]
+        final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Underrun.toString|toString(){}[0]
     }
 
-    final object Stopped : io.github.yuroyami.kiteaudio.output/AudioSinkEvent { // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Stopped|null[0]
-        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Stopped.equals|equals(kotlin.Any?){}[0]
-        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Stopped.hashCode|hashCode(){}[0]
-        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioSinkEvent.Stopped.toString|toString(){}[0]
+    final object Stopped : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Stopped|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Stopped.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Stopped.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Stopped.toString|toString(){}[0]
     }
-}
-
-final class io.github.yuroyami.kiteaudio.output/AudioFormat { // io.github.yuroyami.kiteaudio.output/AudioFormat|null[0]
-    constructor <init>(kotlin/Int, io.github.yuroyami.kiteaudio.output/ChannelLayout = ...) // io.github.yuroyami.kiteaudio.output/AudioFormat.<init>|<init>(kotlin.Int;io.github.yuroyami.kiteaudio.output.ChannelLayout){}[0]
-
-    final val channels // io.github.yuroyami.kiteaudio.output/AudioFormat.channels|{}channels[0]
-        final fun <get-channels>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.channels.<get-channels>|<get-channels>(){}[0]
-    final val layout // io.github.yuroyami.kiteaudio.output/AudioFormat.layout|{}layout[0]
-        final fun <get-layout>(): io.github.yuroyami.kiteaudio.output/ChannelLayout // io.github.yuroyami.kiteaudio.output/AudioFormat.layout.<get-layout>|<get-layout>(){}[0]
-    final val sampleRate // io.github.yuroyami.kiteaudio.output/AudioFormat.sampleRate|{}sampleRate[0]
-        final fun <get-sampleRate>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.sampleRate.<get-sampleRate>|<get-sampleRate>(){}[0]
-
-    final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.component1|component1(){}[0]
-    final fun component2(): io.github.yuroyami.kiteaudio.output/ChannelLayout // io.github.yuroyami.kiteaudio.output/AudioFormat.component2|component2(){}[0]
-    final fun copy(kotlin/Int = ..., io.github.yuroyami.kiteaudio.output/ChannelLayout = ...): io.github.yuroyami.kiteaudio.output/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioFormat.copy|copy(kotlin.Int;io.github.yuroyami.kiteaudio.output.ChannelLayout){}[0]
-    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioFormat.equals|equals(kotlin.Any?){}[0]
-    final fun framesToMicros(kotlin/Int): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioFormat.framesToMicros|framesToMicros(kotlin.Int){}[0]
-    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioFormat.hashCode|hashCode(){}[0]
-    final fun microsToFrames(kotlin/Long): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioFormat.microsToFrames|microsToFrames(kotlin.Long){}[0]
-    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioFormat.toString|toString(){}[0]
 }
 
 final class io.github.yuroyami.kiteaudio.output/Latency { // io.github.yuroyami.kiteaudio.output/Latency|null[0]
@@ -176,4 +139,4 @@ final class io.github.yuroyami.kiteaudio.output/Latency { // io.github.yuroyami.
 }
 
 final fun io.github.yuroyami.kiteaudio.output/audioOutputAvailable(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/audioOutputAvailable|audioOutputAvailable(){}[0]
-final fun io.github.yuroyami.kiteaudio.output/openAudioSink(io.github.yuroyami.kiteaudio.output/AudioFormat = ..., kotlin/Int = ..., kotlin/Function1<io.github.yuroyami.kiteaudio.output/AudioSinkEvent, kotlin/Unit> = ...): io.github.yuroyami.kiteaudio.output/AudioSink // io.github.yuroyami.kiteaudio.output/openAudioSink|openAudioSink(io.github.yuroyami.kiteaudio.output.AudioFormat;kotlin.Int;kotlin.Function1<io.github.yuroyami.kiteaudio.output.AudioSinkEvent,kotlin.Unit>){}[0]
+final fun io.github.yuroyami.kiteaudio.output/openAudioOutput(io.github.yuroyami.kiteaudio.core/AudioFormat = ..., kotlin/Int = ..., kotlin/Function1<io.github.yuroyami.kiteaudio.output/AudioOutputEvent, kotlin/Unit> = ...): io.github.yuroyami.kiteaudio.output/AudioOutput // io.github.yuroyami.kiteaudio.output/openAudioOutput|openAudioOutput(io.github.yuroyami.kiteaudio.core.AudioFormat;kotlin.Int;kotlin.Function1<io.github.yuroyami.kiteaudio.output.AudioOutputEvent,kotlin.Unit>){}[0]

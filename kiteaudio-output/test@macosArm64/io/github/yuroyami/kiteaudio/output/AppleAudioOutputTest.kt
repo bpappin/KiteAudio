@@ -2,12 +2,15 @@
 
 package io.github.yuroyami.kiteaudio.output
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import platform.posix.usleep
 
@@ -15,13 +18,13 @@ import platform.posix.usleep
  * Opens a real AudioQueue on this Mac.
  *
  * This makes sound. It is short and quiet on purpose. The point is that the queue really pulls:
- * a sink that opens without error and then never asks for a sample looks fine from the outside
+ * an output that opens without error and then never asks for a sample looks fine from the outside
  * and is silent in practice.
  */
-class AppleAudioSinkTest {
+class AppleAudioOutputTest {
 
-    /** Appends without a lock: the event queue of the sink and the test thread both touch the list. */
-    private fun AtomicReference<List<AudioSinkEvent>>.append(event: AudioSinkEvent) {
+    /** Appends without a lock: the event queue of the output and the test thread both touch the list. */
+    private fun AtomicReference<List<AudioOutputEvent>>.append(event: AudioOutputEvent) {
         while (true) {
             val current = load()
             if (compareAndSet(current, current + event)) return
@@ -31,14 +34,14 @@ class AppleAudioSinkTest {
     @Test
     fun theQueuePullsFromTheCallback() {
         val blocks = AtomicInt(0)
-        // Only the render callback touches the phase, and the sink runs it on one serial queue.
+        // Only the render callback touches the phase, and the output runs it on one serial queue.
         var phase = 0.0
-        val events = AtomicReference<List<AudioSinkEvent>>(emptyList())
-        val format = AudioFormat(48_000)
+        val events = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        val format = AudioFormat(48_000, ChannelLayout.STEREO)
 
-        val sink = openAudioSink(format, bufferFrames = 512) { events.append(it) }
+        val output = openAudioOutput(format, bufferFrames = 512) { events.append(it) }
         try {
-            sink.start { out, frames ->
+            output.start { out, frames ->
                 for (i in 0 until frames) {
                     val value = (sin(phase) * 0.03).toFloat()
                     out[i * 2] = value
@@ -56,15 +59,15 @@ class AppleAudioSinkTest {
                 waited += 20
             }
             assertTrue(blocks.load() >= 8, "the queue asked for only ${blocks.load()} blocks in $waited ms")
-            assertTrue(sink.isRunning)
+            assertTrue(output.isRunning)
         } finally {
-            sink.stop()
-            sink.close()
+            output.stop()
+            output.close()
         }
 
         val seen = events.load()
-        assertTrue(seen.any { it is AudioSinkEvent.Started }, "no Started event: $seen")
-        assertTrue(seen.none { it is AudioSinkEvent.Failed }, "the sink failed: $seen")
+        assertTrue(seen.any { it is AudioOutputEvent.Started }, "no Started event: $seen")
+        assertTrue(seen.none { it is AudioOutputEvent.Failed }, "the output failed: $seen")
     }
 
     @Test
@@ -72,9 +75,9 @@ class AppleAudioSinkTest {
         // Starting with empty buffers is an audible click. Priming means the callback has
         // already run before start() returns.
         val blocks = AtomicInt(0)
-        val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 256)
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 256)
         try {
-            sink.start { out, frames ->
+            output.start { out, frames ->
                 blocks.fetchAndAdd(1)
                 for (i in 0 until frames * 2) out[i] = 0f
                 frames
@@ -82,17 +85,23 @@ class AppleAudioSinkTest {
             val primed = blocks.load()
             assertTrue(primed >= 3, "only $primed buffers were primed before the queue started")
         } finally {
-            sink.close()
+            output.close()
         }
     }
 
     @Test
     fun stoppingAndClosingTwiceIsNotAnError() {
-        val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 256)
-        sink.stop()
-        sink.stop()
-        sink.close()
-        sink.close()
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 256)
+        output.stop()
+        output.stop()
+        output.close()
+        output.close()
+    }
+
+    @Test
+    fun aLayoutOfMoreThanTwoChannelsIsRefusedBeforeTheDeviceOpens() {
+        val problem = assertFailsWith<IllegalArgumentException> { openAudioOutput(AudioFormat(48_000, 6)) }
+        assertTrue("6" in problem.message.orEmpty(), "the message does not name the count: ${problem.message}")
     }
 
     @Test
@@ -102,12 +111,12 @@ class AppleAudioSinkTest {
 
     @Test
     fun theLatencyCountsEveryBufferInFlight() {
-        val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 512)
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 512)
         try {
-            assertEquals(LatencyQuality.Estimated, sink.latency.quality)
-            assertTrue(sink.latency.frames >= 512, "the latency ignores the buffers in flight")
+            assertEquals(LatencyQuality.Estimated, output.latency.quality)
+            assertTrue(output.latency.frames >= 512, "the latency ignores the buffers in flight")
         } finally {
-            sink.close()
+            output.close()
         }
     }
 }

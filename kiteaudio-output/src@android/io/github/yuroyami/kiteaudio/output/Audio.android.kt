@@ -5,14 +5,15 @@ import android.media.AudioFormat as AndroidAudioFormat
 import android.media.AudioTrack
 import android.os.Build
 import android.os.Process
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /** Blocking platform output with one owned, independently cancellable render generation. */
-private class AndroidAudioSink(
+private class AndroidAudioOutput(
     override val format: AudioFormat,
     private val track: AudioTrack,
     private val bufferFrames: Int,
-    private val onEvent: (AudioSinkEvent) -> Unit,
-) : AudioSink {
+    private val onEvent: (AudioOutputEvent) -> Unit,
+) : AudioOutput {
     // Capacity is an estimate of buffering, not current queued depth or acoustic latency.
     override val latency: Latency
         get() = Latency(track.bufferSizeInFrames, LatencyQuality.Estimated)
@@ -31,7 +32,7 @@ private class AndroidAudioSink(
         var failure: Throwable? = null
         var failedGeneration: Generation? = null
         synchronized(stateLock) {
-            check(!closed) { "the audio sink is closed" }
+            check(!closed) { "the audio output is closed" }
             val previous = generation
             if (previous?.active == true) return
             check(previous == null) { "the previous audio callback is still stopping" }
@@ -53,7 +54,7 @@ private class AndroidAudioSink(
             }
         }
         failure?.let {
-            try { deliverAudioEvent(onEvent, AudioSinkEvent.Failed("the audio output would not start", it)) }
+            try { deliverAudioEvent(onEvent, AudioOutputEvent.Failed("the audio output would not start", it)) }
             finally { synchronized(stateLock) { if (generation === failedGeneration) generation = null } }
         }
     }
@@ -63,11 +64,11 @@ private class AndroidAudioSink(
             Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
             val floats = FloatArray(bufferFrames * format.channels)
             val pcm = ShortArray(floats.size)
-            val observer: (AudioSinkEvent) -> Unit = { event ->
-                if (event is AudioSinkEvent.Failed) current.active = false
+            val observer: (AudioOutputEvent) -> Unit = { event ->
+                if (event is AudioOutputEvent.Failed) current.active = false
                 deliverAudioEvent(onEvent, event)
             }
-            if (current.active) deliverAudioEvent(onEvent, AudioSinkEvent.Started(format, latency))
+            if (current.active) deliverAudioEvent(onEvent, AudioOutputEvent.Started(format, latency))
             while (current.active) {
                 if (!renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)) break
                 if (!current.active) break
@@ -81,13 +82,13 @@ private class AndroidAudioSink(
                     if (!current.active) break
                     if (count < 0 || count > pcm.size - written || count % (format.channels) != 0) {
                         current.active = false
-                        deliverAudioEvent(onEvent, AudioSinkEvent.DeviceLost("AudioTrack.write returned invalid count $count"))
+                        deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost("AudioTrack.write returned invalid count $count"))
                         break
                     }
                     if (count == 0) {
                         if (++noProgress >= 10) {
                             current.active = false
-                            deliverAudioEvent(onEvent, AudioSinkEvent.DeviceLost("AudioTrack.write made no progress"))
+                            deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost("AudioTrack.write made no progress"))
                         } else {
                             Thread.sleep(1)
                         }
@@ -99,12 +100,12 @@ private class AndroidAudioSink(
             }
         } catch (problem: Throwable) {
             current.active = false
-            deliverAudioEvent(onEvent, AudioSinkEvent.Failed("the audio worker failed", problem))
+            deliverAudioEvent(onEvent, AudioOutputEvent.Failed("the audio worker failed", problem))
         } finally {
             current.active = false
             synchronized(stateLock) { haltOutput() }
             try {
-                deliverAudioEvent(onEvent, AudioSinkEvent.Stopped)
+                deliverAudioEvent(onEvent, AudioOutputEvent.Stopped)
             } finally {
                 synchronized(stateLock) { if (generation === current) generation = null }
             }
@@ -140,11 +141,12 @@ private class AndroidAudioSink(
 }
 
 @Throws(Exception::class)
-public actual fun openAudioSink(
+public actual fun openAudioOutput(
     preferredFormat: AudioFormat,
     bufferFrames: Int,
-    onEvent: (AudioSinkEvent) -> Unit,
-): AudioSink {
+    onEvent: (AudioOutputEvent) -> Unit,
+): AudioOutput {
+    requireSupportedLayout(preferredFormat)
     validateBufferFrames(preferredFormat, bufferFrames)
     val channelMask = if (preferredFormat.channels == 1) {
         AndroidAudioFormat.CHANNEL_OUT_MONO
@@ -158,7 +160,7 @@ public actual fun openAudioSink(
         AndroidAudioFormat.ENCODING_PCM_16BIT,
     )
     if (minimum <= 0) {
-        deliverAudioEvent(onEvent, AudioSinkEvent.Failed("AudioTrack reports no usable buffer size ($minimum)"))
+        deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioTrack reports no usable buffer size ($minimum)"))
         throw UnsupportedOperationException("AudioTrack reports no usable buffer size")
     }
 
@@ -193,11 +195,11 @@ public actual fun openAudioSink(
 
     if (track.state != AudioTrack.STATE_INITIALIZED) {
         track.release()
-        deliverAudioEvent(onEvent, AudioSinkEvent.Failed("AudioTrack would not initialise"))
+        deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioTrack would not initialise"))
         throw UnsupportedOperationException("AudioTrack would not initialise")
     }
 
-    return AndroidAudioSink(preferredFormat, track, bufferFrames, onEvent)
+    return AndroidAudioOutput(preferredFormat, track, bufferFrames, onEvent)
 }
 
 /**

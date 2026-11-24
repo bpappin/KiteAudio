@@ -6,9 +6,9 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.TimeSource
 
-/** The render step every sink shares: what it reports for a fast, a slow, a short and a failing block. */
+/** The render step every output shares: what it reports for a fast, a slow, a short and a failing block. */
 class RenderAudioBlockTest {
-    private val events = mutableListOf<AudioSinkEvent>()
+    private val events = mutableListOf<AudioOutputEvent>()
 
     private fun render(deadlineMicros: Long, frames: Int = 4, callback: AudioRenderCallback): Boolean =
         renderAudioBlock(callback, FloatArray(frames * 2), frames, deadlineMicros) { events += it }
@@ -30,7 +30,7 @@ class RenderAudioBlockTest {
     @Test
     fun aSlowFullBlockReportsAnOverrunAndNoUnderrun() {
         assertTrue(render(deadlineMicros = 1_000L) { _, frames -> spin(3_000L); frames })
-        val overrun = events.single() as AudioSinkEvent.Overrun
+        val overrun = events.single() as AudioOutputEvent.Overrun
         assertEquals(1_000L, overrun.deadlineMicros)
         assertTrue(overrun.tookMicros >= 3_000L, "took ${overrun.tookMicros} microseconds")
     }
@@ -39,20 +39,20 @@ class RenderAudioBlockTest {
     fun aSlowShortBlockReportsTheOverrunBeforeTheUnderrun() {
         assertTrue(render(deadlineMicros = 1_000L) { _, frames -> spin(3_000L); frames - 1 })
         assertEquals(2, events.size)
-        assertTrue(events[0] is AudioSinkEvent.Overrun)
-        assertEquals(AudioSinkEvent.Underrun(1), events[1])
+        assertTrue(events[0] is AudioOutputEvent.Overrun)
+        assertEquals(AudioOutputEvent.Underrun(1), events[1])
     }
 
     @Test
     fun aThrowingCallbackFailsWithoutAnOverrun() {
         val problem = IllegalStateException("boom")
         assertFalse(render(deadlineMicros = 0L) { _, _ -> throw problem })
-        assertEquals(listOf<AudioSinkEvent>(AudioSinkEvent.Failed("the render callback threw", problem)), events)
+        assertEquals(listOf<AudioOutputEvent>(AudioOutputEvent.Failed("the render callback threw", problem)), events)
     }
 
     @Test
     fun anImpossibleCountFailsWithoutAnOverrun() {
         assertFalse(render(deadlineMicros = 0L) { _, frames -> frames + 1 })
-        assertTrue(events.single() is AudioSinkEvent.Failed)
+        assertTrue(events.single() is AudioOutputEvent.Failed)
     }
 }

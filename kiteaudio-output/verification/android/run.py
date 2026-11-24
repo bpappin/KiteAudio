@@ -27,17 +27,24 @@ compiler += [jar('org.jetbrains.intellij.deps/trove4j', '1.0.20200330'), jar('or
 with tempfile.TemporaryDirectory(prefix='kiteaudio-output-android-regression-') as directory:
     work = Path(directory)
     common = (ROOT / 'kiteaudio-output/src/io/github/yuroyami/kiteaudio/output/Audio.kt').read_text()
-    marker = '/** Opens a sink for this platform. */'
+    marker = '/**\n * Opens an output for this platform.\n'
     assert common.count(marker) == 1
+    default = '    preferredFormat: AudioFormat = AudioFormat(48_000, ChannelLayout.STEREO),\n'
+    assert common.count(default) == 1
     (work / 'Audio.kt').write_text(common.split(marker)[0])
     backend = (ROOT / 'kiteaudio-output/src@android/io/github/yuroyami/kiteaudio/output/Audio.android.kt').read_text()
     assert backend.count('public actual fun') == 2
     backend = backend.replace('public actual fun', 'public fun')
-    signature = '    preferredFormat: AudioFormat,\n    bufferFrames: Int,\n    onEvent: (AudioSinkEvent) -> Unit,'
+    signature = '    preferredFormat: AudioFormat,\n    bufferFrames: Int,\n    onEvent: (AudioOutputEvent) -> Unit,'
     assert backend.count(signature) == 1
-    backend = backend.replace(signature, '    preferredFormat: AudioFormat = AudioFormat(48_000),\n    bufferFrames: Int = 1024,\n    onEvent: (AudioSinkEvent) -> Unit = {},')
+    # The Android backend does not import ChannelLayout, so the copied default names its package.
+    backend = backend.replace(signature, '    preferredFormat: AudioFormat = AudioFormat(48_000, io.github.yuroyami.kiteaudio.core.ChannelLayout.STEREO),\n    bufferFrames: Int = 1024,\n    onEvent: (AudioOutputEvent) -> Unit = {},')
     (work / 'Audio.android.kt').write_text(backend)
     for source in HERE.glob('*.kt'):
         shutil.copy2(source, work / source.name)
-    subprocess.run([java, '-Xmx512m', '-cp', os.pathsep.join(map(str, compiler)), 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler', '-no-stdlib', '-no-reflect', '-nowarn', '-jvm-target', '21', '-classpath', str(stdlib), '-d', str(work), *map(str, work.glob('*.kt'))], check=True, timeout=60)
+    # The output API uses the AudioFormat and ChannelLayout types of kiteaudio-core.
+    (work / 'core').mkdir()
+    for source in (ROOT / 'kiteaudio-core/src').rglob('*.kt'):
+        shutil.copy2(source, work / 'core' / source.name)
+    subprocess.run([java, '-Xmx512m', '-cp', os.pathsep.join(map(str, compiler)), 'org.jetbrains.kotlin.cli.jvm.K2JVMCompiler', '-no-stdlib', '-no-reflect', '-nowarn', '-jvm-target', '21', '-classpath', str(stdlib), '-d', str(work), *map(str, work.glob('*.kt')), *map(str, (work / 'core').glob('*.kt'))], check=True, timeout=60)
     subprocess.run([java, '-cp', os.pathsep.join((str(work), str(stdlib))), 'RegressionKt'], check=True, timeout=20)

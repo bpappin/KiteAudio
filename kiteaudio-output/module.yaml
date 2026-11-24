@@ -1,5 +1,4 @@
-# Real-time audio: a render callback, a lock-free ring, and one sink per platform.
-# The API keeps KitePlayer's names on purpose, so the two can be merged later rather than translated.
+# Plays mono or stereo Float32 PCM on the default audio device of each platform.
 product:
   type: kmp/lib
   platforms:
@@ -13,6 +12,9 @@ product:
 apply:
   - ../library.module-template.yaml
   - ../kmp.module-template.yaml
+
+dependencies:
+  - //kiteaudio-core: exported
 
 settings:
   android:

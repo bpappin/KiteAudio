@@ -2,6 +2,8 @@
 
 package io.github.yuroyami.kiteaudio.output
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlinx.cinterop.ByteVar
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
@@ -31,7 +33,7 @@ import platform.darwin.dispatch_sync
 import platform.posix.usleep
 
 /** Native allocation/dispatch is real; every AudioQueue operation is a fake with no hardware. */
-class AppleAudioSinkRegressionTest {
+class AppleAudioOutputRegressionTest {
     private class Driver : AppleAudioQueueDriver {
         private var queueStorage: ByteVar? = null
         private var queue: AudioQueueRef? = null
@@ -111,21 +113,21 @@ class AppleAudioSinkRegressionTest {
         val driver = Driver()
         val inside = AtomicBoolean(false)
         driver.disposalCheck = { !inside.load() }
-        val sink = AppleAudioSink(AudioFormat(48_000), 4, {}, driver)
-        sink.start { _, frames ->
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, {}, driver)
+        output.start { _, frames ->
             inside.store(true)
-            sink.close()
+            output.close()
             assertFalse(driver.disposed.load())
             inside.store(false)
             frames
         }
         await { driver.disposed.load() }
-        assertFalse(sink.isRunning)
+        assertFalse(output.isRunning)
         assertFalse(driver.lifetimeViolation.load())
         assertEquals(1, driver.allocations.load())
         assertEquals(0, driver.enqueues.load())
         assertEquals(0, driver.starts.load())
-        assertFailsWith<IllegalStateException> { sink.start { _, frames -> frames } }
+        assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
     }
 
     @Test
@@ -133,16 +135,16 @@ class AppleAudioSinkRegressionTest {
         for (position in 0..2) {
             val driver = Driver().apply { allocationFailure = position }
             val failures = AtomicInt(0)
-            val sink = AppleAudioSink(AudioFormat(48_000), 4, { if (it is AudioSinkEvent.Failed) failures.fetchAndAdd(1) }, driver)
+            val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, { if (it is AudioOutputEvent.Failed) failures.fetchAndAdd(1) }, driver)
             try {
-                sink.start { _, frames -> frames }
+                output.start { _, frames -> frames }
                 await { driver.disposed.load() }
                 driver.flushCallbacks()
-                assertFalse(sink.isRunning)
+                assertFalse(output.isRunning)
                 assertEquals(position + 1, driver.allocations.load())
                 assertEquals(0, driver.starts.load())
                 assertTrue(failures.load() > 0)
-            } finally { sink.close() }
+            } finally { output.close() }
         }
     }
 
@@ -152,20 +154,20 @@ class AppleAudioSinkRegressionTest {
             val driver = Driver()
             val failures = AtomicInt(0)
             driver.rejectEnqueue.store(duringPriming)
-            val sink = AppleAudioSink(AudioFormat(48_000), 4, { if (it is AudioSinkEvent.Failed) failures.fetchAndAdd(1) }, driver)
+            val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, { if (it is AudioOutputEvent.Failed) failures.fetchAndAdd(1) }, driver)
             try {
-                sink.start { _, frames -> frames }
+                output.start { _, frames -> frames }
                 if (!duringPriming) {
-                    assertTrue(sink.isRunning)
+                    assertTrue(output.isRunning)
                     driver.rejectEnqueue.store(true)
                     driver.fireAsync()
                 }
                 await { driver.disposed.load() }
                 driver.flushCallbacks()
-                assertFalse(sink.isRunning)
+                assertFalse(output.isRunning)
                 assertTrue(failures.load() > 0)
                 assertEquals(if (duringPriming) 0 else 1, driver.starts.load())
-            } finally { sink.close() }
+            } finally { output.close() }
         }
     }
 
@@ -174,17 +176,17 @@ class AppleAudioSinkRegressionTest {
         val driver = Driver()
         driver.rejectDispose.store(true)
         val failures = AtomicInt(0)
-        val sink = AppleAudioSink(AudioFormat(48_000), 4, {
-            if (it is AudioSinkEvent.Failed) failures.fetchAndAdd(1)
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, {
+            if (it is AudioOutputEvent.Failed) failures.fetchAndAdd(1)
         }, driver)
-        sink.start { _, frames -> frames }
-        sink.stop()
+        output.start { _, frames -> frames }
+        output.stop()
         await { failures.load() > 0 }
         assertFalse(driver.disposed.load())
-        assertFalse(sink.isRunning)
-        assertFailsWith<IllegalStateException> { sink.start { _, frames -> frames } }
+        assertFalse(output.isRunning)
+        assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
         driver.rejectDispose.store(false)
-        sink.close()
+        output.close()
         await { driver.disposed.load() }
         assertTrue(driver.disposals.load() >= 2)
     }
@@ -194,19 +196,19 @@ class AppleAudioSinkRegressionTest {
         val driver = Driver()
         driver.rejectDispose.store(true)
         val failures = AtomicInt(0)
-        lateinit var sink: AudioSink
-        sink = AppleAudioSink(AudioFormat(48_000), 4, {
-            if (it is AudioSinkEvent.Failed) { failures.fetchAndAdd(1); sink.close() }
+        lateinit var output: AudioOutput
+        output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, {
+            if (it is AudioOutputEvent.Failed) { failures.fetchAndAdd(1); output.close() }
         }, driver)
-        sink.start { _, frames -> frames }
-        sink.stop()
+        output.start { _, frames -> frames }
+        output.stop()
         await { driver.disposals.load() >= 2 }
         driver.flushCallbacks()
         usleep(20_000u)
         assertEquals(1, failures.load())
         assertEquals(2, driver.disposals.load())
         driver.rejectDispose.store(false)
-        sink.close()
+        output.close()
         await { driver.disposed.load() }
     }
 
@@ -214,12 +216,12 @@ class AppleAudioSinkRegressionTest {
     fun callbackCloseAndThrowingObserversCannotEscapeOrEnqueueAfterCancellation() {
         val driver = Driver()
         val calls = AtomicInt(0)
-        val sink = AppleAudioSink(AudioFormat(48_000), 4, { error("broken observer") }, driver)
-        sink.start { _, frames -> if (calls.fetchAndAdd(1) >= 3) sink.close(); frames }
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, { error("broken observer") }, driver)
+        output.start { _, frames -> if (calls.fetchAndAdd(1) >= 3) output.close(); frames }
         driver.fireAsync()
         await { driver.disposed.load() }
         assertEquals(3, driver.enqueues.load())
-        assertFalse(sink.isRunning)
+        assertFalse(output.isRunning)
     }
 
     @Test
@@ -227,16 +229,16 @@ class AppleAudioSinkRegressionTest {
         val driver = Driver()
         val oldCalls = AtomicInt(0)
         val newCalls = AtomicInt(0)
-        val sink = AppleAudioSink(AudioFormat(48_000), 4, {}, driver)
-        sink.start { _, frames -> oldCalls.fetchAndAdd(1); frames }
-        sink.stop()
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, {}, driver)
+        output.start { _, frames -> oldCalls.fetchAndAdd(1); frames }
+        output.stop()
         await { driver.disposed.load() }
         driver.flushCallbacks()
-        sink.start { _, frames -> newCalls.fetchAndAdd(1); frames }
-        assertTrue(sink.isRunning)
+        output.start { _, frames -> newCalls.fetchAndAdd(1); frames }
+        assertTrue(output.isRunning)
         driver.fireAsync()
         await { newCalls.load() >= 4 }
-        sink.close()
+        output.close()
         await { driver.disposed.load() }
         assertEquals(3, oldCalls.load())
         assertEquals(2, driver.starts.load())
@@ -249,8 +251,8 @@ class AppleAudioSinkRegressionTest {
         val calls = AtomicInt(0)
         val entered = AtomicBoolean(false)
         val released = AtomicBoolean(false)
-        val sink = AppleAudioSink(AudioFormat(48_000), 4, {}, driver)
-        sink.start { _, frames ->
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 4, {}, driver)
+        output.start { _, frames ->
             if (calls.fetchAndAdd(1) >= 3) {
                 entered.store(true)
                 await { released.load() }
@@ -260,13 +262,13 @@ class AppleAudioSinkRegressionTest {
         driver.fireAsync()
         await { entered.load() }
         try {
-            sink.stop()
-            assertFalse(sink.isRunning)
-            assertFailsWith<IllegalStateException> { sink.start { _, frames -> frames } }
+            output.stop()
+            assertFalse(output.isRunning)
+            assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
             assertFalse(driver.disposed.load())
         } finally {
             released.store(true)
-            sink.close()
+            output.close()
         }
         await { driver.disposed.load() }
         assertEquals(3, driver.enqueues.load())

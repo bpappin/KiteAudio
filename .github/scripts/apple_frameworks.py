@@ -35,7 +35,7 @@ FRAMEWORKS = {
     "KiteMIDIIO": {"module": "kiteaudio-midi-devices", "export": ["kiteaudio-midi"], "platforms": APPLE,
                    "attribution": False},
     "KiteSynth": {"module": "kiteaudio-synth", "export": [], "platforms": APPLE, "attribution": False},
-    "KiteRT": {"module": "kiteaudio-output", "export": [], "platforms": APPLE, "attribution": False},
+    "KiteRT": {"module": "kiteaudio-output", "export": ["kiteaudio-core"], "platforms": APPLE, "attribution": False},
 }
 # The file that holds settings.kotlin.version.
 KOTLIN_VERSION_FILE = "library.module-template.yaml"

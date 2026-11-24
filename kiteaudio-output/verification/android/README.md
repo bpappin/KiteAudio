@@ -12,7 +12,8 @@ invokes Gradle nor downloads dependencies. Missing cache entries are a setup fai
 
 The runner copies the current common and Android production sources to a temporary
 directory, removes the expect/actual factory declarations, and copies common default
-arguments onto the Android factory. It compiles these source bodies against the
+arguments onto the Android factory. It also copies the sources of `kiteaudio-core`, which
+holds the `AudioFormat` and `ChannelLayout` types that the output API uses. It compiles these source bodies against the
 small framework doubles in this directory. Seven assertion groups check buffer bounds,
 exact PCM order across short and zero writes, bounded no-progress failure, canceled
 worker ownership and terminal close, startup retry and event exception containment,

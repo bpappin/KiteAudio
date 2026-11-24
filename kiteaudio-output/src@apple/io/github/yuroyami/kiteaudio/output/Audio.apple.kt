@@ -2,6 +2,7 @@
 
 package io.github.yuroyami.kiteaudio.output
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
@@ -29,18 +30,18 @@ import platform.posix.memcpy
 
 // Detect only our own user-callback reentrancy, without a lock or heap allocation per block.
 @ThreadLocal
-private var callbackSink: AppleAudioSink? = null
+private var callbackOutput: AppleAudioOutput? = null
 
 /**
  * AudioQueue owns the callback block, which keeps its generation alive. A separate control
  * queue disposes AudioQueue only after active rendering has unwound. No StableRef is needed.
  */
-internal class AppleAudioSink(
+internal class AppleAudioOutput(
     override val format: AudioFormat,
     private val bufferFrames: Int,
-    private val onEvent: (AudioSinkEvent) -> Unit,
+    private val onEvent: (AudioOutputEvent) -> Unit,
     private val driver: AppleAudioQueueDriver = NativeAudioQueueDriver,
-) : AudioSink {
+) : AudioOutput {
     override val latency: Latency
         get() = Latency(bufferFrames * BUFFER_COUNT, LatencyQuality.Estimated)
 
@@ -53,7 +54,7 @@ internal class AppleAudioSink(
         val pcm = ShortArray(samples)
         var callback: AudioRenderCallback? = callback
         var queue: AudioQueueRef? = null
-        lateinit var observer: (AudioSinkEvent) -> Unit
+        lateinit var observer: (AudioOutputEvent) -> Unit
     }
 
     private val controlQueue = dispatch_queue_create("KiteRT-audio-control", null)
@@ -65,8 +66,8 @@ internal class AppleAudioSink(
         get() = generation.load()?.let { it.active.load() && it.started.load() } == true
 
     override fun start(callback: AudioRenderCallback) {
-        check(!closed.load()) { "the audio sink is closed" }
-        if (callbackSink === this) {
+        check(!closed.load()) { "the audio output is closed" }
+        if (callbackOutput === this) {
             if (generation.load()?.active?.load() == true) return
             error("the previous audio callback is still stopping")
         }
@@ -92,20 +93,20 @@ internal class AppleAudioSink(
     }
 
     private fun startOnControlQueue(callback: AudioRenderCallback) {
-        check(!closed.load()) { "the audio sink is closed" }
+        check(!closed.load()) { "the audio output is closed" }
         val previous = generation.load()
         if (previous?.active?.load() == true) return
         check(previous == null) { "the previous audio callback is still stopping" }
         val next = Generation(bufferFrames * format.channels, callback)
         next.observer = { event ->
-            if (event is AudioSinkEvent.Failed) next.active.store(false)
+            if (event is AudioOutputEvent.Failed) next.active.store(false)
             deliverAudioEvent(onEvent, event)
         }
         generation.store(next)
         if (closed.load()) {
             next.active.store(false)
             releaseOnControlQueue(next)
-            error("the audio sink is closed")
+            error("the audio output is closed")
         }
         try {
             val status = memScoped {
@@ -170,7 +171,7 @@ internal class AppleAudioSink(
             next.started.store(true)
             dispatch_async(renderQueue) {
                 inCallback {
-                    if (next.active.load()) deliverAudioEvent(onEvent, AudioSinkEvent.Started(format, latency))
+                    if (next.active.load()) deliverAudioEvent(onEvent, AudioOutputEvent.Started(format, latency))
                 }
             }
         } catch (problem: Throwable) {
@@ -180,9 +181,9 @@ internal class AppleAudioSink(
     }
 
     private inline fun inCallback(action: () -> Unit) {
-        val previous = callbackSink
-        callbackSink = this
-        try { action() } finally { callbackSink = previous }
+        val previous = callbackOutput
+        callbackOutput = this
+        try { action() } finally { callbackOutput = previous }
     }
 
     private fun fill(current: Generation, queue: AudioQueueRef?, buffer: AudioQueueBufferRef?) {
@@ -216,7 +217,7 @@ internal class AppleAudioSink(
         current.active.store(false)
         current.started.store(false)
         // Delivery is always on the render queue, so observers may safely cancel/close.
-        dispatch_async(renderQueue) { inCallback { deliverAudioEvent(onEvent, AudioSinkEvent.Failed(reason, cause)) } }
+        dispatch_async(renderQueue) { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Failed(reason, cause)) } }
         requestRelease(current)
     }
 
@@ -243,7 +244,7 @@ internal class AppleAudioSink(
                 // resource only once, so an unsuccessful retry cannot feed back forever.
                 if (current.disposalFailureReported.compareAndSet(false, true)) {
                     dispatch_async(renderQueue) {
-                        inCallback { deliverAudioEvent(onEvent, AudioSinkEvent.Failed("AudioQueue disposal failed, status $disposeStatus")) }
+                        inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioQueue disposal failed, status $disposeStatus")) }
                     }
                 }
                 return
@@ -251,13 +252,13 @@ internal class AppleAudioSink(
             current.queue = null
             if (stopStatus != 0) {
                 dispatch_async(renderQueue) {
-                    inCallback { deliverAudioEvent(onEvent, AudioSinkEvent.Failed("AudioQueue stop failed, status $stopStatus")) }
+                    inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioQueue stop failed, status $stopStatus")) }
                 }
             }
         }
         current.released.store(true)
         dispatch_async(renderQueue) {
-            try { inCallback { deliverAudioEvent(onEvent, AudioSinkEvent.Stopped) } }
+            try { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Stopped) } }
             finally { generation.compareAndSet(current, null) }
         }
     }
@@ -278,13 +279,14 @@ internal class AppleAudioSink(
 }
 
 @Throws(Exception::class)
-public actual fun openAudioSink(
+public actual fun openAudioOutput(
     preferredFormat: AudioFormat,
     bufferFrames: Int,
-    onEvent: (AudioSinkEvent) -> Unit,
-): AudioSink {
+    onEvent: (AudioOutputEvent) -> Unit,
+): AudioOutput {
+    requireSupportedLayout(preferredFormat)
     validateBufferFrames(preferredFormat, bufferFrames)
-    return AppleAudioSink(preferredFormat, bufferFrames, onEvent)
+    return AppleAudioOutput(preferredFormat, bufferFrames, onEvent)
 }
 
 public actual fun audioOutputAvailable(): Boolean = true

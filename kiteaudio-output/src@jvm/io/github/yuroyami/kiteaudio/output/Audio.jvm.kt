@@ -1,5 +1,6 @@
 package io.github.yuroyami.kiteaudio.output
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import javax.sound.sampled.AudioSystem
 import javax.sound.sampled.DataLine
 import javax.sound.sampled.LineUnavailableException
@@ -7,12 +8,12 @@ import javax.sound.sampled.SourceDataLine
 import javax.sound.sampled.AudioFormat as JavaAudioFormat
 
 /** Blocking platform output with one owned, independently cancellable render generation. */
-internal class JvmAudioSink(
+internal class JvmAudioOutput(
     override val format: AudioFormat,
     private val line: SourceDataLine,
     private val bufferFrames: Int,
-    private val onEvent: (AudioSinkEvent) -> Unit,
-) : AudioSink {
+    private val onEvent: (AudioOutputEvent) -> Unit,
+) : AudioOutput {
     // Capacity is an estimate of buffering, not current queued depth or acoustic latency.
     override val latency: Latency
         get() = Latency(line.bufferSize / (format.channels * 2), LatencyQuality.Estimated)
@@ -31,7 +32,7 @@ internal class JvmAudioSink(
         var failure: Throwable? = null
         var failedGeneration: Generation? = null
         synchronized(stateLock) {
-            check(!closed) { "the audio sink is closed" }
+            check(!closed) { "the audio output is closed" }
             val previous = generation
             if (previous?.active == true) return
             check(previous == null) { "the previous audio callback is still stopping" }
@@ -53,7 +54,7 @@ internal class JvmAudioSink(
             }
         }
         failure?.let {
-            try { deliverAudioEvent(onEvent, AudioSinkEvent.Failed("the audio output would not start", it)) }
+            try { deliverAudioEvent(onEvent, AudioOutputEvent.Failed("the audio output would not start", it)) }
             finally { synchronized(stateLock) { if (generation === failedGeneration) generation = null } }
         }
     }
@@ -62,11 +63,11 @@ internal class JvmAudioSink(
         try {
             val floats = FloatArray(bufferFrames * format.channels)
             val pcm = ByteArray(floats.size * 2)
-            val observer: (AudioSinkEvent) -> Unit = { event ->
-                if (event is AudioSinkEvent.Failed) current.active = false
+            val observer: (AudioOutputEvent) -> Unit = { event ->
+                if (event is AudioOutputEvent.Failed) current.active = false
                 deliverAudioEvent(onEvent, event)
             }
-            if (current.active) deliverAudioEvent(onEvent, AudioSinkEvent.Started(format, latency))
+            if (current.active) deliverAudioEvent(onEvent, AudioOutputEvent.Started(format, latency))
             while (current.active) {
                 if (!renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)) break
                 if (!current.active) break
@@ -83,13 +84,13 @@ internal class JvmAudioSink(
                     if (!current.active) break
                     if (count < 0 || count > pcm.size - written || count % (format.channels * 2) != 0) {
                         current.active = false
-                        deliverAudioEvent(onEvent, AudioSinkEvent.DeviceLost("SourceDataLine.write returned invalid count $count"))
+                        deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost("SourceDataLine.write returned invalid count $count"))
                         break
                     }
                     if (count == 0) {
                         if (++noProgress >= 10) {
                             current.active = false
-                            deliverAudioEvent(onEvent, AudioSinkEvent.DeviceLost("SourceDataLine.write made no progress"))
+                            deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost("SourceDataLine.write made no progress"))
                         } else {
                             Thread.sleep(1)
                         }
@@ -101,12 +102,12 @@ internal class JvmAudioSink(
             }
         } catch (problem: Throwable) {
             current.active = false
-            deliverAudioEvent(onEvent, AudioSinkEvent.Failed("the audio worker failed", problem))
+            deliverAudioEvent(onEvent, AudioOutputEvent.Failed("the audio worker failed", problem))
         } finally {
             current.active = false
             synchronized(stateLock) { haltOutput() }
             try {
-                deliverAudioEvent(onEvent, AudioSinkEvent.Stopped)
+                deliverAudioEvent(onEvent, AudioOutputEvent.Stopped)
             } finally {
                 synchronized(stateLock) { if (generation === current) generation = null }
             }
@@ -142,11 +143,12 @@ internal class JvmAudioSink(
 }
 
 @Throws(Exception::class)
-public actual fun openAudioSink(
+public actual fun openAudioOutput(
     preferredFormat: AudioFormat,
     bufferFrames: Int,
-    onEvent: (AudioSinkEvent) -> Unit,
-): AudioSink {
+    onEvent: (AudioOutputEvent) -> Unit,
+): AudioOutput {
+    requireSupportedLayout(preferredFormat)
     validateBufferFrames(preferredFormat, bufferFrames)
     val javaFormat = JavaAudioFormat(
         preferredFormat.sampleRate.toFloat(),
@@ -164,11 +166,11 @@ public actual fun openAudioSink(
             it.open(javaFormat, bufferFrames * preferredFormat.channels * 2 * 4)
         }
     } catch (problem: LineUnavailableException) {
-        deliverAudioEvent(onEvent, AudioSinkEvent.Failed("no audio output is available", problem))
+        deliverAudioEvent(onEvent, AudioOutputEvent.Failed("no audio output is available", problem))
         throw problem
     }
 
-    return JvmAudioSink(preferredFormat, line, bufferFrames, onEvent)
+    return JvmAudioOutput(preferredFormat, line, bufferFrames, onEvent)
 }
 
 public actual fun audioOutputAvailable(): Boolean = runCatching {
