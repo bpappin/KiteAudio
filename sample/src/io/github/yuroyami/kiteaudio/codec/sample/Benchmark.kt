@@ -1,11 +1,11 @@
 package io.github.yuroyami.kiteaudio.codec.sample
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.Pcm
 import io.github.yuroyami.kiteaudio.codec.ResampleQuality
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import java.io.File
 import kotlin.system.exitProcess
 

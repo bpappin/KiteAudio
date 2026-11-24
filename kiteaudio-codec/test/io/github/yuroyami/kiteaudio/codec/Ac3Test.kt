@@ -1,5 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioChannel
 import kotlin.math.abs
 import kotlin.math.sqrt
 import kotlin.test.Test

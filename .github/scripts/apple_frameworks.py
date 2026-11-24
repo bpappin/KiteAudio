@@ -29,7 +29,7 @@ CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "dar
 IOS = ("iosArm64", "iosSimulatorArm64", "iosX64")
 APPLE = IOS + ("macosArm64",)
 FRAMEWORKS = {
-    "AudioKodec": {"module": "kiteaudio-codec", "export": [], "platforms": IOS, "attribution": True},
+    "AudioKodec": {"module": "kiteaudio-codec", "export": ["kiteaudio-core"], "platforms": IOS, "attribution": True},
     "AudioKodecIO": {"module": "kiteaudio-codec-io", "export": [], "platforms": IOS, "attribution": True},
     "KiteMIDI": {"module": "kiteaudio-midi", "export": [], "platforms": APPLE, "attribution": False},
     "KiteMIDIIO": {"module": "kiteaudio-midi-devices", "export": ["kiteaudio-midi"], "platforms": APPLE,

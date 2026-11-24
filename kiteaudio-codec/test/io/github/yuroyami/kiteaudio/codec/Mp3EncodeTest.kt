@@ -2,6 +2,8 @@ package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.log10

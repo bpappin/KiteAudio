@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+
 /**
  * Information about a file's encoded audio.
  *

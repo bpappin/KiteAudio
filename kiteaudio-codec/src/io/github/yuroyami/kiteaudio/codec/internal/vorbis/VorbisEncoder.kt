@@ -1,9 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec.internal.vorbis
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.AudioSink
-import io.github.yuroyami.kiteaudio.codec.PcmSource
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.bits.BitWriterLsb
 import io.github.yuroyami.kiteaudio.codec.internal.dsp.Fft
@@ -15,6 +13,8 @@ import io.github.yuroyami.kiteaudio.codec.internal.psy.TransientDetector
 import io.github.yuroyami.kiteaudio.codec.internal.tag.VorbisComment
 import io.github.yuroyami.kiteaudio.codec.readChecked
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos

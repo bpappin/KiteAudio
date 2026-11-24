@@ -1,10 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec.internal.mpeg.encoder
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.AudioSink
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
-import io.github.yuroyami.kiteaudio.codec.PcmSource
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.bits.BitWriterMsb
 import io.github.yuroyami.kiteaudio.codec.internal.mpeg.Mp3Tables
@@ -12,6 +9,9 @@ import io.github.yuroyami.kiteaudio.codec.internal.mpeg.MpegVbrHeader
 import io.github.yuroyami.kiteaudio.codec.internal.tag.Id3v2Writer
 import io.github.yuroyami.kiteaudio.codec.readChecked
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.ln

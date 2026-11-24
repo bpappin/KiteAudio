@@ -3,6 +3,9 @@ package io.github.yuroyami.kiteaudio.codec
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagFormat
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

@@ -1,6 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.internal.codec
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioChannel
 
 /**
  * Wraps a codec whose container interleaves channels in some order other than

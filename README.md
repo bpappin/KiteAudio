@@ -16,7 +16,7 @@ Every artifact has the group `io.github.yuroyami` and the version 0.3.0.
 
 | Artifact | What it does | Targets |
 |---|---|---|
-| `kiteaudio-codec` | Audio containers, codecs and tags. Depends on kotlin-stdlib only. | 22: JVM, Android, JS, wasmJs, wasmWasi, Apple, Linux, Windows, Android Native |
+| `kiteaudio-codec` | Audio containers, codecs and tags. Depends on kotlin-stdlib and `kiteaudio-core` only. | 22: JVM, Android, JS, wasmJs, wasmWasi, Apple, Linux, Windows, Android Native |
 | `kiteaudio-codec-io` | The kotlinx-io bridge of the codec: reads a `Path` or `RawSource` and writes to a `Sink` or a `Path`. | The same 22 |
 | [`kiteaudio-midi`](kiteaudio-midi/README.md) | Standard MIDI Files, typed MIDI messages, a tempo map and note pairing. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS, JS, Wasm |
 | `kiteaudio-midi-devices` | MIDI ports through MidiManager on Android, CoreMIDI on Apple and `javax.sound.midi` on the JVM. | JVM, Android, iOS, macOS |
@@ -38,9 +38,10 @@ support tables.
 
 Kotlin Multiplatform has no library that decodes audio in common code. The existing choices
 wrap each platform's own player, which gives you playback and not samples, and gives you
-nothing at all on JS or WebAssembly. AudioKodec decodes in `commonMain` with no dependency
-beyond `kotlin-stdlib`, so the same call works on Android, iOS, the JVM, Linux, Windows,
-watchOS, in a browser and in a WASI runtime.
+nothing at all on JS or WebAssembly. AudioKodec decodes in `commonMain` with no third-party
+dependency, so the same call works on Android, iOS, the JVM, Linux, Windows, watchOS, in a
+browser and in a WASI runtime. It depends on `kotlin-stdlib` and `kiteaudio-core`, which holds
+the shared audio format types.
 
 Every format listed here has tests, and most are checked sample for sample against ffmpeg or
 the codec's own reference decoder.

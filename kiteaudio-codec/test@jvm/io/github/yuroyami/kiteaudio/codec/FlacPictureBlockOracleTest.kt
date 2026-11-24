@@ -4,6 +4,7 @@ import io.github.yuroyami.kiteaudio.codec.tag.PictureType
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import java.awt.image.BufferedImage
 import java.io.File
 import java.io.FileOutputStream

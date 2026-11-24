@@ -2,11 +2,11 @@ package io.github.yuroyami.kiteaudio.codec.sample
 
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioFrame
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import org.junit.Assume.assumeTrue
 import java.io.File
 import java.util.concurrent.CountDownLatch

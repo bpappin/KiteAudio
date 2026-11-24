@@ -1,6 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

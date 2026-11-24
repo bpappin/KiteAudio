@@ -5,6 +5,7 @@ import io.github.yuroyami.kiteaudio.codec.tag.RawTagEntry
 import io.github.yuroyami.kiteaudio.codec.tag.RawTags
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

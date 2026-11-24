@@ -3,7 +3,6 @@ package io.github.yuroyami.kiteaudio.codec.internal.ogg
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioFrame
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
@@ -13,6 +12,7 @@ import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.internal.opus.OpusMultistreamDecoder
 import io.github.yuroyami.kiteaudio.codec.internal.opus.OpusPacket
 import io.github.yuroyami.kiteaudio.codec.internal.vorbis.VorbisDecoder
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * Decodes Opus audio carried in Ogg, as RFC 7845 lays it out.

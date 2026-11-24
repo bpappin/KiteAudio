@@ -33,6 +33,9 @@ import io.github.yuroyami.kiteaudio.codec.internal.tag.TagWriter
 import io.github.yuroyami.kiteaudio.codec.internal.wavpack.WavPackFile
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagWriteOptions
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 
 /**
  * The entry point to AudioKodec.

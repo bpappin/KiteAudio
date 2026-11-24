@@ -11,6 +11,10 @@ import io.github.yuroyami.kiteaudio.codec.tag.TagChapter
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagFormat
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

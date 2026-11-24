@@ -1,11 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec.internal.container
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
@@ -13,6 +10,9 @@ import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.bits.BitReaderMsb
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.internal.mpeg.MpegStream
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * The parts of an AAC configuration both raw framings carry: the sampling

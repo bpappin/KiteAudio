@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+
 /**
  * One block of decoded audio.
  *

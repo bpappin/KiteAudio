@@ -1,21 +1,21 @@
 package io.github.yuroyami.kiteaudio.codec.internal.dsp
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.BACK_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.BACK_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.BACK_RIGHT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_LEFT_OF_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_RIGHT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_RIGHT_OF_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.LOW_FREQUENCY
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.SIDE_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.SIDE_RIGHT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.TOP_FRONT_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.TOP_FRONT_RIGHT
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioChannel.BACK_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.BACK_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.BACK_RIGHT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_LEFT_OF_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_RIGHT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_RIGHT_OF_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.LOW_FREQUENCY
+import io.github.yuroyami.kiteaudio.core.AudioChannel.SIDE_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.SIDE_RIGHT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.TOP_FRONT_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.TOP_FRONT_RIGHT
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * The coefficients that carry each channel of one layout into another.

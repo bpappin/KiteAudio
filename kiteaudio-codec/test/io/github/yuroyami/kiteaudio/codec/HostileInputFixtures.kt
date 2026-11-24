@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+
 /** Small valid files; each new decoder container must be represented here. */
 internal object HostileInputFixtures {
     fun files(): List<Pair<String, ByteArray>> {

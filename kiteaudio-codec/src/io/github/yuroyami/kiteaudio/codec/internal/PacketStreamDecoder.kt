@@ -1,7 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.internal
 
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioFrame
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
@@ -10,6 +9,7 @@ import io.github.yuroyami.kiteaudio.codec.IntAudioFrame
 import io.github.yuroyami.kiteaudio.codec.IntPcmAccess
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * Where each packet of a coded stream is, and where its output starts.

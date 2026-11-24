@@ -1,12 +1,12 @@
 package io.github.yuroyami.kiteaudio.codec.internal.aac
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.bits.BitReaderMsb
 import io.github.yuroyami.kiteaudio.codec.internal.container.AacConfig
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * What an AAC decoder needs to know before its first block: the coding, the

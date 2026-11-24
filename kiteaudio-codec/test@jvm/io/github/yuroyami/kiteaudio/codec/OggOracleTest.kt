@@ -6,6 +6,9 @@ import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.internal.ogg.OggReader
 import io.github.yuroyami.kiteaudio.codec.internal.ogg.OggCrc
 import io.github.yuroyami.kiteaudio.codec.internal.tag.VorbisComment
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

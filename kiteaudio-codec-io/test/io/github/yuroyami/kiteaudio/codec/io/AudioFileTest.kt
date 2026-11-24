@@ -1,13 +1,13 @@
 package io.github.yuroyami.kiteaudio.codec.io
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
-import io.github.yuroyami.kiteaudio.codec.PcmSource
 import io.github.yuroyami.kiteaudio.codec.asPcmSource
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlinx.io.buffered
 import kotlinx.io.IOException
 import kotlinx.io.files.Path

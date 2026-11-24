@@ -5,19 +5,19 @@
  */
 package io.github.yuroyami.kiteaudio.codec.internal.wavpack
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.AudioSink
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.Dither
 import io.github.yuroyami.kiteaudio.codec.IntPcmSource
-import io.github.yuroyami.kiteaudio.codec.PcmSource
 import io.github.yuroyami.kiteaudio.codec.internal.codec.IntegerPcmConverter
 import io.github.yuroyami.kiteaudio.codec.internal.flac.Md5
 import io.github.yuroyami.kiteaudio.codec.internal.tag.ApeTag
 import io.github.yuroyami.kiteaudio.codec.readChecked
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.math.round
 
 /**

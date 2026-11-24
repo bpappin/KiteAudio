@@ -1,5 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull

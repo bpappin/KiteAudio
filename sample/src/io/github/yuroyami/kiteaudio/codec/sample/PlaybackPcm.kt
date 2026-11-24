@@ -1,11 +1,11 @@
 package io.github.yuroyami.kiteaudio.codec.sample
 
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.Pcm
 import io.github.yuroyami.kiteaudio.codec.Resampler
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * How decoded audio reaches an output that takes 16-bit signed little-endian

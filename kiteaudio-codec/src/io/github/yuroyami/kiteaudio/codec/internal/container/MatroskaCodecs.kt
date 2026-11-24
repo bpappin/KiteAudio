@@ -1,8 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.internal.container
 
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
@@ -22,6 +20,8 @@ import io.github.yuroyami.kiteaudio.codec.internal.opus.OpusMultistreamDecoder
 import io.github.yuroyami.kiteaudio.codec.internal.vorbis.VorbisConfig
 import io.github.yuroyami.kiteaudio.codec.internal.vorbis.VorbisDecoder
 import io.github.yuroyami.kiteaudio.codec.internal.vorbis.VorbisSynthesis
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * What each Matroska codec ID means for decoding, after the Matroska codec

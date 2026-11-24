@@ -1,9 +1,9 @@
 package io.github.yuroyami.kiteaudio.codec.internal.ogg
 
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException

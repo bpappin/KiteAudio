@@ -1,8 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec.internal.codec
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * GSM 06.10 in QuickTime and MP4 files, under the `agsm` sample entry: each

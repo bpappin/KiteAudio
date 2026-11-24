@@ -1,7 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.internal
 
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioFrame
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
@@ -12,6 +11,7 @@ import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.codec.SampleCodec
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * The decoder every block-structured container shares.

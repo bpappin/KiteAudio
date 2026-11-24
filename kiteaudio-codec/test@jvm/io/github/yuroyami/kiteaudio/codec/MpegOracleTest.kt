@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit
 import io.github.yuroyami.kiteaudio.codec.internal.mpeg.MpegFrameHeader
 import io.github.yuroyami.kiteaudio.codec.internal.mpeg.MpegStream
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals

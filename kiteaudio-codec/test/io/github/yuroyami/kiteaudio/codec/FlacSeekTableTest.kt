@@ -5,6 +5,7 @@ import io.github.yuroyami.kiteaudio.codec.internal.flac.FlacMetadata
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

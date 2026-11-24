@@ -10,8 +10,8 @@ import javax.sound.sampled.DataLine
 import javax.sound.sampled.SourceDataLine
 import javax.sound.sampled.AudioFormat as LineFormat
 // --8<-- [end:imports-jvm]
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

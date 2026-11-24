@@ -28,5 +28,6 @@ intended, not a vulnerability.
 - Every buffer sized from a value in the file is checked against
   `DecodeOptions.maxAllocationBytes` before it is allocated.
 - No decoder reads outside the audio payload the container declares.
-- The core has no dependency beyond `kotlin-stdlib`, no filesystem access and
-  no network access.
+- The codec depends on `kotlin-stdlib` and `kiteaudio-core` only, and
+  `kiteaudio-core` depends on `kotlin-stdlib` only.
+- The codec has no filesystem access and no network access.

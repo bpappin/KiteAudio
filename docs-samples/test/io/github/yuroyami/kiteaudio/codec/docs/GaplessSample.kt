@@ -1,9 +1,9 @@
 package io.github.yuroyami.kiteaudio.codec.docs
 
 // --8<-- [start:imports]
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 // --8<-- [end:imports]
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import kotlin.test.Test

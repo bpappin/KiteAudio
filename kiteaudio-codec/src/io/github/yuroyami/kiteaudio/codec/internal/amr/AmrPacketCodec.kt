@@ -1,8 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec.internal.amr
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * Decodes packets of AMR or AMR-WB frames in the storage format of RFC 4867

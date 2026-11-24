@@ -1,7 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.internal.aac
 
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
@@ -12,6 +11,7 @@ import io.github.yuroyami.kiteaudio.codec.internal.container.AacConfig
 import io.github.yuroyami.kiteaudio.codec.internal.container.AdtsHeader
 import io.github.yuroyami.kiteaudio.codec.internal.container.AdtsStream
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * AAC-LC packets for [PacketStreamDecoder]: one raw data block per packet

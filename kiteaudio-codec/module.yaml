@@ -29,7 +29,10 @@ apply:
   - ../kmp.module-template.yaml
   - ../codec.module-template.yaml
 
-# Intentionally no dependencies. The AudioKodec core depends on kotlin-stdlib only.
+# kiteaudio-core holds the shared audio format types and depends on kotlin-stdlib only.
+# Keep the codec free of any other dependency.
+dependencies:
+  - //kiteaudio-core: exported
 
 settings:
   jvm:
@@ -46,7 +49,8 @@ settings:
         Audio containers, codecs and tags written in Kotlin for Kotlin Multiplatform. Decodes 22 containers to Float32 PCM,
         among them FLAC, WAV, AIFF, MP3, Ogg Vorbis and Opus, AAC, ALAC, AC-3, Matroska, WavPack and Monkey's Audio.
         Encodes FLAC, WAV, AIFF, AU and ALAC. Reads and edits ID3, APE, Vorbis comment, MP4 and RIFF tags with the audio
-        left byte-identical. Names 30 formats by sniffing. Depends on kotlin-stdlib only and builds for 22 targets.
+        left byte-identical. Names 30 formats by sniffing. Depends on kotlin-stdlib and kiteaudio-core only, and builds
+        for 22 targets.
 
 # Pin the klib name to "io.github.yuroyami:kiteaudio-codec", the group and artifact name.
 # The committed klib ABI dump records this name. The web test runner finds the test klib

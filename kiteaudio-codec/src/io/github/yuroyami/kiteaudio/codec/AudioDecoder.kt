@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+
 /**
  * A decoder that hands back one block of PCM at a time.
  *

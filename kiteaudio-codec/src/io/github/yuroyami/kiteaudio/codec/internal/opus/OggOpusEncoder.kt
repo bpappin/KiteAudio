@@ -1,16 +1,16 @@
 package io.github.yuroyami.kiteaudio.codec.internal.opus
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioSink
 import io.github.yuroyami.kiteaudio.codec.BitrateMode
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
-import io.github.yuroyami.kiteaudio.codec.PcmSource
 import io.github.yuroyami.kiteaudio.codec.Resampler
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.internal.ogg.OggPageWriter
 import io.github.yuroyami.kiteaudio.codec.internal.tag.VorbisComment
 import io.github.yuroyami.kiteaudio.codec.readChecked
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.PcmSource
 
 /**
  * Writes an Ogg Opus file, as RFC 7845 lays it out, from a [PcmSource].

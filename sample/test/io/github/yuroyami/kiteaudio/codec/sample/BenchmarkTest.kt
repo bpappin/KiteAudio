@@ -50,7 +50,7 @@ class BenchmarkTest {
 
     @Test
     fun decodingAFileReportsEveryFrame() {
-        val format = io.github.yuroyami.kiteaudio.codec.AudioFormat(8_000, 2)
+        val format = io.github.yuroyami.kiteaudio.core.AudioFormat(8_000, 2)
         val wav = io.github.yuroyami.kiteaudio.codec.AudioKodec.encode(
             TestSignal.stereo(2, 8_000), format, io.github.yuroyami.kiteaudio.codec.EncodeTarget.wav(16),
         )

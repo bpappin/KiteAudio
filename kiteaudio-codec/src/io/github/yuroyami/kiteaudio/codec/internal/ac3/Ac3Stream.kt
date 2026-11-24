@@ -3,7 +3,6 @@ package io.github.yuroyami.kiteaudio.codec.internal.ac3
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
@@ -15,6 +14,7 @@ import io.github.yuroyami.kiteaudio.codec.internal.PacketIndex
 import io.github.yuroyami.kiteaudio.codec.internal.PacketStreamDecoder
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.internal.mpeg.MpegStream
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * AC-3 syncframes for [PacketStreamDecoder], one syncframe to a packet, from

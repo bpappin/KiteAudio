@@ -1,6 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec.io
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
@@ -63,7 +63,7 @@ class AudioKodecIoTest {
     @Test
     fun aSinkThatCannotBePatchedNeedsTheFrameCountUpFront() {
         val buffer = Buffer()
-        val unknownLength = object : io.github.yuroyami.kiteaudio.codec.PcmSource {
+        val unknownLength = object : io.github.yuroyami.kiteaudio.core.PcmSource {
             private var left = 100
             override val format: AudioFormat get() = this@AudioKodecIoTest.format
             override val frameCount: Long? get() = null

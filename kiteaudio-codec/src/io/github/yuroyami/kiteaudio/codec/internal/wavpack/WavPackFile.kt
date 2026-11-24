@@ -8,9 +8,7 @@ package io.github.yuroyami.kiteaudio.codec.internal.wavpack
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
 import io.github.yuroyami.kiteaudio.codec.AudioDecoder
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
@@ -18,6 +16,8 @@ import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
 import io.github.yuroyami.kiteaudio.codec.internal.PacketIndex
 import io.github.yuroyami.kiteaudio.codec.internal.PacketStreamDecoder
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.math.pow
 
 /** The 32-byte header every WavPack block starts with. */

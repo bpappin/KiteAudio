@@ -5,10 +5,10 @@
  */
 package io.github.yuroyami.kiteaudio.codec.internal.alac
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
+import io.github.yuroyami.kiteaudio.core.AudioChannel
 
 /**
  * What an ALAC stream's configuration, its "magic cookie", says.
@@ -619,8 +619,8 @@ internal class AlacPacketCodec(
     private val scratch = IntArray((config.frameLength + 1) * channels)
     private val scale = 1f / (1L shl (config.bitDepth - 1)).toFloat()
 
-    override val format: io.github.yuroyami.kiteaudio.codec.AudioFormat =
-        io.github.yuroyami.kiteaudio.codec.AudioFormat(sampleRate, io.github.yuroyami.kiteaudio.codec.ChannelLayout.of(canonical))
+    override val format: io.github.yuroyami.kiteaudio.core.AudioFormat =
+        io.github.yuroyami.kiteaudio.core.AudioFormat(sampleRate, io.github.yuroyami.kiteaudio.core.ChannelLayout.of(canonical))
     override val storedBitDepth: Int = config.bitDepth
     override val maxFramesPerPacket: Int = config.frameLength
 

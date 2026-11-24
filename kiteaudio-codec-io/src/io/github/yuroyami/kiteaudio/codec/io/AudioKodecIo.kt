@@ -73,7 +73,7 @@ public fun Path.readAudioSource(maxBytes: Long = 512L * 1024 * 1024): AudioSourc
  *
  * The returned sink cannot be patched, because a kotlinx-io sink only moves
  * forwards. Encoding to it therefore needs a
- * [io.github.yuroyami.kiteaudio.codec.PcmSource] whose frame count is known in
+ * [io.github.yuroyami.kiteaudio.core.PcmSource] whose frame count is known in
  * advance, so that the header can be written correctly the first time.
  * Closing the returned sink closes [this].
  */

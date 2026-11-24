@@ -4,32 +4,6 @@ public final class io/github/yuroyami/kiteaudio/codec/AllocationGuardException :
 	public final fun getRequested ()J
 }
 
-public final class io/github/yuroyami/kiteaudio/codec/AudioChannel : java/lang/Enum {
-	public static final field BACK_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field BACK_LEFT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field BACK_RIGHT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field FRONT_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field FRONT_LEFT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field FRONT_LEFT_OF_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field FRONT_RIGHT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field FRONT_RIGHT_OF_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field LOW_FREQUENCY Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field SIDE_LEFT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field SIDE_RIGHT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_BACK_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_BACK_LEFT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_BACK_RIGHT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_FRONT_CENTER Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_FRONT_LEFT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field TOP_FRONT_RIGHT Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static final field UNKNOWN Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static fun getEntries ()Lkotlin/enums/EnumEntries;
-	public final fun getWaveMaskBit ()I
-	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-	public static fun values ()[Lio/github/yuroyami/kiteaudio/codec/AudioChannel;
-}
-
 public final class io/github/yuroyami/kiteaudio/codec/AudioCodec : java/lang/Enum {
 	public static final field AAC Lio/github/yuroyami/kiteaudio/codec/AudioCodec;
 	public static final field AC3 Lio/github/yuroyami/kiteaudio/codec/AudioCodec;
@@ -108,30 +82,18 @@ public final class io/github/yuroyami/kiteaudio/codec/AudioContainer : java/lang
 public abstract interface class io/github/yuroyami/kiteaudio/codec/AudioDecoder : java/lang/AutoCloseable {
 	public abstract fun close ()V
 	public abstract fun getDurationFrames ()Ljava/lang/Long;
-	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public abstract fun getInfo ()Lio/github/yuroyami/kiteaudio/codec/AudioInfo;
 	public abstract fun getPositionFrames ()J
 	public abstract fun nextFrame ()Lio/github/yuroyami/kiteaudio/codec/AudioFrame;
 	public abstract fun seek (J)J
 }
 
-public final class io/github/yuroyami/kiteaudio/codec/AudioFormat {
-	public fun <init> (II)V
-	public fun <init> (ILio/github/yuroyami/kiteaudio/codec/ChannelLayout;)V
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getChannelLayout ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getChannels ()I
-	public final fun getFloatFrameBytes ()I
-	public final fun getSampleRate ()I
-	public fun hashCode ()I
-	public fun toString ()Ljava/lang/String;
-}
-
 public final class io/github/yuroyami/kiteaudio/codec/AudioFrame {
-	public fun <init> (Lio/github/yuroyami/kiteaudio/codec/AudioFormat;[FIJ)V
+	public fun <init> (Lio/github/yuroyami/kiteaudio/core/AudioFormat;[FIJ)V
 	public final fun copySamples ()[F
 	public final fun get (II)F
-	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public final fun getFrameCount ()I
 	public final fun getPositionFrames ()J
 	public final fun getSampleCount ()I
@@ -139,7 +101,7 @@ public final class io/github/yuroyami/kiteaudio/codec/AudioFrame {
 }
 
 public final class io/github/yuroyami/kiteaudio/codec/AudioInfo {
-	public fun <init> (Lio/github/yuroyami/kiteaudio/codec/AudioContainer;Lio/github/yuroyami/kiteaudio/codec/AudioCodec;Lio/github/yuroyami/kiteaudio/codec/AudioFormat;Ljava/lang/Long;Ljava/lang/Integer;Ljava/lang/Integer;ZJJ)V
+	public fun <init> (Lio/github/yuroyami/kiteaudio/codec/AudioContainer;Lio/github/yuroyami/kiteaudio/codec/AudioCodec;Lio/github/yuroyami/kiteaudio/core/AudioFormat;Ljava/lang/Long;Ljava/lang/Integer;Ljava/lang/Integer;ZJJ)V
 	public final fun getBitDepth ()Ljava/lang/Integer;
 	public final fun getBitrate ()Ljava/lang/Integer;
 	public final fun getCodec ()Lio/github/yuroyami/kiteaudio/codec/AudioCodec;
@@ -148,7 +110,7 @@ public final class io/github/yuroyami/kiteaudio/codec/AudioInfo {
 	public final fun getDataSize ()J
 	public final fun getDurationFrames ()Ljava/lang/Long;
 	public final fun getDurationSeconds ()Ljava/lang/Double;
-	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public final fun isVariableBitrate ()Z
 	public fun toString ()Ljava/lang/String;
 }
@@ -162,16 +124,16 @@ public final class io/github/yuroyami/kiteaudio/codec/AudioKodec {
 	public static synthetic fun decode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;[BLio/github/yuroyami/kiteaudio/codec/DecodeOptions;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/codec/DecodedAudio;
 	public final fun encode (Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)V
 	public final fun encode (Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
-	public final fun encode (Lio/github/yuroyami/kiteaudio/codec/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)V
-	public final fun encode (Lio/github/yuroyami/kiteaudio/codec/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
-	public final fun encode ([FLio/github/yuroyami/kiteaudio/codec/AudioFormat;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
-	public final fun encode ([ILio/github/yuroyami/kiteaudio/codec/AudioFormat;ILio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
+	public final fun encode (Lio/github/yuroyami/kiteaudio/core/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)V
+	public final fun encode (Lio/github/yuroyami/kiteaudio/core/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
+	public final fun encode ([FLio/github/yuroyami/kiteaudio/core/AudioFormat;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
+	public final fun encode ([ILio/github/yuroyami/kiteaudio/core/AudioFormat;ILio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;)[B
 	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)V
 	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
-	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/codec/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)V
-	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/codec/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
-	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;[FLio/github/yuroyami/kiteaudio/codec/AudioFormat;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
-	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;[ILio/github/yuroyami/kiteaudio/codec/AudioFormat;ILio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
+	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/core/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/AudioSink;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)V
+	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/core/PcmSource;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
+	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;[FLio/github/yuroyami/kiteaudio/core/AudioFormat;Lio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
+	public static synthetic fun encode$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;[ILio/github/yuroyami/kiteaudio/core/AudioFormat;ILio/github/yuroyami/kiteaudio/codec/EncodeTarget;Lio/github/yuroyami/kiteaudio/codec/tag/TagBundle;ILjava/lang/Object;)[B
 	public final fun open (Lio/github/yuroyami/kiteaudio/codec/AudioSource;Lio/github/yuroyami/kiteaudio/codec/DecodeOptions;)Lio/github/yuroyami/kiteaudio/codec/AudioDecoder;
 	public final fun open ([BLio/github/yuroyami/kiteaudio/codec/DecodeOptions;)Lio/github/yuroyami/kiteaudio/codec/AudioDecoder;
 	public static synthetic fun open$default (Lio/github/yuroyami/kiteaudio/codec/AudioKodec;Lio/github/yuroyami/kiteaudio/codec/AudioSource;Lio/github/yuroyami/kiteaudio/codec/DecodeOptions;ILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/codec/AudioDecoder;
@@ -246,32 +208,6 @@ public final class io/github/yuroyami/kiteaudio/codec/ByteArrayAudioSink : io/gi
 	public fun write ([BII)V
 }
 
-public final class io/github/yuroyami/kiteaudio/codec/ChannelLayout {
-	public static final field Companion Lio/github/yuroyami/kiteaudio/codec/ChannelLayout$Companion;
-	public fun equals (Ljava/lang/Object;)Z
-	public final fun getChannels ()Ljava/util/List;
-	public final fun getCount ()I
-	public final fun getWaveMask ()I
-	public fun hashCode ()I
-	public final fun isPositional ()Z
-	public fun toString ()Ljava/lang/String;
-}
-
-public final class io/github/yuroyami/kiteaudio/codec/ChannelLayout$Companion {
-	public final fun canonical (I)Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun fromWaveMask (II)Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getMONO ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getQUAD ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getSTEREO ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getSURROUND_3_0 ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getSURROUND_5_0 ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getSURROUND_5_1 ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun getSURROUND_7_1 ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun of (Ljava/util/List;)Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun of ([Lio/github/yuroyami/kiteaudio/codec/AudioChannel;)Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-	public final fun unknown (I)Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
-}
-
 public final class io/github/yuroyami/kiteaudio/codec/CorruptStreamException : io/github/yuroyami/kiteaudio/codec/AudioKodecException {
 	public fun <init> (Ljava/lang/String;J)V
 	public synthetic fun <init> (Ljava/lang/String;JILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -301,10 +237,10 @@ public final class io/github/yuroyami/kiteaudio/codec/DecodeOptions$Companion {
 	public final fun getDEFAULT ()Lio/github/yuroyami/kiteaudio/codec/DecodeOptions;
 }
 
-public final class io/github/yuroyami/kiteaudio/codec/DecodedAudio : io/github/yuroyami/kiteaudio/codec/PcmSource {
-	public fun <init> (Lio/github/yuroyami/kiteaudio/codec/AudioFormat;[FILio/github/yuroyami/kiteaudio/codec/AudioInfo;)V
+public final class io/github/yuroyami/kiteaudio/codec/DecodedAudio : io/github/yuroyami/kiteaudio/core/PcmSource {
+	public fun <init> (Lio/github/yuroyami/kiteaudio/core/AudioFormat;[FILio/github/yuroyami/kiteaudio/codec/AudioInfo;)V
 	public final fun getDurationSeconds ()D
-	public fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public fun getFrameCount ()Ljava/lang/Long;
 	public final fun getFrames ()I
 	public final fun getInfo ()Lio/github/yuroyami/kiteaudio/codec/AudioInfo;
@@ -390,9 +326,9 @@ public final class io/github/yuroyami/kiteaudio/codec/FadeCurve : java/lang/Enum
 }
 
 public final class io/github/yuroyami/kiteaudio/codec/IntAudioFrame {
-	public fun <init> (Lio/github/yuroyami/kiteaudio/codec/AudioFormat;[IIJI)V
+	public fun <init> (Lio/github/yuroyami/kiteaudio/core/AudioFormat;[IIJI)V
 	public final fun getBitDepth ()I
-	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public final fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public final fun getFrameCount ()I
 	public final fun getPositionFrames ()J
 	public final fun getSampleCount ()I
@@ -406,14 +342,14 @@ public abstract interface class io/github/yuroyami/kiteaudio/codec/IntPcmAccess 
 
 public abstract interface class io/github/yuroyami/kiteaudio/codec/IntPcmSource {
 	public abstract fun getBitDepth ()I
-	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
+	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/core/AudioFormat;
 	public abstract fun getFrameCount ()Ljava/lang/Long;
 	public abstract fun read ([III)I
 }
 
 public final class io/github/yuroyami/kiteaudio/codec/IntPcmSourceKt {
-	public static final fun asIntPcmSource ([ILio/github/yuroyami/kiteaudio/codec/AudioFormat;II)Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;
-	public static synthetic fun asIntPcmSource$default ([ILio/github/yuroyami/kiteaudio/codec/AudioFormat;IIILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;
+	public static final fun asIntPcmSource ([ILio/github/yuroyami/kiteaudio/core/AudioFormat;II)Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;
+	public static synthetic fun asIntPcmSource$default ([ILio/github/yuroyami/kiteaudio/core/AudioFormat;IIILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/codec/IntPcmSource;
 }
 
 public final class io/github/yuroyami/kiteaudio/codec/LevelScan {
@@ -443,13 +379,13 @@ public final class io/github/yuroyami/kiteaudio/codec/LoudnessMeter {
 	public static final field Companion Lio/github/yuroyami/kiteaudio/codec/LoudnessMeter$Companion;
 	public fun <init> (IIZ)V
 	public synthetic fun <init> (IIZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun <init> (ILio/github/yuroyami/kiteaudio/codec/ChannelLayout;Z)V
-	public synthetic fun <init> (ILio/github/yuroyami/kiteaudio/codec/ChannelLayout;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ILio/github/yuroyami/kiteaudio/core/ChannelLayout;Z)V
+	public synthetic fun <init> (ILio/github/yuroyami/kiteaudio/core/ChannelLayout;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun add ([FII)V
 	public static synthetic fun add$default (Lio/github/yuroyami/kiteaudio/codec/LoudnessMeter;[FIIILjava/lang/Object;)V
 	public final fun finish ()V
 	public final fun getIntegratedLoudness ()D
-	public final fun getLayout ()Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;
+	public final fun getLayout ()Lio/github/yuroyami/kiteaudio/core/ChannelLayout;
 	public final fun getLoudnessRange ()D
 	public final fun getMeasureTruePeak ()Z
 	public final fun getMomentaryLoudness ()D
@@ -480,11 +416,11 @@ public final class io/github/yuroyami/kiteaudio/codec/Pcm {
 	public final fun midSideToStereo ([FI[F)[F
 	public static synthetic fun midSideToStereo$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FI[FILjava/lang/Object;)[F
 	public final fun minValueOf (I)I
-	public final fun mixChannels ([FILio/github/yuroyami/kiteaudio/codec/ChannelLayout;Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;[F)[F
-	public static synthetic fun mixChannels$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FILio/github/yuroyami/kiteaudio/codec/ChannelLayout;Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;[FILjava/lang/Object;)[F
-	public final fun mixMatrix (Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;)[[F
-	public final fun remapChannels ([FILio/github/yuroyami/kiteaudio/codec/ChannelLayout;Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;[F)[F
-	public static synthetic fun remapChannels$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FILio/github/yuroyami/kiteaudio/codec/ChannelLayout;Lio/github/yuroyami/kiteaudio/codec/ChannelLayout;[FILjava/lang/Object;)[F
+	public final fun mixChannels ([FILio/github/yuroyami/kiteaudio/core/ChannelLayout;Lio/github/yuroyami/kiteaudio/core/ChannelLayout;[F)[F
+	public static synthetic fun mixChannels$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FILio/github/yuroyami/kiteaudio/core/ChannelLayout;Lio/github/yuroyami/kiteaudio/core/ChannelLayout;[FILjava/lang/Object;)[F
+	public final fun mixMatrix (Lio/github/yuroyami/kiteaudio/core/ChannelLayout;Lio/github/yuroyami/kiteaudio/core/ChannelLayout;)[[F
+	public final fun remapChannels ([FILio/github/yuroyami/kiteaudio/core/ChannelLayout;Lio/github/yuroyami/kiteaudio/core/ChannelLayout;[F)[F
+	public static synthetic fun remapChannels$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FILio/github/yuroyami/kiteaudio/core/ChannelLayout;Lio/github/yuroyami/kiteaudio/core/ChannelLayout;[FILjava/lang/Object;)[F
 	public final fun resample ([FIIILio/github/yuroyami/kiteaudio/codec/ResampleQuality;)[F
 	public static synthetic fun resample$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FIIILio/github/yuroyami/kiteaudio/codec/ResampleQuality;ILjava/lang/Object;)[F
 	public final fun scaleOf (I)D
@@ -492,15 +428,9 @@ public final class io/github/yuroyami/kiteaudio/codec/Pcm {
 	public static synthetic fun stereoToMidSide$default (Lio/github/yuroyami/kiteaudio/codec/Pcm;[FI[FILjava/lang/Object;)[F
 }
 
-public abstract interface class io/github/yuroyami/kiteaudio/codec/PcmSource {
-	public abstract fun getFormat ()Lio/github/yuroyami/kiteaudio/codec/AudioFormat;
-	public abstract fun getFrameCount ()Ljava/lang/Long;
-	public abstract fun read ([FII)I
-}
-
 public final class io/github/yuroyami/kiteaudio/codec/PcmSourceKt {
-	public static final fun asPcmSource ([FLio/github/yuroyami/kiteaudio/codec/AudioFormat;I)Lio/github/yuroyami/kiteaudio/codec/PcmSource;
-	public static synthetic fun asPcmSource$default ([FLio/github/yuroyami/kiteaudio/codec/AudioFormat;IILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/codec/PcmSource;
+	public static final fun asPcmSource ([FLio/github/yuroyami/kiteaudio/core/AudioFormat;I)Lio/github/yuroyami/kiteaudio/core/PcmSource;
+	public static synthetic fun asPcmSource$default ([FLio/github/yuroyami/kiteaudio/core/AudioFormat;IILjava/lang/Object;)Lio/github/yuroyami/kiteaudio/core/PcmSource;
 }
 
 public final class io/github/yuroyami/kiteaudio/codec/ResampleQuality : java/lang/Enum {

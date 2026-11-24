@@ -1,8 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec.internal.ilbc
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /**
  * iLBC in QuickTime and MP4 files, under the `ilbc` sample entry, which does

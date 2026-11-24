@@ -5,7 +5,7 @@ import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.DecodedAudio
 import io.github.yuroyami.kiteaudio.codec.Pcm
 // --8<-- [end:imports]
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import kotlin.test.Test
 import kotlin.test.assertEquals

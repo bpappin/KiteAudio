@@ -1,12 +1,12 @@
 package io.github.yuroyami.kiteaudio.codec.internal.mp4
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.AudioSink
 import io.github.yuroyami.kiteaudio.codec.Dither
 import io.github.yuroyami.kiteaudio.codec.IntPcmSource
-import io.github.yuroyami.kiteaudio.codec.PcmSource
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import io.github.yuroyami.kiteaudio.codec.readChecked
 import io.github.yuroyami.kiteaudio.codec.internal.alac.AlacConfig
 import io.github.yuroyami.kiteaudio.codec.internal.alac.AlacEncoder

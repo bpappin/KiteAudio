@@ -2,13 +2,13 @@ package io.github.yuroyami.kiteaudio.codec.sample
 
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.awt.Color
 import java.awt.GradientPaint
 import java.awt.image.BufferedImage

@@ -2,13 +2,13 @@ package io.github.yuroyami.kiteaudio.codec.internal.container
 
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.internal.ParsedStream
 import io.github.yuroyami.kiteaudio.codec.internal.ilbc.IlbcCodec
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * Reads iLBC in the storage format of RFC 3952, section 4.1: the magic

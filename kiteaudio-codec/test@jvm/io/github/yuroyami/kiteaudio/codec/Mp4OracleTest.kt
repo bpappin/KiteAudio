@@ -2,6 +2,8 @@ package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.internal.io.SourceReader
 import io.github.yuroyami.kiteaudio.codec.internal.mp4.Mp4Reader
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder

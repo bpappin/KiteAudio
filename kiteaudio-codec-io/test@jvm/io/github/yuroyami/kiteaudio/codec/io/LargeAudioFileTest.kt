@@ -1,10 +1,10 @@
 package io.github.yuroyami.kiteaudio.codec.io
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.AudioSource
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.IntPcmAccess
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import java.io.RandomAccessFile
 import java.nio.file.Files
 import kotlinx.io.files.Path

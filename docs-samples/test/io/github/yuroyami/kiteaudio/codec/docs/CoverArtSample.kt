@@ -1,13 +1,13 @@
 package io.github.yuroyami.kiteaudio.codec.docs
 
 // --8<-- [start:imports]
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.tag.PictureType
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 // --8<-- [end:imports]
 import kotlin.test.Test
 import kotlin.test.assertContentEquals

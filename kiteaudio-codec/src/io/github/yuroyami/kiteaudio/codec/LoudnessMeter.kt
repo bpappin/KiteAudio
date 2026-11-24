@@ -1,6 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.tag.ReplayGain
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.log10

@@ -7,6 +7,7 @@ import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagFormat
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
 import io.github.yuroyami.kiteaudio.codec.tag.TagWriteOptions
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

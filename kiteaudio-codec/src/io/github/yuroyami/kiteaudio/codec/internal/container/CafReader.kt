@@ -1,10 +1,10 @@
 package io.github.yuroyami.kiteaudio.codec.internal.container
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioChannel
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException

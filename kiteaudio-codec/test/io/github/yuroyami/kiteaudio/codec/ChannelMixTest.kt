@@ -1,13 +1,14 @@
 package io.github.yuroyami.kiteaudio.codec
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.BACK_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_CENTER
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.FRONT_RIGHT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.LOW_FREQUENCY
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.SIDE_LEFT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.SIDE_RIGHT
-import io.github.yuroyami.kiteaudio.codec.AudioChannel.TOP_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.BACK_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_CENTER
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.FRONT_RIGHT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.LOW_FREQUENCY
+import io.github.yuroyami.kiteaudio.core.AudioChannel.SIDE_LEFT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.SIDE_RIGHT
+import io.github.yuroyami.kiteaudio.core.AudioChannel.TOP_CENTER
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.hypot

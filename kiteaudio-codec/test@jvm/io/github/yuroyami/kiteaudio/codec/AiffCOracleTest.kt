@@ -1,5 +1,6 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import java.io.ByteArrayOutputStream
 import java.io.DataOutputStream
 import java.io.File

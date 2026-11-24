@@ -1,6 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.io.File
 import java.util.concurrent.TimeUnit
 import kotlin.math.abs

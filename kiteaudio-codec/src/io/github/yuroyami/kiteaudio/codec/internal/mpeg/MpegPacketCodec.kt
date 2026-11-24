@@ -1,9 +1,9 @@
 package io.github.yuroyami.kiteaudio.codec.internal.mpeg
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.internal.PacketCodec
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 
 /** One complete MPEG audio frame per indexed packet, retaining synthesis and reservoir state. */
 internal class MpegPacketCodec(

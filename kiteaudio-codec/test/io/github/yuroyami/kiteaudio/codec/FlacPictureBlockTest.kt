@@ -7,6 +7,8 @@ import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
 import io.github.yuroyami.kiteaudio.codec.internal.flac.FlacMetadata
 import io.github.yuroyami.kiteaudio.codec.internal.tag.FlacPicture
 import io.github.yuroyami.kiteaudio.codec.internal.tag.Base64
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

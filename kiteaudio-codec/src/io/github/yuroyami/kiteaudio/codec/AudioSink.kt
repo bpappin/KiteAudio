@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.PcmSource
+
 /**
  * A sink for bytes an encoder or a tag writer produces.
  *

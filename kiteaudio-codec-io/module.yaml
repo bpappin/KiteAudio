@@ -45,7 +45,7 @@ settings:
       name: KiteAudio Codec kotlinx-io
       description: >-
         kotlinx-io bridge for AudioKodec. Reads a Path or RawSource into an AudioSource, and writes an encoder's output
-        to a Sink or a Path. Optional; the AudioKodec core needs no dependency beyond kotlin-stdlib.
+        to a Sink or a Path. Optional; the codec module needs only kotlin-stdlib and kiteaudio-core.
 
 # Pin the klib name to "io.github.yuroyami:kiteaudio-codec-io", the group and artifact name.
 # The committed klib ABI dump records this name. The web test runner finds the test klib

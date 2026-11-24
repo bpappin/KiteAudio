@@ -1,11 +1,8 @@
 package io.github.yuroyami.kiteaudio.codec.docs
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.DecodeOptions
 import io.github.yuroyami.kiteaudio.codec.Dither
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
@@ -16,6 +13,9 @@ import io.github.yuroyami.kiteaudio.codec.tag.ReplayGain
 import io.github.yuroyami.kiteaudio.codec.tag.TagChapter
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagWriteOptions
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals

@@ -1,5 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec
 
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+
 internal object TagStressFixtures {
     fun flac(comments: List<String>, vendor: String = "tag-test"): ByteArray {
         val original = AudioKodec.encode(FloatArray(16), AudioFormat(44_100, 1), EncodeTarget.flac())

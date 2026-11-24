@@ -1,13 +1,11 @@
 package io.github.yuroyami.kiteaudio.codec.sample
 
 import io.github.yuroyami.kiteaudio.codec.AllocationGuardException
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
 import io.github.yuroyami.kiteaudio.codec.AudioInfo
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.AudioSource
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.CorruptStreamException
 import io.github.yuroyami.kiteaudio.codec.TruncatedStreamException
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
@@ -15,6 +13,8 @@ import io.github.yuroyami.kiteaudio.codec.UnsupportedFormatException
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import java.math.BigDecimal
 import java.util.Locale
 import kotlin.math.abs

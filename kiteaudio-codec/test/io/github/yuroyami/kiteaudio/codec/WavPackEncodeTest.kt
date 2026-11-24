@@ -7,6 +7,9 @@ import io.github.yuroyami.kiteaudio.codec.tag.TagField
 import io.github.yuroyami.kiteaudio.codec.tag.TagFormat
 import io.github.yuroyami.kiteaudio.codec.tag.TagPicture
 import io.github.yuroyami.kiteaudio.codec.tag.TagWriteOptions
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.math.PI
 import kotlin.math.round
 import kotlin.math.sin

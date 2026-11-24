@@ -2,6 +2,7 @@ package io.github.yuroyami.kiteaudio.codec
 
 import io.github.yuroyami.kiteaudio.codec.internal.aac.AacTables
 import io.github.yuroyami.kiteaudio.codec.internal.tag.Base64
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos

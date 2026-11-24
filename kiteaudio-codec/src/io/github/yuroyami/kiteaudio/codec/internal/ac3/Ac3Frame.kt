@@ -1,7 +1,7 @@
 package io.github.yuroyami.kiteaudio.codec.internal.ac3
 
-import io.github.yuroyami.kiteaudio.codec.AudioChannel
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.AudioChannel
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 
 /**
  * The synchronisation information and the start of the bit stream

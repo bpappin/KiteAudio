@@ -3,13 +3,13 @@ package io.github.yuroyami.kiteaudio.codec.internal.container
 import io.github.yuroyami.kiteaudio.codec.AudioCodec
 import io.github.yuroyami.kiteaudio.codec.BitrateMode
 import io.github.yuroyami.kiteaudio.codec.AudioContainer
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioSink
-import io.github.yuroyami.kiteaudio.codec.ChannelLayout
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.IntPcmSource
-import io.github.yuroyami.kiteaudio.codec.PcmSource
+import io.github.yuroyami.kiteaudio.core.PcmSource
 import io.github.yuroyami.kiteaudio.codec.UnsupportedFeatureException
 import io.github.yuroyami.kiteaudio.codec.fresh
 import io.github.yuroyami.kiteaudio.codec.readChecked

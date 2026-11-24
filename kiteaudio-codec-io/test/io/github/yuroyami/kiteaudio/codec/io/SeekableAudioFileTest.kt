@@ -1,12 +1,12 @@
 package io.github.yuroyami.kiteaudio.codec.io
 
-import io.github.yuroyami.kiteaudio.codec.AudioFormat
 import io.github.yuroyami.kiteaudio.codec.AudioKodec
 import io.github.yuroyami.kiteaudio.codec.AudioKodecException
 import io.github.yuroyami.kiteaudio.codec.EncodeTarget
 import io.github.yuroyami.kiteaudio.codec.IntPcmAccess
 import io.github.yuroyami.kiteaudio.codec.tag.TagBundle
 import io.github.yuroyami.kiteaudio.codec.tag.TagField
+import io.github.yuroyami.kiteaudio.core.AudioFormat
 import kotlinx.io.IOException
 import kotlinx.io.buffered
 import kotlinx.io.files.Path
