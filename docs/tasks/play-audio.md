@@ -4,14 +4,14 @@
 `io.github.yuroyami:kiteaudio-output:0.3.0`. See [Install](../index.md#install).
 
 AudioKodec decodes and does not play. `kiteaudio-output` plays on the JVM, Android, iOS and
-macOS. On the other platforms, or to keep your own playback code, give the samples to the
-audio output of the platform yourself. Each platform wants the samples in its own shape:
-interleaved 16-bit integers, interleaved floats, or one float array per channel. AudioKodec
-decodes to interleaved Float32, and `Pcm` converts to the others. The code on this page
-handles mono and stereo; for more channels, match `format.channelLayout` to the order your
-platform expects.
+macOS, and in a browser from Kotlin/JS and Kotlin/Wasm. On the other platforms, or to keep
+your own playback code, give the samples to the audio output of the platform yourself. Each
+platform wants the samples in its own shape: interleaved 16-bit integers, interleaved
+floats, or one float array per channel. AudioKodec decodes to interleaved Float32, and `Pcm`
+converts to the others. The code on this page handles mono and stereo; for more channels,
+match `format.channelLayout` to the order your platform expects.
 
-## JVM, Android, iOS and macOS: kiteaudio-output
+## JVM, Android, iOS, macOS and the browser: kiteaudio-output
 
 `kiteaudio-output` opens the default audio device and pulls the samples through a callback.
 The decoder and the output use the same `AudioFormat` type, from `kiteaudio-core`, so the
@@ -23,11 +23,13 @@ decoded format goes to `openAudioOutput` as it is:
 --8<-- "OutputSample.kt:play"
 ```
 
-The callback runs on an audio thread of the platform, so it must not allocate, lock or
-block. The output plays one or two channels, and a layout of more channels throws
-`IllegalArgumentException`. This sample decodes the whole file first, which suits clips and
-songs. It waits with `Thread.sleep`, so it is code for the JVM and Android. The
-`openAudioOutput` call and the callback are the same on iOS and macOS. The
+The callback runs on an audio thread of the platform, or on the main thread of the page in
+a browser, so it must not allocate, lock or block. The output plays one or two channels,
+and a layout of more channels throws `IllegalArgumentException`. This sample decodes the
+whole file first, which suits clips and songs. It waits with `Thread.sleep`, so it is code
+for the JVM and Android. The `openAudioOutput` call and the callback are the same on iOS,
+on macOS and in a browser. A browser usually lets a page play sound only after a click or
+a key press, so start the output from such an event there. The
 [README of kiteaudio-output](https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-output/README.md)
 describes the events and the latency.
 
