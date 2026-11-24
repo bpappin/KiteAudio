@@ -3,20 +3,27 @@
 package io.github.yuroyami.kiteaudio.output
 
 import io.github.yuroyami.kiteaudio.core.AudioFormat
+import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointerVar
+import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.usePinned
 import kotlinx.cinterop.value
 import kotlin.concurrent.atomics.AtomicBoolean
+import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.native.concurrent.ThreadLocal
 import platform.AudioToolbox.AudioQueueBuffer
 import platform.AudioToolbox.AudioQueueBufferRef
+import platform.AudioToolbox.AudioQueuePropertyID
+import platform.AudioToolbox.AudioQueuePropertyListenerProc
 import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
 import platform.CoreAudioTypes.AudioStreamBasicDescription
@@ -34,13 +41,18 @@ private var callbackOutput: AppleAudioOutput? = null
 
 /**
  * AudioQueue owns the callback block, which keeps its generation alive. A separate control
- * queue disposes AudioQueue only after active rendering has unwound. No StableRef is needed.
+ * queue disposes AudioQueue only after active rendering has unwound. The running-state listener
+ * holds one StableRef per generation, freed after a successful disposal.
+ *
+ * The system can end a stream: the queue stops running, or [watchSession] reports a notice of
+ * the audio session. Both hop to the control queue, which sends DeviceLost, then Stopped.
  */
 internal class AppleAudioOutput(
     override val format: AudioFormat,
     private val bufferFrames: Int,
     private val onEvent: (AudioOutputEvent) -> Unit,
     private val driver: AppleAudioQueueDriver = NativeAudioQueueDriver,
+    private val watchSession: (AppleAudioOutput) -> () -> Unit = ::watchAudioSession,
 ) : AudioOutput {
     override val latency: Latency
         get() = Latency(bufferFrames * BUFFER_COUNT, LatencyQuality.Estimated)
@@ -55,6 +67,20 @@ internal class AppleAudioOutput(
         var callback: AudioRenderCallback? = callback
         var queue: AudioQueueRef? = null
         lateinit var observer: (AudioOutputEvent) -> Unit
+
+        // Only the control queue reads or writes the fields below.
+        var listener: StableRef<RunningWatch>? = null
+        var listening = false
+        var stopWatchingSession: (() -> Unit)? = null
+        // The system media services were lost or reset, so a failed disposal abandons the queue.
+        var queueInvalid = false
+    }
+
+    /** The target of the running-state listener. AudioQueue calls it on its own thread. */
+    private class RunningWatch(val output: AppleAudioOutput, val generation: Generation) {
+        fun changed() {
+            dispatch_async(output.controlQueue) { output.queueRunningChanged(generation) }
+        }
     }
 
     private val controlQueue = dispatch_queue_create("KiteRT-audio-control", null)
@@ -62,6 +88,10 @@ internal class AppleAudioOutput(
     private val closed = AtomicBoolean(false)
     private val startPending = AtomicBoolean(false)
     private val generation = AtomicReference<Generation?>(null)
+    private val listenerRefs = AtomicInt(0)
+
+    /** The listener StableRefs that this output holds now. Tests check it for leaks. */
+    internal val openListenerRefs: Int get() = listenerRefs.load()
     override val isRunning: Boolean
         get() = generation.load()?.let { it.active.load() && it.started.load() } == true
 
@@ -138,6 +168,16 @@ internal class AppleAudioOutput(
                 return
             }
             val queue = next.queue!!
+            val watch = StableRef.create(RunningWatch(this, next))
+            listenerRefs.fetchAndAdd(1)
+            next.listener = watch
+            val listening = driver.addRunningListener(queue, runningChanged, watch.asCPointer())
+            if (listening != 0) {
+                fail(next, "AudioQueue would not report its running state, status $listening")
+                releaseOnControlQueue(next)
+                return
+            }
+            next.listening = true
             repeat(BUFFER_COUNT) {
                 if (!next.active.load()) return@repeat
                 memScoped {
@@ -162,6 +202,8 @@ internal class AppleAudioOutput(
                 releaseOnControlQueue(next)
                 return
             }
+            // Watch before the start, so a notice during the start ends the new stream.
+            next.stopWatchingSession = watchSession(this)
             val startStatus = driver.start(queue)
             if (startStatus != 0) {
                 fail(next, "AudioQueue would not start, status $startStatus")
@@ -210,7 +252,13 @@ internal class AppleAudioOutput(
         buffer.pointed.mAudioDataByteSize = (current.pcm.size * 2).toUInt()
         if (!current.active.load()) return
         val status = driver.enqueue(queue, buffer)
-        if (status != 0) fail(current, "AudioQueue could not enqueue a buffer, status $status")
+        if (status == 0) return
+        // A queue that the system stopped hands its buffers back and refuses them. That is a loss.
+        if (current.started.load() && driver.isRunning(queue) != true) {
+            dispatch_async(controlQueue) { queueRunningChanged(current) }
+        } else {
+            fail(current, "AudioQueue could not enqueue a buffer, status $status")
+        }
     }
 
     private fun fail(current: Generation, reason: String, cause: Throwable? = null) {
@@ -225,18 +273,79 @@ internal class AppleAudioOutput(
         dispatch_async(controlQueue) { releaseOnControlQueue(current) }
     }
 
+    /** Ends the stream of a queue that stopped running without a request from the app. */
+    private fun queueRunningChanged(current: Generation) {
+        val queue = current.queue ?: return
+        if (generation.load() !== current || current.released.load() || !current.started.load()) return
+        // A queue that starts, or that moves to a new default device, keeps running.
+        if (driver.isRunning(queue) == true) return
+        endBySystem(current, "the system stopped the audio queue", invalidatesQueue = false)
+    }
+
+    /**
+     * Ends a running stream for a notice of the audio session. Safe from any thread: it only hops
+     * to the control queue. The iOS session observers call it.
+     */
+    internal fun onSessionNotice(notice: SessionNotice) {
+        dispatch_async(controlQueue) {
+            generation.load()?.let { endBySystem(it, notice.reason, notice.invalidatesQueue) }
+        }
+    }
+
+    /** Returns after the work queued on the control queue so far has run. Tests use it as a barrier. */
+    internal fun awaitControlQueue() {
+        dispatch_sync(controlQueue) { }
+    }
+
+    // Runs on the control queue. A stream the app stopped already sends no DeviceLost.
+    private fun endBySystem(current: Generation, reason: String, invalidatesQueue: Boolean) {
+        if (generation.load() !== current || current.released.load()) return
+        if (invalidatesQueue) current.queueInvalid = true
+        if (current.active.load() && current.started.load()) {
+            current.active.store(false)
+            current.started.store(false)
+            // The render queue is serial, so DeviceLost arrives before the Stopped of the release.
+            dispatch_async(renderQueue) { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost(reason)) } }
+            releaseOnControlQueue(current)
+        } else if (invalidatesQueue && !current.active.load()) {
+            // A queue whose disposal failed may be invalid now. Retry, so a restart is possible.
+            releaseOnControlQueue(current)
+        }
+    }
+
     private fun releaseOnControlQueue(current: Generation) {
         if (generation.load() !== current || current.released.load()) return
         current.active.store(false)
         current.started.store(false)
+        current.stopWatchingSession?.let { stopWatching ->
+            current.stopWatchingSession = null
+            try { stopWatching() } catch (_: Throwable) { }
+        }
         // This runs off the callback queue. After the barrier, late callbacks only return;
         // successful synchronous disposal guarantees no callback survives its return.
         dispatch_sync(renderQueue) { }
         current.callback = null
         val queue = current.queue
         if (queue != null) {
+            // Remove the listener first, so the stop below does not report itself.
+            if (current.listening) {
+                current.listening = false
+                current.listener?.let { driver.removeRunningListener(queue, runningChanged, it.asCPointer()) }
+            }
             val stopStatus = driver.stop(queue)
             val disposeStatus = driver.dispose(queue)
+            if (disposeStatus != 0 && current.queueInvalid) {
+                // The system already dropped this queue. Keep the listener StableRef, since a
+                // stale queue could still call it, and let a new start build a new queue.
+                current.listener = null
+                current.queue = null
+                current.released.store(true)
+                dispatch_async(renderQueue) {
+                    try { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Stopped) } }
+                    finally { generation.compareAndSet(current, null) }
+                }
+                return
+            }
             if (disposeStatus != 0) {
                 // The callback block and generation must remain owned while native code may
                 // still call them. A later stop/close retries teardown; restart stays blocked.
@@ -250,7 +359,12 @@ internal class AppleAudioOutput(
                 return
             }
             current.queue = null
-            if (stopStatus != 0) {
+            current.listener?.let { listener ->
+                current.listener = null
+                listener.dispose()
+                listenerRefs.fetchAndAdd(-1)
+            }
+            if (stopStatus != 0 && !current.queueInvalid) {
                 dispatch_async(renderQueue) {
                     inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioQueue stop failed, status $stopStatus")) }
                 }
@@ -275,7 +389,14 @@ internal class AppleAudioOutput(
         stop()
     }
 
-    private companion object { const val BUFFER_COUNT = 3 }
+    private companion object {
+        const val BUFFER_COUNT = 3
+
+        // AudioQueue calls this on its own thread. It only hops to the control queue.
+        val runningChanged: AudioQueuePropertyListenerProc = staticCFunction { userData: COpaquePointer?, _: AudioQueueRef?, _: AudioQueuePropertyID ->
+            userData?.asStableRef<RunningWatch>()?.get()?.changed()
+        }
+    }
 }
 
 @Throws(Exception::class)

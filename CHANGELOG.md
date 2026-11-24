@@ -83,6 +83,10 @@ The artifacts and packages have new names:
   more channels throws `IllegalArgumentException`.
 - `AudioFormat.microsToFrames` returns `Long`. Before, it returned `Int` and gave a negative or zero frame
   count for a long duration, for example 13 hours at 48 kHz.
+- On iOS and macOS, a stream that the system ends sends `DeviceLost` and then `Stopped`, and `isRunning` turns
+  false, as on the other platforms. This covers a queue that stops running, and on iOS an interruption, a lost
+  output device and a loss or reset of the media services. Call `start()` again to play. The app still owns the
+  `AVAudioSession`.
 
 ### Added in the codec
 

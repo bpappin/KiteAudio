@@ -70,8 +70,24 @@ public sealed interface AudioOutputEvent {
     public data class Overrun(val deadlineMicros: Long, val tookMicros: Long) : AudioOutputEvent
 
     /**
-     * The device went away: headphones unplugged, an interface removed. In a browser, also an audio
-     * context that closed, or that the browser suspended or interrupted after the stream started.
+     * The system ended the stream: the device went away, or a call or another app took the audio.
+     *
+     * The rule is the same on every platform. The output sends this event once, then [Stopped]
+     * once, and [AudioOutput.isRunning] is false. The output does not resume by itself. To play
+     * again, call [AudioOutput.start] after [Stopped] arrives. A [AudioOutput.stop] or
+     * [AudioOutput.close] by the app never sends this event.
+     *
+     * What ends a stream on each platform:
+     * - JVM and Android: a write that returns an invalid count or makes no progress.
+     * - iOS: an audio session interruption that begins, a route change that removes the output
+     *   device, or a loss or reset of the system media services.
+     * - macOS: an AudioQueue that stops running. A move to a new default device that keeps the
+     *   queue running is not a loss.
+     * - Browser: an audio context that closed, or that the browser suspended or interrupted after
+     *   the stream started.
+     *
+     * On iOS the host app owns the shared `AVAudioSession`: its category, its activation and its
+     * background policy. The output never changes them.
      */
     public data class DeviceLost(val reason: String) : AudioOutputEvent
 
@@ -94,12 +110,17 @@ public interface AudioOutput {
     /** An estimate based on platform buffer capacity, excluding hardware and route delay. */
     public val latency: Latency
 
+    /** True while the stream plays. False after a stop by the app or an end by the system. */
     public val isRunning: Boolean
 
     /**
      * Begins pulling from [callback]. Already-running calls are ignored. A closed output or a
      * previous render/event callback that is still unwinding causes [IllegalStateException].
      * Restart from a Stopped observer must be deferred until that observer returns.
+     *
+     * After [AudioOutputEvent.DeviceLost] the stream is over, and nothing restarts it. Call this
+     * function again after [AudioOutputEvent.Stopped] to play. On Apple platforms each call
+     * opens a new AudioQueue, so a start also works after a reset of the system media services.
      */
     @Throws(IllegalStateException::class)
     public fun start(callback: AudioRenderCallback)

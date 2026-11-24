@@ -28,7 +28,7 @@ mono or stereo `FloatArray` samples; the native backends clamp them and convert 
 | `AudioRenderCallback` | Fills the requested frames; a short render is padded with silence. |
 | `AudioFormat` and `ChannelLayout` | Describe the sample rate and the channel layout. Both come from `kiteaudio-core`. An output plays one or two channels. |
 | `Latency` and `LatencyQuality` | Report a delay value and distinguish estimates from measurements. All current backends report estimates. |
-| `AudioOutputEvent` | Reports startup, deliberate stops, short renders, slow renders and some failures. Device-loss detection differs by backend. |
+| `AudioOutputEvent` | Reports startup, stops, short renders, slow renders, failures, and a stream that the system ended (`DeviceLost`). What can end a stream differs by platform. The rule after a loss is the same everywhere. |
 
 `kiteaudio-core` is the KiteAudio module that holds the audio format types that several KiteAudio modules share.
 KiteRT depends on it and exposes it, so you do not add it yourself.
@@ -164,10 +164,10 @@ Neither one measures hardware underruns. An invalid frame count or render except
 | Target | Backend | Integration requirements and current coverage |
 | --- | --- | --- |
 | JVM | `javax.sound.sampled.SourceDataLine` | JDK 21 toolchain; an installed Java Sound output provider supporting signed 16-bit PCM. The repository includes live audio tests. Linux and Windows use this JVM backend; there are no native Linux or Windows targets. |
-| Android | Streaming `AudioTrack` | minSdk 23, compileSdk 36. Requests low-latency performance mode on API 26 and above; the system may choose a different performance path. An offline source-level fake-backend harness is included; it is not a device test. |
-| iOS arm64 | AudioQueue | Built as a dynamic `KiteRT` framework. The host app owns its audio session, activation, interruptions and background-audio policy. No iOS test sources are included. |
+| Android | Streaming `AudioTrack` | minSdk 23, compileSdk 37.2. Requests low-latency performance mode on API 26 and above; the system may choose a different performance path. The repository includes host tests that drive the output with a fake track; they are not a device test. |
+| iOS arm64 | AudioQueue | Built as a dynamic `KiteRT` framework. The host app owns its audio session: its category, its activation and its background-audio policy. The output never changes them. An interruption that begins, a route change that removes the output device, or a loss or reset of the media services ends the stream with `DeviceLost`. No iOS test sources are included. The macOS tests cover the shared logic with a fake queue, not the iOS observers. |
 | iOS simulator arm64 and x64 | AudioQueue | Framework targets are configured. Simulator support does not establish physical-device behavior. |
-| macOS arm64 | AudioQueue | Uses the system AudioToolbox platform bindings. The repository includes live audio tests. |
+| macOS arm64 | AudioQueue | Uses the system AudioToolbox platform bindings. The repository includes live audio tests. A queue that stops running ends the stream with `DeviceLost`. A move to a new default device that keeps the queue running sends nothing. |
 | JS and wasmJs in a browser | An `AudioWorkletNode` fed from the page, or `AudioBuffer`s scheduled by a page timer | `openAudioOutput` uses the worklet where the page can, and falls back to scheduled buffers in a page that is not a secure context or whose content security policy blocks a `blob:` worklet module. `Started` arrives once the browser lets the page play sound, usually after a click or a key press; a `start()` made before then waits, and calling `start()` again from the click or key handler asks the browser once more. Node.js has no Web Audio: opening an output throws `UnsupportedOperationException` there. Checked by hand with [verification/web](verification/web/README.md) in Chrome 156, Safari 27.2 and Firefox 159 on macOS; not yet on iOS. |
 
 macOS x64, tvOS, watchOS, native Linux and Windows, and wasmWasi are not configured.
@@ -177,7 +177,9 @@ that a route is available, or that sound reaches a speaker.
 
 Apple uses Kotlin/Native's system AudioToolbox bindings and a block callback on a private serial
 dispatch queue. A separate control queue owns setup and teardown; callback ownership survives
-until native disposal succeeds. There is no custom cinterop definition or bundled C source.
+until native disposal succeeds. A listener for the running state of the queue, and on iOS the
+`AVAudioSession` observers, hand each notice to the control queue, which ends the stream.
+There is no custom cinterop definition or bundled C source.
 The shared heap does not synchronize application renderer state: UI, MIDI and audio work still
 need an explicit handoff.
 
@@ -204,7 +206,19 @@ need an explicit handoff.
 - Use a positive, modest `bufferFrames` value. Bounds and multiplication are validated before
   allocation; return a frame count in `0..frames`. Partial writes are completed before the
   next block is rendered, and repeated zero-progress writes stop with `DeviceLost`.
-- In a browser, a context that closes, or that the browser suspends or interrupts once the stream has started, for a call or another app taking the audio, ends the stream with `DeviceLost` and then `Stopped`. Start it again to play, usually from a click or a key press, since the browser may want one before it resumes.
+- When the system ends a stream, the output sends `DeviceLost` and then `Stopped`, each once, and
+  `isRunning` turns false. This rule is the same on every platform. The output does not resume
+  by itself: call `start()` again after `Stopped` to play. A `stop()` or `close()` by the app
+  sends no `DeviceLost`. These events end a stream:
+  - JVM and Android: writes that make no progress, or a write that returns an invalid count.
+  - iOS: an audio session interruption that begins, for example a phone call, Siri or an alarm.
+    A route change that removes the output device, for example unplugged headphones. A loss or
+    a reset of the system media services. After a reset, the next `start()` opens a new queue.
+  - macOS: an AudioQueue that stops running. A move to a new default device that keeps the
+    queue running is not a loss, and the sound goes on.
+  - Browser: a context that closes, or that the browser suspends or interrupts once the stream
+    has started, for a call or another app taking the audio. Start it again from a click or a
+    key press, since the browser may want one before it resumes.
 
 ## Good to know
 
@@ -213,7 +227,7 @@ need an explicit handoff.
 | Real-time guarantees | JVM thread priority and Android's audio priority are scheduling requests. Kotlin/Native garbage collection and native callback execution also affect deadlines. No backend promises a hard deadline. |
 | Latency | JVM and Android report the platform buffer capacity; Apple reports its three-buffer capacity; the browser reports its four blocks plus the context's `baseLatency`, whichever technique it uses. All are `Estimated`: capacity is not current queue occupancy or measured acoustic delay and excludes other device/route delays. |
 | Formats | Mono and stereo only. A layout of more channels throws `IllegalArgumentException`. There is no float-device output, resampler or format-negotiation API. Unsupported sample rates can fail to open. |
-| Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
+| Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. After `DeviceLost`, the app calls `start()` again. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
 | Precision | Native backends clamp float samples to `[-1, 1]` and quantize them to 16-bit PCM without dithering. The browser passes Float32 through unchanged. |
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |
 | Browser techniques | The worklet counts every frame of silence it plays; scheduled buffers estimate an underrun from the context clock, and allocate an `AudioBuffer` and a source node for every block. Nothing says which technique an output settled on. |

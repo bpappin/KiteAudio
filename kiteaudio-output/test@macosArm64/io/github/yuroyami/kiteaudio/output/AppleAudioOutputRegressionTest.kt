@@ -5,11 +5,13 @@ package io.github.yuroyami.kiteaudio.output
 import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.core.ChannelLayout
 import kotlinx.cinterop.ByteVar
+import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.free
+import kotlinx.cinterop.invoke
 import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.nativeHeap
 import kotlinx.cinterop.pointed
@@ -17,17 +19,22 @@ import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlin.concurrent.atomics.AtomicBoolean
 import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.AtomicReference
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertTrue
 import platform.AudioToolbox.AudioQueueBuffer
 import platform.AudioToolbox.AudioQueueBufferRef
+import platform.AudioToolbox.AudioQueuePropertyListenerProc
 import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
+import platform.AudioToolbox.kAudioQueueProperty_IsRunning
 import platform.CoreAudioTypes.AudioStreamBasicDescription
 import platform.darwin.dispatch_async
+import platform.darwin.dispatch_queue_create
 import platform.darwin.dispatch_queue_t
 import platform.darwin.dispatch_sync
 import platform.posix.usleep
@@ -50,6 +57,14 @@ class AppleAudioOutputRegressionTest {
         var allocationFailure = -1
         val lifetimeViolation = AtomicBoolean(false)
         var disposalCheck: () -> Boolean = { true }
+        val running = AtomicBoolean(false)
+        val listenersAdded = AtomicInt(0)
+        val listenersRemoved = AtomicInt(0)
+        val wrongListenerRemoved = AtomicBoolean(false)
+        private var listener: AudioQueuePropertyListenerProc? = null
+        private var listenerData: COpaquePointer? = null
+        // Stands in for the AudioQueue thread that calls property listeners.
+        private val systemQueue = dispatch_queue_create("fake-audio-queue-system", null)
         override fun create(format: CPointer<AudioStreamBasicDescription>, output: CPointer<AudioQueueRefVar>, queue: dispatch_queue_t,
                             callback: (AudioQueueRef?, AudioQueueBufferRef?) -> Unit): Int {
             val storage = nativeHeap.alloc<ByteVar>()
@@ -77,9 +92,27 @@ class AppleAudioOutputRegressionTest {
             enqueues.fetchAndAdd(1)
             return if (rejectEnqueue.load()) -1 else 0
         }
-        override fun start(queue: AudioQueueRef): Int { starts.fetchAndAdd(1); return 0 }
-        override fun stop(queue: AudioQueueRef): Int = 0
+        // Like AudioQueue, a start and a stop each report the new running state to the listener.
+        override fun start(queue: AudioQueueRef): Int { starts.fetchAndAdd(1); running.store(true); postRunningChange(); return 0 }
+        override fun stop(queue: AudioQueueRef): Int { running.store(false); postRunningChange(); return 0 }
+        override fun addRunningListener(queue: AudioQueueRef, listener: AudioQueuePropertyListenerProc, userData: COpaquePointer): Int {
+            dispatch_sync(systemQueue) { this.listener = listener; listenerData = userData }
+            listenersAdded.fetchAndAdd(1)
+            return 0
+        }
+        override fun removeRunningListener(queue: AudioQueueRef, listener: AudioQueuePropertyListenerProc, userData: COpaquePointer): Int {
+            dispatch_sync(systemQueue) {
+                if (listener != this.listener || userData != listenerData) wrongListenerRemoved.store(true)
+                this.listener = null
+                listenerData = null
+            }
+            listenersRemoved.fetchAndAdd(1)
+            return 0
+        }
+        override fun isRunning(queue: AudioQueueRef): Boolean? = running.load()
         override fun dispose(queue: AudioQueueRef): Int {
+            // A synchronous AudioQueue disposal returns after its last listener call.
+            dispatch_sync(systemQueue) { }
             disposals.fetchAndAdd(1)
             if (!disposalCheck()) lifetimeViolation.store(true)
             if (rejectDispose.load()) return -1
@@ -101,6 +134,55 @@ class AppleAudioOutputRegressionTest {
             dispatch_async(deliveryQueue) { completion(currentQueue, buffer) }
         }
         fun flushCallbacks() { dispatch_sync(deliveryQueue) { } }
+
+        fun flushSystem() { dispatch_sync(systemQueue) { } }
+
+        /** True once the output opened a queue, which also gives the fake its callback queue. */
+        val created: Boolean get() = deliveryQueue != null
+
+        /** The system stops the queue while it plays, as an interruption or a lost device does. */
+        fun stopRunning() { running.store(false); postRunningChange() }
+
+        /** A stop by the system that also hands a buffer back, which the stopped queue then refuses. */
+        fun stopRunningAndReturnABuffer() {
+            running.store(false)
+            rejectEnqueue.store(true)
+            fireAsync()
+            flushCallbacks()
+            postRunningChange()
+        }
+
+        private fun postRunningChange() {
+            val currentQueue = queue
+            dispatch_async(systemQueue) {
+                val proc = listener ?: return@dispatch_async
+                proc(listenerData, currentQueue, kAudioQueueProperty_IsRunning)
+            }
+        }
+    }
+
+    /** Appends without a lock: the output's queues and the test thread all touch the list. */
+    private class Events {
+        private val list = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        val all: List<AudioOutputEvent> get() = list.load()
+        fun add(event: AudioOutputEvent) {
+            while (true) {
+                val current = list.load()
+                if (list.compareAndSet(current, current + event)) return
+            }
+        }
+        fun count(predicate: (AudioOutputEvent) -> Boolean): Int = all.count(predicate)
+        val stops: Int get() = count { it == AudioOutputEvent.Stopped }
+        val losses: List<AudioOutputEvent.DeviceLost> get() = all.filterIsInstance<AudioOutputEvent.DeviceLost>()
+    }
+
+    private val stereo = AudioFormat(48_000, ChannelLayout.STEREO)
+
+    /** Waits until the output has finished its work and its Stopped observer has returned. */
+    private fun settle(output: AppleAudioOutput, driver: Driver) {
+        driver.flushSystem()
+        output.awaitControlQueue()
+        if (driver.created) driver.flushCallbacks()
     }
 
     private fun await(condition: () -> Boolean) {
@@ -272,5 +354,294 @@ class AppleAudioOutputRegressionTest {
         }
         await { driver.disposed.load() }
         assertEquals(3, driver.enqueues.load())
+    }
+    /** Checks the end of a stream the system stopped: one DeviceLost, then one Stopped, and nothing after. */
+    private fun assertOneLossThenStopped(events: Events, reason: String) {
+        val seen = events.all
+        assertEquals(1, events.losses.size, "DeviceLost count: $seen")
+        assertEquals(1, events.stops, "Stopped count: $seen")
+        assertEquals(reason, events.losses.single().reason)
+        val lost = seen.indexOfFirst { it is AudioOutputEvent.DeviceLost }
+        assertEquals(seen.size - 2, lost, "DeviceLost is not right before Stopped: $seen")
+        assertEquals(AudioOutputEvent.Stopped, seen.last())
+        assertTrue(seen.none { it is AudioOutputEvent.Failed }, "a loss reported Failed: $seen")
+    }
+
+    @Test
+    fun aQueueTheSystemStopsEndsTheStreamWithDeviceLostThenStopped() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            // The start reported running to the listener, and that is not a loss.
+            assertTrue(output.isRunning)
+            assertTrue(events.losses.isEmpty())
+            driver.stopRunning()
+            await { events.stops == 1 }
+            settle(output, driver)
+            assertFalse(output.isRunning)
+            assertOneLossThenStopped(events, "the system stopped the audio queue")
+            assertTrue(driver.disposed.load())
+            assertEquals(1, driver.listenersRemoved.load())
+            assertFalse(driver.wrongListenerRemoved.load())
+            assertEquals(0, output.openListenerRefs)
+        } finally { output.close() }
+    }
+
+    @Test
+    fun aBufferTheStoppedQueueRefusesIsPartOfTheLossNotAFailure() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            driver.stopRunningAndReturnABuffer()
+            await { events.stops == 1 }
+            settle(output, driver)
+            assertFalse(output.isRunning)
+            assertOneLossThenStopped(events, "the system stopped the audio queue")
+        } finally { output.close() }
+    }
+
+    @Test
+    fun startAfterTheSystemStoppedTheQueuePlaysAgain() {
+        val driver = Driver()
+        val events = Events()
+        val calls = AtomicInt(0)
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            driver.stopRunning()
+            await { events.stops == 1 }
+            settle(output, driver)
+            output.start { _, frames -> calls.fetchAndAdd(1); frames }
+            assertTrue(output.isRunning)
+            driver.fireAsync()
+            await { calls.load() >= 4 }
+            settle(output, driver)
+            assertTrue(output.isRunning)
+            assertEquals(2, driver.starts.load())
+            assertEquals(2, driver.listenersAdded.load())
+            assertEquals(1, events.losses.size)
+        } finally { output.close() }
+        await { driver.disposed.load() }
+        assertFalse(driver.lifetimeViolation.load())
+    }
+
+    @Test
+    fun aStopOrCloseByTheAppSendsNoDeviceLost() {
+        for (close in listOf(false, true)) {
+            val driver = Driver()
+            val events = Events()
+            val output = AppleAudioOutput(stereo, 4, events::add, driver)
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            if (close) output.close() else output.stop()
+            await { events.stops == 1 }
+            // The stop of the queue reaches no listener, and later notices find nothing to end.
+            driver.stopRunning()
+            SessionNotice.entries.forEach(output::onSessionNotice)
+            settle(output, driver)
+            assertFalse(output.isRunning)
+            assertTrue(events.losses.isEmpty(), "close=$close: ${events.all}")
+            assertEquals(1, events.stops)
+            assertEquals(1, driver.listenersRemoved.load())
+            assertEquals(0, output.openListenerRefs)
+            output.close()
+        }
+    }
+
+    @Test
+    fun aNoticeWhileStoppedSendsNothing() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            // Never started.
+            SessionNotice.entries.forEach(output::onSessionNotice)
+            settle(output, driver)
+            assertTrue(events.all.isEmpty(), "${events.all}")
+            // Started, then stopped by the system once. Later notices change nothing.
+            output.start { _, frames -> frames }
+            driver.stopRunning()
+            await { events.stops == 1 }
+            driver.stopRunning()
+            SessionNotice.entries.forEach(output::onSessionNotice)
+            settle(output, driver)
+            assertEquals(1, events.losses.size, "${events.all}")
+            assertEquals(1, events.stops)
+            assertFalse(output.isRunning)
+        } finally { output.close() }
+    }
+
+    @Test
+    fun eachSessionNoticeEndsAPlayingStreamOnceAndStartPlaysAgain() {
+        for (notice in SessionNotice.entries) {
+            val driver = Driver()
+            val events = Events()
+            val calls = AtomicInt(0)
+            val output = AppleAudioOutput(stereo, 4, events::add, driver)
+            try {
+                output.start { _, frames -> frames }
+                settle(output, driver)
+                // The observers call from a system thread, and a notice can arrive twice.
+                output.onSessionNotice(notice)
+                output.onSessionNotice(notice)
+                await { events.stops == 1 }
+                settle(output, driver)
+                assertFalse(output.isRunning, "$notice")
+                assertOneLossThenStopped(events, notice.reason)
+                assertTrue(driver.disposed.load())
+                assertEquals(0, output.openListenerRefs)
+
+                output.start { _, frames -> calls.fetchAndAdd(1); frames }
+                assertTrue(output.isRunning, "$notice")
+                driver.fireAsync()
+                await { calls.load() >= 4 }
+                assertEquals(2, driver.starts.load())
+            } finally { output.close() }
+            await { driver.disposed.load() }
+        }
+    }
+
+    @Test
+    fun aQueueThatCannotBeDisposedAfterAMediaServicesResetDoesNotBlockARestart() {
+        for (notice in listOf(SessionNotice.MediaServicesLost, SessionNotice.MediaServicesReset)) {
+            val driver = Driver()
+            val events = Events()
+            val output = AppleAudioOutput(stereo, 4, events::add, driver)
+            try {
+                output.start { _, frames -> frames }
+                driver.rejectDispose.store(true)
+                output.onSessionNotice(notice)
+                await { events.stops == 1 }
+                settle(output, driver)
+                assertOneLossThenStopped(events, notice.reason)
+                driver.rejectDispose.store(false)
+                output.start { _, frames -> frames }
+                assertTrue(output.isRunning, "$notice")
+            } finally { output.close() }
+        }
+    }
+
+    @Test
+    fun aMediaServicesResetReleasesAQueueWhoseDisposalFailedEarlier() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            driver.rejectDispose.store(true)
+            output.stop()
+            await { events.count { it is AudioOutputEvent.Failed } == 1 }
+            assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
+            output.onSessionNotice(SessionNotice.MediaServicesReset)
+            await { events.stops == 1 }
+            settle(output, driver)
+            // The app stopped this stream, so the reset only finishes the release.
+            assertTrue(events.losses.isEmpty(), "${events.all}")
+            driver.rejectDispose.store(false)
+            output.start { _, frames -> frames }
+            assertTrue(output.isRunning)
+        } finally { output.close() }
+    }
+
+    @Test
+    fun anInterruptionWhoseQueueCannotBeDisposedKeepsTheQueueAndReportsTheFailure() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            driver.rejectDispose.store(true)
+            output.onSessionNotice(SessionNotice.InterruptionBegan)
+            await { events.count { it is AudioOutputEvent.Failed } == 1 }
+            settle(output, driver)
+            assertEquals(1, events.losses.size)
+            assertEquals(0, events.stops)
+            assertFalse(output.isRunning)
+            assertEquals(1, output.openListenerRefs)
+            assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
+            driver.rejectDispose.store(false)
+        } finally { output.close() }
+        await { driver.disposed.load() }
+        settle(output, driver)
+        assertEquals(1, events.losses.size)
+        assertEquals(1, events.stops)
+        assertEquals(0, output.openListenerRefs)
+    }
+
+    @Test
+    fun theSessionIsWatchedOnlyWhileAStreamRuns() {
+        val driver = Driver()
+        val events = Events()
+        val watches = AtomicInt(0)
+        val unwatches = AtomicInt(0)
+        val output = AppleAudioOutput(stereo, 4, events::add, driver) {
+            watches.fetchAndAdd(1)
+            val stopWatching: () -> Unit = { unwatches.fetchAndAdd(1) }
+            stopWatching
+        }
+        assertEquals(0, watches.load())
+        output.start { _, frames -> frames }
+        assertEquals(1, watches.load())
+        assertEquals(0, unwatches.load())
+        output.onSessionNotice(SessionNotice.OldDeviceUnavailable)
+        await { events.stops == 1 }
+        settle(output, driver)
+        assertEquals(1, unwatches.load())
+        output.start { _, frames -> frames }
+        assertEquals(2, watches.load())
+        output.close()
+        await { driver.disposed.load() }
+        settle(output, driver)
+        assertEquals(2, unwatches.load())
+        assertEquals(driver.listenersAdded.load(), driver.listenersRemoved.load())
+        assertEquals(0, output.openListenerRefs)
+    }
+
+    @Test
+    fun aLossRacingAnAppStopEndsTheStreamOnce() {
+        repeat(50) { round ->
+            val driver = Driver()
+            val events = Events()
+            val output = AppleAudioOutput(stereo, 4, events::add, driver)
+            output.start { _, frames -> frames }
+            driver.stopRunning()
+            output.onSessionNotice(SessionNotice.InterruptionBegan)
+            output.stop()
+            await { events.stops == 1 }
+            settle(output, driver)
+            assertEquals(1, events.stops, "round $round: ${events.all}")
+            assertTrue(events.losses.size <= 1, "round $round: ${events.all}")
+            if (events.losses.isNotEmpty()) assertIs<AudioOutputEvent.DeviceLost>(events.all[events.all.size - 2])
+            assertFalse(output.isRunning)
+            output.close()
+        }
+    }
+
+    @Test
+    fun aDeviceLostObserverCanCloseTheOutput() {
+        val driver = Driver()
+        val events = Events()
+        lateinit var output: AppleAudioOutput
+        output = AppleAudioOutput(stereo, 4, { event ->
+            events.add(event)
+            if (event is AudioOutputEvent.DeviceLost) {
+                // A restart from inside the event is rejected; the app restarts after Stopped.
+                assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
+                output.close()
+            }
+        }, driver)
+        output.start { _, frames -> frames }
+        driver.stopRunning()
+        await { events.stops == 1 }
+        settle(output, driver)
+        assertOneLossThenStopped(events, "the system stopped the audio queue")
+        assertTrue(driver.disposed.load())
+        assertFailsWith<IllegalStateException> { output.start { _, frames -> frames } }
     }
 }

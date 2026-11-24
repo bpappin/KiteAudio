@@ -1,9 +1,12 @@
-@file:OptIn(kotlin.concurrent.atomics.ExperimentalAtomicApi::class)
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlin.concurrent.atomics.ExperimentalAtomicApi::class)
 
 package io.github.yuroyami.kiteaudio.output
 
 import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.pointed
+import kotlinx.cinterop.value
 import kotlin.concurrent.atomics.AtomicInt
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.math.PI
@@ -11,7 +14,14 @@ import kotlin.math.sin
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import platform.AudioToolbox.AudioQueueBufferRef
+import platform.AudioToolbox.AudioQueueRef
+import platform.AudioToolbox.AudioQueueRefVar
+import platform.AudioToolbox.AudioQueueStop
+import platform.CoreAudioTypes.AudioStreamBasicDescription
+import platform.darwin.dispatch_queue_t
 import platform.posix.usleep
 
 /**
@@ -115,6 +125,68 @@ class AppleAudioOutputTest {
         try {
             assertEquals(LatencyQuality.Estimated, output.latency.quality)
             assertTrue(output.latency.frames >= 512, "the latency ignores the buffers in flight")
+        } finally {
+            output.close()
+        }
+    }
+    /** The native driver, which also keeps the last queue it opened so a test can stop it from outside. */
+    private class RecordingDriver : AppleAudioQueueDriver by NativeAudioQueueDriver {
+        var queue: AudioQueueRef? = null
+        override fun create(format: CPointer<AudioStreamBasicDescription>, output: CPointer<AudioQueueRefVar>, queue: dispatch_queue_t,
+                            callback: (AudioQueueRef?, AudioQueueBufferRef?) -> Unit): Int =
+            NativeAudioQueueDriver.create(format, output, queue, callback).also { this.queue = output.pointed.value }
+    }
+
+    private fun awaitTrue(what: String, condition: () -> Boolean) {
+        repeat(150) { if (condition()) return; usleep(20_000u) }
+        assertTrue(condition(), what)
+    }
+
+    @Test
+    fun aRealQueueThatStopsWithoutTheAppEndsTheStreamWithDeviceLost() {
+        val events = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        val blocks = AtomicInt(0)
+        val driver = RecordingDriver()
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 512, { events.append(it) }, driver)
+        try {
+            output.start { out, frames -> out.fill(0f); blocks.fetchAndAdd(1); frames }
+            awaitTrue("the queue never pulled") { blocks.load() >= 6 }
+            // The real IsRunning listener of AudioQueue must see this stop, as it sees one by the system.
+            assertEquals(0, AudioQueueStop(driver.queue, true))
+            awaitTrue("no Stopped after the queue stopped: ${events.load()}") { events.load().contains(AudioOutputEvent.Stopped) }
+            assertFalse(output.isRunning)
+            val seen = events.load().filter { it !is AudioOutputEvent.Underrun && it !is AudioOutputEvent.Overrun }
+            assertEquals(1, seen.count { it is AudioOutputEvent.DeviceLost }, "$seen")
+            assertEquals(AudioOutputEvent.Stopped, seen.last(), "$seen")
+            assertTrue(seen[seen.size - 2] is AudioOutputEvent.DeviceLost, "$seen")
+            assertEquals(0, output.openListenerRefs)
+
+            // The app starts it again, and the new queue pulls.
+            usleep(50_000u)
+            val before = blocks.load()
+            output.start { out, frames -> out.fill(0f); blocks.fetchAndAdd(1); frames }
+            assertTrue(output.isRunning)
+            awaitTrue("the restarted queue never pulled") { blocks.load() >= before + 6 }
+        } finally {
+            output.close()
+        }
+    }
+
+    @Test
+    fun aRealQueueStoppedByTheAppSendsNoDeviceLost() {
+        val events = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        val blocks = AtomicInt(0)
+        val output = AppleAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 512, { events.append(it) })
+        try {
+            output.start { out, frames -> out.fill(0f); blocks.fetchAndAdd(1); frames }
+            awaitTrue("the queue never pulled") { blocks.load() >= 6 }
+            // The queue reports running after a start. That must not read as a loss.
+            assertTrue(output.isRunning)
+            output.stop()
+            awaitTrue("no Stopped after stop: ${events.load()}") { events.load().contains(AudioOutputEvent.Stopped) }
+            usleep(100_000u)
+            assertTrue(events.load().none { it is AudioOutputEvent.DeviceLost || it is AudioOutputEvent.Failed }, "${events.load()}")
+            assertEquals(0, output.openListenerRefs)
         } finally {
             output.close()
         }
