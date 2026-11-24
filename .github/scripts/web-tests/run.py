@@ -17,8 +17,14 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[3]
 HERE = Path(__file__).resolve().parent
-MODULES = ("kiteaudio-codec", "kiteaudio-codec-io")
 PLATFORMS = ("js", "wasmJs", "wasmWasi")
+# Each module with web tests, and the web platforms it builds for.
+MODULES = {
+    "kiteaudio-codec": PLATFORMS,
+    "kiteaudio-codec-io": PLATFORMS,
+    "kiteaudio-midi": ("js", "wasmJs"),
+    "kiteaudio-synth": ("js", "wasmJs"),
+}
 ARTIFACTS = ROOT / "build/artifacts/CompiledWebArtifact"
 CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "darwin" else ".cache/JetBrains/Kotlin")
 
@@ -81,14 +87,25 @@ def wasm_tests(module, platform, executable):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--platform", choices=PLATFORMS, action="append",
-                        help="run one platform; repeat it for more (default: all three)")
+                        help="run one platform; repeat it for more (default: every one a module builds for)")
     parser.add_argument("--module", choices=MODULES, action="append",
-                        help="run one module; repeat it for more (default: both)")
+                        help="run one module; repeat it for more (default: all of them)")
     args = parser.parse_args()
     platforms = args.platform or PLATFORMS
+    modules = args.module or MODULES
+    # A module named on the command line that builds for none of the platforms asked for would
+    # run nothing, and a run that tests nothing must not pass.
+    idle = [module for module in modules if not any(platform in MODULES[module] for platform in platforms)]
+    if args.module and idle:
+        raise RuntimeError(f"{', '.join(idle)} has no tests on {', '.join(platforms)}; "
+                           f"it builds for {', '.join(p for m in idle for p in MODULES[m])}")
+    if len(idle) == len(modules):
+        raise RuntimeError(f"no module builds for {', '.join(platforms)}")
     executable = node()
-    for module in args.module or MODULES:
+    for module in modules:
         for platform in platforms:
+            if platform not in MODULES[module]:
+                continue
             if platform == "js":
                 js_tests(module, executable)
             else:

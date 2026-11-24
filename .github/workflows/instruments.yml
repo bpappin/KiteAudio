@@ -19,6 +19,7 @@ on:
       - 'libs.versions.toml'
       - 'build-plugins/**'
       - '.github/workflows/instruments.yml'
+      - '.github/scripts/web-tests/**'
   pull_request:
     paths:
       - 'kiteaudio-midi/**'
@@ -34,6 +35,7 @@ on:
       - 'libs.versions.toml'
       - 'build-plugins/**'
       - '.github/workflows/instruments.yml'
+      - '.github/scripts/web-tests/**'
   workflow_dispatch:
 
 permissions:
@@ -80,10 +82,23 @@ jobs:
         if: ${{ !cancelled() }}
         run: ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p android
 
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        if: ${{ !cancelled() }}
+        with:
+          node-version: '26'
+
+      # `./kotlin test` cannot run the JS tests, and it runs wasmJs only in a
+      # browser. The script links both and runs them in Node, as ci.yml does for
+      # the codec modules.
+      - name: JS and wasmJs tests in Node
+        if: ${{ !cancelled() }}
+        run: python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth
+
   # The Apple source sets of the MIDI device and output modules compile only on
   # a Mac. This job runs the macOS tests of the four multiplatform modules and the
   # CoreMIDI tests, which do real work only on macOS. The klib check reads the
-  # klibs of the four Apple platforms.
+  # klibs of the four Apple platforms, and the js and wasmJs klibs of the modules
+  # that build for the web.
   apple:
     name: macOS tests, Apple klibs and klib API check
     runs-on: macos-latest
@@ -105,6 +120,9 @@ jobs:
           for platform in iosArm64 iosSimulatorArm64 iosX64 macosArm64; do
             ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p "$platform"
           done
+
+      - name: Build the web klibs
+        run: ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -p js -p wasmJs
 
       - name: Public klib API check
         if: ${{ !cancelled() }}

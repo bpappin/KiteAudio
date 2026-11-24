@@ -272,6 +272,8 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
 
 - The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle,
   on Kotlin 2.4.21.
+- `kiteaudio-midi` and `kiteaudio-synth` also build for `js` and `wasmJs`, and
+  their tests run there in Node through `.github/scripts/web-tests/run.py` (#164).
 
 ## KiteSynth before the merge
 
