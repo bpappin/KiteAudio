@@ -28,7 +28,7 @@ mono or stereo `FloatArray` samples; the native backends clamp them and convert 
 | `AudioRenderCallback` | Fills the requested frames; a short render is padded with silence. |
 | `AudioFormat` and `ChannelLayout` | Describe the sample rate and the channel layout. Both come from `kiteaudio-core`. An output plays one or two channels. |
 | `Latency` and `LatencyQuality` | Report a delay value and distinguish estimates from measurements. All current backends report estimates. |
-| `AudioOutputEvent` | Reports startup, stops, short renders, slow renders, failures, and a stream that the system ended (`DeviceLost`). What can end a stream differs by platform. The rule after a loss is the same everywhere. |
+| `AudioOutputEvent` | Reports startup, stops, short renders, slow renders, a device that ran out of sound although every render was full (`DeviceUnderrun`), failures, and a stream that the system ended (`DeviceLost`). What can end a stream differs by platform. The rule after a loss is the same everywhere. |
 
 `kiteaudio-core` is the KiteAudio module that holds the audio format types that several KiteAudio modules share.
 KiteRT depends on it and exposes it, so you do not add it yourself.
@@ -142,6 +142,7 @@ val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFr
     when (event) {
         is AudioOutputEvent.Started -> Unit   // format and latency are available here
         is AudioOutputEvent.Underrun -> Unit  // event.frames were replaced with silence
+        is AudioOutputEvent.DeviceUnderrun -> Unit  // event.count new dropouts, event.total since open
         is AudioOutputEvent.Overrun -> Unit   // the render took event.tookMicros, past event.deadlineMicros
         is AudioOutputEvent.DeviceLost -> Unit
         is AudioOutputEvent.Failed -> Unit
@@ -154,10 +155,29 @@ val quality = output.latency.quality
 output.close()
 ```
 
-An `Underrun` event means the renderer returned fewer frames. An `Overrun` event means a
-render took longer than the block it filled lasts, even when it returned every frame.
-Neither one measures hardware underruns. An invalid frame count or render exception stops the stream and emits
-`Failed`. Event-handler exceptions are contained so they cannot escape a worker or native callback.
+An `Underrun` event means the renderer returned fewer frames, and the output played silence for the
+rest of the block. An `Overrun` event means a render took longer than the block it filled lasts, even
+when it returned every frame. A `DeviceUnderrun` event means the device ran out of sound although the
+renderer filled every block, for example after a scheduling delay. Its unit is one dropout, not
+frames. `count` gives the new dropouts and `total` gives all dropouts since the output was opened,
+across stops and starts. The output sends `DeviceUnderrun` after it writes a block, at most once for
+each block, and never from inside the render callback. A block with a short render sends only
+`Underrun`, and the output counts no device underrun for that block.
+
+An invalid frame count or render exception stops the stream and emits `Failed`. Event-handler
+exceptions are contained so they cannot escape a worker or native callback.
+
+Each platform gets the `DeviceUnderrun` count from a different source. Where the system keeps a
+counter, the count is a measurement. Elsewhere the output estimates it.
+
+| Platform | Source of the count | Measured or estimated |
+| --- | --- | --- |
+| JVM | The line has no bytes left to play right before a write: `SourceDataLine.available()` reports the whole buffer as free. The output checks this only after the stream has filled the line once, because every stream starts with an empty line. | Estimated. Java Sound has no counter. |
+| Android 7.0 (API level 24) and newer | `AudioTrack.getUnderrunCount()`, read after each written block. The first block of each stream only sets the starting value. | Measured by the system. |
+| Android 6 (API level 23) | None. The output sends no `DeviceUnderrun`. | |
+| iOS and macOS | The clock of the AudioQueue (`AudioQueueGetCurrentTime`) has passed the end of every frame enqueued so far. The clock keeps running while the queue has no buffer. | Estimated. The clock runs behind the device by its output latency, so a dropout shorter than about that latency can go unseen. |
+| Browser, worklet | The worklet played silence, and every render since it last handed a block back was full. Silence after a short render goes out as `Underrun`, in frames. | Estimated. The worklet is part of the output, not a counter of the browser. |
+| Browser, scheduled buffers | The page timer fired after the booked blocks had run out, by the clock of the audio context. | Estimated. |
 
 ## Platforms
 
@@ -189,7 +209,7 @@ need an explicit handoff.
   logging, waits or locks. Reuse buffers and keep allocation out of the callback.
 - JVM and Android render on a dedicated writer thread. Apple primes and subsequently renders
   on one serial callback queue; dispatch may use different OS threads over time. The browser
-  renders on the page's main thread, so a long task elsewhere on the page can cause an underrun.
+  renders on the page's main thread, so a long task elsewhere on the page can cause a `DeviceUnderrun`.
   With the worklet it renders a block each time the worklet hands one back; with scheduled
   buffers a timer keeps four blocks booked ahead. Browsers slow timers in a hidden tab, which
   should play as gaps with scheduled buffers; that has not been checked yet. Four blocks are in
@@ -230,7 +250,7 @@ need an explicit handoff.
 | Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. After `DeviceLost`, the app calls `start()` again. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
 | Precision | Native backends clamp float samples to `[-1, 1]` and quantize them to 16-bit PCM without dithering. The browser passes Float32 through unchanged. |
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |
-| Browser techniques | The worklet counts every frame of silence it plays; scheduled buffers estimate an underrun from the context clock, and allocate an `AudioBuffer` and a source node for every block. Nothing says which technique an output settled on. |
+| Browser techniques | The worklet counts every frame of silence it plays; scheduled buffers estimate a `DeviceUnderrun` from the context clock, and allocate an `AudioBuffer` and a source node for every block. Nothing says which technique an output settled on. |
 | Input | Recording and full-duplex streams are not implemented. |
 
 See the [issue tracker](https://github.com/yuroyami/KiteAudio/issues) for defects and proposed

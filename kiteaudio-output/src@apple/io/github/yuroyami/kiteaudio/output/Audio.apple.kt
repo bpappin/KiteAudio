@@ -10,7 +10,9 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.free
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.nativeHeap
 import kotlinx.cinterop.pointed
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
@@ -27,9 +29,11 @@ import platform.AudioToolbox.AudioQueuePropertyListenerProc
 import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
 import platform.CoreAudioTypes.AudioStreamBasicDescription
+import platform.CoreAudioTypes.AudioTimeStamp
 import platform.CoreAudioTypes.kAudioFormatFlagIsPacked
 import platform.CoreAudioTypes.kAudioFormatFlagIsSignedInteger
 import platform.CoreAudioTypes.kAudioFormatLinearPCM
+import platform.CoreAudioTypes.kAudioTimeStampSampleTimeValid
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_queue_create
 import platform.darwin.dispatch_sync
@@ -68,6 +72,11 @@ internal class AppleAudioOutput(
         var queue: AudioQueueRef? = null
         lateinit var observer: (AudioOutputEvent) -> Unit
 
+        // Only the render queue reads or writes the fields below, until the release frees the clock.
+        val clock = nativeHeap.alloc<AudioTimeStamp>()
+        var enqueuedFrames = 0L
+        var dry = false
+
         // Only the control queue reads or writes the fields below.
         var listener: StableRef<RunningWatch>? = null
         var listening = false
@@ -89,6 +98,8 @@ internal class AppleAudioOutput(
     private val startPending = AtomicBoolean(false)
     private val generation = AtomicReference<Generation?>(null)
     private val listenerRefs = AtomicInt(0)
+    // Only the render queue uses it.
+    private val deviceUnderruns = DeviceUnderrunCounter()
 
     /** The listener StableRefs that this output holds now. Tests check it for leaks. */
     internal val openListenerRefs: Int get() = listenerRefs.load()
@@ -231,7 +242,8 @@ internal class AppleAudioOutput(
     private fun fill(current: Generation, queue: AudioQueueRef?, buffer: AudioQueueBufferRef?) {
         if (!current.active.load() || queue == null || buffer == null) return
         val callback = current.callback ?: return
-        if (!renderAudioBlock(callback, current.scratch, bufferFrames, format.framesToMicros(bufferFrames), current.observer)) {
+        val filled = renderAudioBlock(callback, current.scratch, bufferFrames, format.framesToMicros(bufferFrames), current.observer)
+        if (filled == RENDER_FAILED) {
             current.active.store(false)
             requestRelease(current)
             return
@@ -252,13 +264,41 @@ internal class AppleAudioOutput(
         buffer.pointed.mAudioDataByteSize = (current.pcm.size * 2).toUInt()
         if (!current.active.load()) return
         val status = driver.enqueue(queue, buffer)
-        if (status == 0) return
+        if (status == 0) {
+            // Read the clock only after a good enqueue, so a slow call never delays the checks of a refused buffer.
+            // A short render already sent Underrun, so its block counts no device underrun.
+            if (queueRanDry(current, queue) && filled == bufferFrames) deviceUnderruns.report(1, onEvent)
+            current.enqueuedFrames += bufferFrames
+            return
+        }
+        // A stream that the app or the system already ended expects its buffers to be refused.
+        if (!current.active.load()) return
         // A queue that the system stopped hands its buffers back and refuses them. That is a loss.
         if (current.started.load() && driver.isRunning(queue) != true) {
             dispatch_async(controlQueue) { queueRunningChanged(current) }
-        } else {
+        } else if (current.active.compareAndSet(true, false)) {
+            // Only the side that clears active ends the stream, so a loss on the control queue sends no Failed.
             fail(current, "AudioQueue could not enqueue a buffer, status $status")
         }
+    }
+
+    /**
+     * True when the clock of the queue has passed the end of every frame enqueued before the
+     * newest block. The clock keeps running while the queue has no buffer. The queue counts as dry
+     * until the enqueued frames lead its clock by a block again, so one dropout counts once.
+     */
+    private fun queueRanDry(current: Generation, queue: AudioQueueRef): Boolean {
+        if (!current.started.load()) return false
+        val clock = current.clock
+        if (driver.currentTime(queue, clock.ptr) != 0 || (clock.mFlags and kAudioTimeStampSampleTimeValid) == 0u) return false
+        val lead = current.enqueuedFrames - clock.mSampleTime
+        if (current.dry) {
+            if (lead >= bufferFrames) current.dry = false
+            return false
+        }
+        if (lead >= 0) return false
+        current.dry = true
+        return true
     }
 
     private fun fail(current: Generation, reason: String, cause: Throwable? = null) {
@@ -301,8 +341,7 @@ internal class AppleAudioOutput(
     private fun endBySystem(current: Generation, reason: String, invalidatesQueue: Boolean) {
         if (generation.load() !== current || current.released.load()) return
         if (invalidatesQueue) current.queueInvalid = true
-        if (current.active.load() && current.started.load()) {
-            current.active.store(false)
+        if (current.started.load() && current.active.compareAndSet(true, false)) {
             current.started.store(false)
             // The render queue is serial, so DeviceLost arrives before the Stopped of the release.
             dispatch_async(renderQueue) { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.DeviceLost(reason)) } }
@@ -339,6 +378,7 @@ internal class AppleAudioOutput(
                 // stale queue could still call it, and let a new start build a new queue.
                 current.listener = null
                 current.queue = null
+                nativeHeap.free(current.clock)
                 current.released.store(true)
                 dispatch_async(renderQueue) {
                     try { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Stopped) } }
@@ -370,6 +410,7 @@ internal class AppleAudioOutput(
                 }
             }
         }
+        nativeHeap.free(current.clock)
         current.released.store(true)
         dispatch_async(renderQueue) {
             try { inCallback { deliverAudioEvent(onEvent, AudioOutputEvent.Stopped) } }

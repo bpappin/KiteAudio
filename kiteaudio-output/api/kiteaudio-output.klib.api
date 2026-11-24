@@ -49,6 +49,22 @@ sealed interface io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.gi
         final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceLost.toString|toString(){}[0]
     }
 
+    final class DeviceUnderrun : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun|null[0]
+        constructor <init>(kotlin/Int, kotlin/Long) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.<init>|<init>(kotlin.Int;kotlin.Long){}[0]
+
+        final val count // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.count|{}count[0]
+            final fun <get-count>(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.count.<get-count>|<get-count>(){}[0]
+        final val total // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.total|{}total[0]
+            final fun <get-total>(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.total.<get-total>|<get-total>(){}[0]
+
+        final fun component1(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.component1|component1(){}[0]
+        final fun component2(): kotlin/Long // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.component2|component2(){}[0]
+        final fun copy(kotlin/Int = ..., kotlin/Long = ...): io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.copy|copy(kotlin.Int;kotlin.Long){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.DeviceUnderrun.toString|toString(){}[0]
+    }
+
     final class Failed : io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed|null[0]
         constructor <init>(kotlin/String, kotlin/Throwable? = ...) // io.github.yuroyami.kiteaudio.output/AudioOutputEvent.Failed.<init>|<init>(kotlin.String;kotlin.Throwable?){}[0]
 

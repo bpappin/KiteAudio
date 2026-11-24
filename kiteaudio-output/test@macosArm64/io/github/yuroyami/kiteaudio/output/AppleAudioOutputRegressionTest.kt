@@ -33,6 +33,8 @@ import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
 import platform.AudioToolbox.kAudioQueueProperty_IsRunning
 import platform.CoreAudioTypes.AudioStreamBasicDescription
+import platform.CoreAudioTypes.AudioTimeStamp
+import platform.CoreAudioTypes.kAudioTimeStampSampleTimeValid
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_queue_create
 import platform.darwin.dispatch_queue_t
@@ -63,6 +65,11 @@ class AppleAudioOutputRegressionTest {
         val wrongListenerRemoved = AtomicBoolean(false)
         private var listener: AudioQueuePropertyListenerProc? = null
         private var listenerData: COpaquePointer? = null
+        // The clock of the queue. The test sets it before it fires a callback.
+        var sampleTime = 0.0
+        var clockFlags = kAudioTimeStampSampleTimeValid
+        var clockStatus = 0
+        val clockReads = AtomicInt(0)
         // Stands in for the AudioQueue thread that calls property listeners.
         private val systemQueue = dispatch_queue_create("fake-audio-queue-system", null)
         override fun create(format: CPointer<AudioStreamBasicDescription>, output: CPointer<AudioQueueRefVar>, queue: dispatch_queue_t,
@@ -87,8 +94,15 @@ class AppleAudioOutputRegressionTest {
             buffers += buffer.ptr
             return 0
         }
+        /** Runs once inside the next enqueue, which then refuses the buffer as a stopped queue does. */
+        var enqueueHook: (() -> Unit)? = null
         override fun enqueue(queue: AudioQueueRef, buffer: AudioQueueBufferRef): Int {
             if (disposed.load()) { lifetimeViolation.store(true); return -1 }
+            enqueueHook?.let { hook ->
+                enqueueHook = null
+                hook()
+                return KAUDIO_QUEUE_ERR_ENQUEUE_DURING_RESET
+            }
             enqueues.fetchAndAdd(1)
             return if (rejectEnqueue.load()) -1 else 0
         }
@@ -110,6 +124,12 @@ class AppleAudioOutputRegressionTest {
             return 0
         }
         override fun isRunning(queue: AudioQueueRef): Boolean? = running.load()
+        override fun currentTime(queue: AudioQueueRef, stamp: CPointer<AudioTimeStamp>): Int {
+            clockReads.fetchAndAdd(1)
+            stamp.pointed.mSampleTime = sampleTime
+            stamp.pointed.mFlags = clockFlags
+            return clockStatus
+        }
         override fun dispose(queue: AudioQueueRef): Int {
             // A synchronous AudioQueue disposal returns after its last listener call.
             dispatch_sync(systemQueue) { }
@@ -159,6 +179,11 @@ class AppleAudioOutputRegressionTest {
                 proc(listenerData, currentQueue, kAudioQueueProperty_IsRunning)
             }
         }
+    }
+
+    private companion object {
+        // kAudioQueueErr_EnqueueDuringReset, which a real queue returned in this case.
+        const val KAUDIO_QUEUE_ERR_ENQUEUE_DURING_RESET = -66632
     }
 
     /** Appends without a lock: the output's queues and the test thread all touch the list. */
@@ -621,6 +646,143 @@ class AppleAudioOutputRegressionTest {
             assertFalse(output.isRunning)
             output.close()
         }
+    }
+
+    /** Sets the clock of the queue to [time], hands a buffer back and waits until the output has refilled it. */
+    private fun block(driver: Driver, time: Double) {
+        driver.sampleTime = time
+        driver.fireAsync()
+        driver.flushCallbacks()
+    }
+
+    private fun deviceUnderruns(events: Events) = events.all.filterIsInstance<AudioOutputEvent.DeviceUnderrun>()
+
+    @Test
+    fun aQueueClockPastTheEnqueuedFramesIsOneDeviceUnderrunAfterTheEnqueue() {
+        val driver = Driver()
+        val events = Events()
+        val enqueuesAtEvents = AtomicReference<List<Int>>(emptyList())
+        val output = AppleAudioOutput(stereo, 4, { event ->
+            events.add(event)
+            if (event is AudioOutputEvent.DeviceUnderrun) enqueuesAtEvents.store(enqueuesAtEvents.load() + driver.enqueues.load())
+        }, driver)
+        try {
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            assertEquals(0, driver.clockReads.load(), "the clock was read while the buffers were primed")
+            // Priming enqueued 12 frames, and the clock has passed them: the queue ran dry.
+            block(driver, 13.0)
+            // 16 frames are enqueued now. A lead of less than one block is still the same dropout.
+            block(driver, 13.0)
+            // A lead of a whole block ends the dropout. The next pass is a new one.
+            block(driver, 14.0)
+            block(driver, 30.0)
+            settle(output, driver)
+            assertEquals(listOf(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)), deviceUnderruns(events))
+            assertEquals(listOf(4, 7), enqueuesAtEvents.load(), "an event came before its enqueue")
+            assertTrue(events.all.none { it is AudioOutputEvent.Underrun }, "${events.all}")
+            assertEquals(4, driver.clockReads.load(), "not one clock read for each block")
+        } finally { output.close() }
+    }
+
+    @Test
+    fun aShortRenderWhileTheQueueRunsDrySendsOnlyUnderrun() {
+        val driver = Driver()
+        val events = Events()
+        val renders = AtomicInt(0)
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            // The three priming renders are full. The fourth is short, and the queue has run dry.
+            output.start { _, frames -> if (renders.fetchAndAdd(1) == 3) frames - 1 else frames }
+            block(driver, 13.0)
+            // The same dropout goes on, and it stays counted as the short render's.
+            block(driver, 13.0)
+            settle(output, driver)
+            assertTrue(deviceUnderruns(events).isEmpty(), "${events.all}")
+            assertEquals(1, events.count { it == AudioOutputEvent.Underrun(1) })
+        } finally { output.close() }
+    }
+
+    @Test
+    fun deviceUnderrunTotalsContinueAcrossStopAndStart() {
+        val driver = Driver()
+        val events = Events()
+        val output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            block(driver, 13.0)
+            output.stop()
+            await { events.stops == 1 }
+            settle(output, driver)
+            // A new queue starts its clock and its enqueued frames again.
+            output.start { _, frames -> frames }
+            block(driver, 13.0)
+            settle(output, driver)
+            assertEquals(listOf(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)), deviceUnderruns(events))
+        } finally { output.close() }
+        await { driver.disposed.load() }
+        assertFalse(driver.lifetimeViolation.load())
+    }
+
+    @Test
+    fun aClockThatDoesNotAnswerSendsNothing() {
+        for (invalid in listOf(true, false)) {
+            val driver = Driver()
+            val events = Events()
+            if (invalid) driver.clockFlags = 0u else driver.clockStatus = -1
+            val output = AppleAudioOutput(stereo, 4, events::add, driver)
+            try {
+                output.start { _, frames -> frames }
+                block(driver, 100.0)
+                settle(output, driver)
+                assertEquals(1, driver.clockReads.load())
+                assertTrue(deviceUnderruns(events).isEmpty(), "${events.all}")
+            } finally { output.close() }
+        }
+    }
+
+    @Test
+    fun aBufferRefusedAfterTheSystemEndedTheStreamSendsNoFailed() {
+        val driver = Driver()
+        val events = Events()
+        lateinit var output: AppleAudioOutput
+        output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            // Inside the enqueue, the system stops the queue and the control queue ends the stream.
+            driver.enqueueHook = {
+                driver.stopRunning()
+                await { !output.isRunning }
+            }
+            driver.fireAsync()
+            await { events.stops == 1 }
+            settle(output, driver)
+            assertOneLossThenStopped(events, "the system stopped the audio queue")
+        } finally { output.close() }
+    }
+
+    @Test
+    fun aBufferRefusedAfterTheAppStoppedTheStreamSendsNothing() {
+        val driver = Driver()
+        val events = Events()
+        lateinit var output: AppleAudioOutput
+        output = AppleAudioOutput(stereo, 4, events::add, driver)
+        try {
+            output.start { _, frames -> frames }
+            settle(output, driver)
+            // Inside the enqueue, the app stops the stream. The queue then refuses the buffer.
+            driver.enqueueHook = {
+                output.stop()
+                await { !output.isRunning }
+            }
+            driver.fireAsync()
+            await { events.stops == 1 }
+            settle(output, driver)
+            val seen = events.all
+            assertTrue(seen.none { it is AudioOutputEvent.Failed || it is AudioOutputEvent.DeviceLost }, "$seen")
+            assertEquals(1, events.stops, "$seen")
+        } finally { output.close() }
     }
 
     @Test

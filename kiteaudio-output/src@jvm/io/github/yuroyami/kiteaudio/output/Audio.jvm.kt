@@ -25,6 +25,8 @@ internal class JvmAudioOutput(
 
     private val stateLock = Any()
     @Volatile private var generation: Generation? = null
+    // Only the worker thread uses it, and one worker ends before the next one starts.
+    private val deviceUnderruns = DeviceUnderrunCounter()
     private var closed = false
     override val isRunning: Boolean get() = generation?.active == true
 
@@ -68,8 +70,12 @@ internal class JvmAudioOutput(
                 deliverAudioEvent(onEvent, event)
             }
             if (current.active) deliverAudioEvent(onEvent, AudioOutputEvent.Started(format, latency))
+            val lineBytes = line.bufferSize
+            // The bytes this stream has written. The line starts empty, so it is checked only once it was full.
+            var streamBytes = 0L
             while (current.active) {
-                if (!renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)) break
+                val filled = renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)
+                if (filled == RENDER_FAILED) break
                 if (!current.active) break
                 var offset = 0
                 for (sample in floats) {
@@ -77,6 +83,9 @@ internal class JvmAudioOutput(
                     pcm[offset++] = (value and 0xff).toByte()
                     pcm[offset++] = ((value shr 8) and 0xff).toByte()
                 }
+                // Java Sound has no underrun counter. A line with no bytes left to play has run dry.
+                // A short render already sent Underrun, so its block counts no device underrun.
+                val ranDry = streamBytes >= lineBytes && filled == bufferFrames && line.available() >= lineBytes
                 var written = 0
                 var noProgress = 0
                 while (current.active && written < pcm.size) {
@@ -99,6 +108,8 @@ internal class JvmAudioOutput(
                         noProgress = 0
                     }
                 }
+                streamBytes += written
+                if (ranDry && current.active) deviceUnderruns.report(1, onEvent)
             }
         } catch (problem: Throwable) {
             current.active = false

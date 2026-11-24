@@ -16,17 +16,22 @@ internal interface AndroidPcmTrack {
     fun release()
     fun write(data: ShortArray, offset: Int, count: Int): Int
 
+    /** The underruns that the system counted since the track was created, or -1 below API level 24. */
+    val underrunCount: Int
+
     /** Runs once on the worker thread before the first block. */
     fun raiseWorkerPriority()
 }
 
 private class PlatformPcmTrack(private val track: AudioTrack) : AndroidPcmTrack {
+    private val countsUnderruns = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
     override val bufferSizeInFrames: Int get() = track.bufferSizeInFrames
     override fun play() = track.play()
     override fun pause() = track.pause()
     override fun flush() = track.flush()
     override fun release() = track.release()
     override fun write(data: ShortArray, offset: Int, count: Int): Int = track.write(data, offset, count)
+    override val underrunCount: Int get() = if (countsUnderruns) track.underrunCount else -1
     override fun raiseWorkerPriority() = Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
 }
 
@@ -48,6 +53,8 @@ internal class AndroidAudioOutput(
 
     private val stateLock = Any()
     @Volatile private var generation: Generation? = null
+    // Only the worker thread uses it, and one worker ends before the next one starts.
+    private val deviceUnderruns = DeviceUnderrunCounter()
     private var closed = false
     override val isRunning: Boolean get() = generation?.active == true
 
@@ -92,8 +99,11 @@ internal class AndroidAudioOutput(
                 deliverAudioEvent(onEvent, event)
             }
             if (current.active) deliverAudioEvent(onEvent, AudioOutputEvent.Started(format, latency))
+            // The system counter after the last written block. The first block of a stream only sets it.
+            var underrunsSeen = -1
             while (current.active) {
-                if (!renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)) break
+                val filled = renderAudioBlock(callback, floats, bufferFrames, format.framesToMicros(bufferFrames), observer)
+                if (filled == RENDER_FAILED) break
                 if (!current.active) break
                 for (i in floats.indices) {
                     pcm[i] = (floats[i].coerceIn(-1f, 1f) * 32767f).toInt().toShort()
@@ -119,6 +129,13 @@ internal class AndroidAudioOutput(
                         written += count
                         noProgress = 0
                     }
+                }
+                if (!current.active) break
+                val underruns = track.underrunCount
+                if (underruns >= 0) {
+                    // A short render already sent Underrun, so its block counts no device underrun.
+                    if (underrunsSeen >= 0 && filled == bufferFrames) deviceUnderruns.report(underruns - underrunsSeen, onEvent)
+                    underrunsSeen = underruns
                 }
             }
         } catch (problem: Throwable) {

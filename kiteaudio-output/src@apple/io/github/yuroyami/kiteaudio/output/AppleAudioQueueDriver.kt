@@ -17,6 +17,7 @@ import platform.AudioToolbox.AudioQueueBuffer
 import platform.AudioToolbox.AudioQueueBufferRef
 import platform.AudioToolbox.AudioQueueDispose
 import platform.AudioToolbox.AudioQueueEnqueueBuffer
+import platform.AudioToolbox.AudioQueueGetCurrentTime
 import platform.AudioToolbox.AudioQueueGetProperty
 import platform.AudioToolbox.AudioQueueNewOutputWithDispatchQueue
 import platform.AudioToolbox.AudioQueuePropertyListenerProc
@@ -27,6 +28,7 @@ import platform.AudioToolbox.AudioQueueStart
 import platform.AudioToolbox.AudioQueueStop
 import platform.AudioToolbox.kAudioQueueProperty_IsRunning
 import platform.CoreAudioTypes.AudioStreamBasicDescription
+import platform.CoreAudioTypes.AudioTimeStamp
 import platform.darwin.dispatch_queue_t
 
 /** Narrow native boundary; deterministic tests supply buffers without opening audio hardware. */
@@ -45,6 +47,9 @@ internal interface AppleAudioQueueDriver {
 
     /** The running state that the queue reports, or null when the queue does not answer. */
     fun isRunning(queue: AudioQueueRef): Boolean?
+
+    /** Writes the time of the queue into [stamp], as `AudioQueueGetCurrentTime` does, and returns its status. */
+    fun currentTime(queue: AudioQueueRef, stamp: CPointer<AudioTimeStamp>): Int
 }
 
 internal object NativeAudioQueueDriver : AppleAudioQueueDriver {
@@ -67,4 +72,6 @@ internal object NativeAudioQueueDriver : AppleAudioQueueDriver {
         size.value = sizeOf<UIntVar>().toUInt()
         if (AudioQueueGetProperty(queue, kAudioQueueProperty_IsRunning, running.ptr, size.ptr) != 0) null else running.value != 0u
     }
+    override fun currentTime(queue: AudioQueueRef, stamp: CPointer<AudioTimeStamp>): Int =
+        AudioQueueGetCurrentTime(queue, null, stamp, null)
 }

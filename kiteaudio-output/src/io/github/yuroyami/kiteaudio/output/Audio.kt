@@ -63,8 +63,34 @@ public sealed interface AudioOutputEvent {
     /** The stream has stopped and its render callback has unwound. May follow [Failed]. */
     public data object Stopped : AudioOutputEvent
 
-    /** The render callback did not keep up, and silence was played. */
-    public data class Underrun(val frames: Int) : AudioOutputEvent
+    /**
+     * The render callback returned fewer frames than the output asked for, and the output played
+     * silence for the rest of the block.
+     *
+     * The cause is the callback. When the callback fills every block and the device still runs out
+     * of sound, the output sends [DeviceUnderrun] instead.
+     */
+    public data class Underrun(
+        /** The frames of silence that the output played. */
+        val frames: Int,
+    ) : AudioOutputEvent
+
+    /**
+     * The device ran out of sound although the render callback filled every block in time.
+     *
+     * The cause is outside the callback, for example a scheduling delay of the thread that writes
+     * the blocks. A block with a short render sends only [Underrun], and the output counts no
+     * device underrun for that block. The output sends this event after it writes a block, at most
+     * once for each block, and never from inside the render callback. On some platforms the system
+     * counts the underruns, and on others the output estimates them. The README of
+     * `kiteaudio-output` says which platform does what.
+     */
+    public data class DeviceUnderrun(
+        /** New underruns since the last event of this kind. */
+        val count: Int,
+        /** All underruns since the output was opened. */
+        val total: Long,
+    ) : AudioOutputEvent
 
     /** Rendering took longer than the buffer lasts, even if every frame was filled. */
     public data class Overrun(val deadlineMicros: Long, val tookMicros: Long) : AudioOutputEvent
@@ -160,24 +186,32 @@ internal fun deliverAudioEvent(observer: (AudioOutputEvent) -> Unit, event: Audi
     try { observer(event) } catch (_: Throwable) { }
 }
 
+/** What [renderAudioBlock] returns when the stream must stop. */
+internal const val RENDER_FAILED: Int = -1
+
+/**
+ * Calls [callback] for one block and reports a slow or short render.
+ *
+ * @return the frames that the callback filled, or [RENDER_FAILED] after a failure was reported
+ */
 internal fun renderAudioBlock(
     callback: AudioRenderCallback,
     out: FloatArray,
     frames: Int,
     deadlineMicros: Long,
     observer: (AudioOutputEvent) -> Unit,
-): Boolean {
+): Int {
     val startedAt = TimeSource.Monotonic.markNow()
     val filled = try {
         callback.render(out, frames)
     } catch (problem: Throwable) {
         deliverAudioEvent(observer, AudioOutputEvent.Failed("the render callback threw", problem))
-        return false
+        return RENDER_FAILED
     }
     val tookMicros = startedAt.elapsedNow().inWholeMicroseconds
     if (filled !in 0..frames) {
         deliverAudioEvent(observer, AudioOutputEvent.Failed("the render callback returned $filled for $frames frames"))
-        return false
+        return RENDER_FAILED
     }
     if (tookMicros > deadlineMicros) {
         deliverAudioEvent(observer, AudioOutputEvent.Overrun(deadlineMicros, tookMicros))
@@ -186,7 +220,24 @@ internal fun renderAudioBlock(
         out.fill(0f, filled * (out.size / frames))
         deliverAudioEvent(observer, AudioOutputEvent.Underrun(frames - filled))
     }
-    return true
+    return filled
+}
+
+/**
+ * Keeps the [AudioOutputEvent.DeviceUnderrun] count of one output over its whole life.
+ *
+ * Only the thread or queue that writes the blocks of the output calls it, one stream after the
+ * other, so it needs no lock.
+ */
+internal class DeviceUnderrunCounter {
+    private var total = 0L
+
+    /** Counts [dropouts] new underruns and sends them as one event. Does nothing for zero or less. */
+    fun report(dropouts: Int, observer: (AudioOutputEvent) -> Unit) {
+        if (dropouts <= 0) return
+        total += dropouts
+        deliverAudioEvent(observer, AudioOutputEvent.DeviceUnderrun(dropouts, total))
+    }
 }
 
 /**

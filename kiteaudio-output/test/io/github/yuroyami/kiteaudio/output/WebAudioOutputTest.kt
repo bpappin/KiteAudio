@@ -124,7 +124,8 @@ class WebAudioOutputTest {
 
         web.returned!!(slot, 128, block)
 
-        assertEquals(AudioOutputEvent.Underrun(128), events.last())
+        // Every render was full, so the silence is the device's.
+        assertEquals(AudioOutputEvent.DeviceUnderrun(1, 1), events.last())
         assertEquals(slot to block, web.posted.last())
         assertEquals(5f, block.samples[0])
         assertEquals(WEB_AUDIO_BLOCKS, web.newBlocks, "a returned block was not reused")
@@ -384,8 +385,8 @@ class WebAudioOutputTest {
         web.now = 5 * blockSeconds
         web.tick!!()
 
-        // Booked blocks ran out at 4 blocks and the next starts at 6: two blocks of silence.
-        assertEquals(AudioOutputEvent.Underrun(512), events.last())
+        // Booked blocks ran out at 4 blocks and the next starts at 6: one dropout.
+        assertEquals(AudioOutputEvent.DeviceUnderrun(1, 1), events.last())
         assertTimes(listOf(6 * blockSeconds), web.played.subList(booked, booked + 1).map { it.first })
     }
 
@@ -401,6 +402,131 @@ class WebAudioOutputTest {
         assertEquals(web.gains, web.disconnected)
         assertEquals(1, web.suspends)
         assertTrue(!output.isRunning)
+    }
+
+    /** A renderer that fills every block, except the blocks whose numbers are in [short]. */
+    private fun renderer(vararg short: Int) = AudioRenderCallback { out, frames ->
+        rendered++
+        out.fill(rendered.toFloat(), 0, frames * 2)
+        if (rendered in short) frames - 1 else frames
+    }
+
+    /** Hands back the oldest block in flight, as the processor does, with [silence] frames played since the last one. */
+    private fun handBack(silence: Int) {
+        val (slot, block) = web.posted[web.posted.size - WEB_AUDIO_BLOCKS]
+        web.returned!!(slot, silence, block)
+    }
+
+    @Test
+    fun workletSilenceAfterFullRendersIsOneDeviceUnderrunAfterTheNextPost() {
+        var postedAtEvent = -1
+        val output = openBrowserOutput(web, format, 256, BrowserTechnique.Worklet) { event ->
+            events += event
+            if (event is AudioOutputEvent.DeviceUnderrun) postedAtEvent = web.posted.size
+        }
+        output.start(counting)
+        web.play()
+
+        handBack(0)
+        handBack(300)
+        assertEquals(WEB_AUDIO_BLOCKS + 2, postedAtEvent, "the event came before the next block was posted")
+        handBack(0)
+        handBack(1)
+
+        assertEquals(
+            listOf(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)),
+            events.filter { it is AudioOutputEvent.DeviceUnderrun || it is AudioOutputEvent.Underrun },
+        )
+    }
+
+    @Test
+    fun workletSilenceAfterAShortRenderStaysAnUnderrun() {
+        // The fifth render is the first one after the four that prime the worklet.
+        open().start(renderer(5))
+        web.play()
+
+        handBack(0)
+        assertEquals(AudioOutputEvent.Underrun(1), events.last())
+        handBack(200)
+
+        assertEquals(listOf(AudioOutputEvent.Underrun(1), AudioOutputEvent.Underrun(200)), events.drop(1))
+    }
+
+    @Test
+    fun aShortRenderAfterWorkletSilenceSendsOnlyItsUnderrun() {
+        open().start(renderer(5))
+        web.play()
+
+        handBack(300)
+
+        assertEquals(listOf<AudioOutputEvent>(AudioOutputEvent.Underrun(1)), events.drop(1))
+    }
+
+    @Test
+    fun deviceUnderrunTotalsContinueAcrossStopAndStart() {
+        for (technique in listOf(BrowserTechnique.Worklet, BrowserTechnique.Buffers)) {
+            val web = FakeWebAudio()
+            val events = mutableListOf<AudioOutputEvent>()
+            val output = openBrowserOutput(web, format, 256, technique) { events += it }
+            repeat(2) {
+                output.start(counting)
+                web.play()
+                if (technique == BrowserTechnique.Worklet) {
+                    val (slot, block) = web.posted[web.posted.size - WEB_AUDIO_BLOCKS]
+                    web.returned!!(slot, 64, block)
+                } else {
+                    web.now += 10 * blockSeconds
+                    web.tick!!()
+                }
+                output.stop()
+            }
+
+            assertEquals(
+                listOf(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)),
+                events.filterIsInstance<AudioOutputEvent.DeviceUnderrun>(),
+                "$technique",
+            )
+            assertTrue(events.none { it is AudioOutputEvent.Underrun }, "$technique: $events")
+        }
+    }
+
+    @Test
+    fun aLateTimerSendsOneDeviceUnderrunAfterTheFirstBlockItBooks() {
+        var bookedAtEvent = -1
+        val output = openBrowserOutput(web, format, 256, BrowserTechnique.Buffers) { event ->
+            events += event
+            if (event is AudioOutputEvent.DeviceUnderrun) bookedAtEvent = web.played.size
+        }
+        output.start(counting)
+        web.resumed!!()
+        val booked = web.played.size
+
+        web.now = 5 * blockSeconds
+        web.tick!!()
+        assertEquals(booked + 1, bookedAtEvent, "the event did not follow the first block of the late tick")
+        assertEquals(1, events.count { it is AudioOutputEvent.DeviceUnderrun }, "a late tick that booked ${web.played.size - booked} blocks")
+
+        web.now += blockSeconds
+        web.tick!!()
+        web.now += 20 * blockSeconds
+        web.tick!!()
+
+        assertEquals(
+            listOf(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)),
+            events.filter { it is AudioOutputEvent.DeviceUnderrun || it is AudioOutputEvent.Underrun },
+        )
+    }
+
+    @Test
+    fun aLateTimerWhoseNextRenderIsShortSendsOnlyTheUnderrun() {
+        // Three blocks are booked at the start, so the fourth render is the first of the late tick.
+        open(technique = BrowserTechnique.Buffers).start(renderer(4))
+        web.resumed!!()
+
+        web.now = 5 * blockSeconds
+        web.tick!!()
+
+        assertEquals(listOf<AudioOutputEvent>(AudioOutputEvent.Underrun(1)), events.drop(1))
     }
 
     @Test

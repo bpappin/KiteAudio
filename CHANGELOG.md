@@ -87,6 +87,9 @@ The artifacts and packages have new names:
   false, as on the other platforms. This covers a queue that stops running, and on iOS an interruption, a lost
   output device and a loss or reset of the media services. Call `start()` again to play. The app still owns the
   `AVAudioSession`.
+- The new event `AudioOutputEvent.DeviceUnderrun(count, total)` reports a device that ran out of sound although
+  every render was full. `Underrun` still means a render that returned fewer frames. In the browser, silence after
+  full renders and a page timer that fired late now send `DeviceUnderrun` instead of `Underrun`.
 
 ### Added in the codec
 

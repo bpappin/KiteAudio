@@ -142,6 +142,56 @@ class JvmAudioOutputTest {
         }
     }
 
+    /** The events of a live run, and its render gaps that are longer than the line holds. */
+    private class LiveRun(val events: List<AudioOutputEvent>, val longGaps: Int)
+
+    /** Plays silence for [millis], and blocks the render callback for [stallMillis] in the renders listed in [stalls]. */
+    private fun playWithStalls(millis: Long, stalls: Set<Int>, stallMillis: Long): LiveRun {
+        val events = mutableListOf<AudioOutputEvent>()
+        val renders = AtomicInteger(0)
+        val origin = System.nanoTime()
+        val renderMicros = LongArray(4096)
+        val stopped = CountDownLatch(1)
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 512) {
+            synchronized(events) { events += it }
+            if (it == AudioOutputEvent.Stopped) stopped.countDown()
+        }
+        try {
+            output.start { out, frames ->
+                java.util.Arrays.fill(out, 0f)
+                val render = renders.getAndIncrement()
+                if (render < renderMicros.size) renderMicros[render] = (System.nanoTime() - origin) / 1000
+                if (render in stalls) Thread.sleep(stallMillis)
+                frames
+            }
+            Thread.sleep(millis)
+            assertTrue(renders.get() > 100, "the line asked for only ${renders.get()} blocks")
+        } finally {
+            output.close()
+        }
+        assertTrue(stopped.await(5, TimeUnit.SECONDS), "no Stopped after close")
+        // The line holds four blocks of 512 frames, 43 ms. A write that waits for room returns with its
+        // block in the line, so the line then holds at least three blocks, 32 ms. A shorter gap cannot
+        // empty it. The first four blocks fill the line and are not checked.
+        val gaps = longRenderGaps(renderMicros, renders.get(), 32_000L, stalls, firstChecked = 4)
+        return LiveRun(synchronized(events) { events.toList() }, gaps)
+    }
+
+    @Test
+    fun aLineThatKeepsUpReportsADropoutOnlyForALongGap() {
+        assumeTrue(available, "no audio output device on this machine")
+        val run = playWithStalls(2_500, emptySet(), 0)
+        assertDeviceUnderruns(run.events, deliberate = 0, longGaps = run.longGaps)
+    }
+
+    @Test
+    fun aLineThatRunsDryWhileTheCallbackBlocksReportsEachDropoutOnce() {
+        assumeTrue(available, "no audio output device on this machine")
+        // Each stall of 150 ms empties the line once.
+        val run = playWithStalls(2_500, setOf(40, 100), 150)
+        assertDeviceUnderruns(run.events, deliberate = 2, longGaps = run.longGaps)
+    }
+
     @Test
     fun aFormatKnowsHowLongItsFramesLast() {
         val format = AudioFormat(48_000, ChannelLayout.STEREO)

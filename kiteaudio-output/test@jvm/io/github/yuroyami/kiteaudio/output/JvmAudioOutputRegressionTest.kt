@@ -22,15 +22,20 @@ class JvmAudioOutputRegressionTest {
         val stopped = CountDownLatch(1)
         var startFailure = false
         var writer: (ByteArray, Int, Int) -> Int = { _, _, count -> Thread.sleep(1); count }
+        @Volatile var bufferSize = 4096
+        /** The free bytes of the line for the number of writes so far. */
+        @Volatile var free: (Int) -> Int = { 0 }
+        val availableCalls = AtomicInteger()
         val line = Proxy.newProxyInstance(SourceDataLine::class.java.classLoader, arrayOf(SourceDataLine::class.java)) { _, method, args ->
             when (method.name) {
                 "start" -> { starts.incrementAndGet(); check(!startFailure) { "start failure" }; null }
                 "write" -> { writes.incrementAndGet(); writer(args!![0] as ByteArray, args[1] as Int, args[2] as Int) }
                 "stop", "close" -> { stopped.countDown(); null }
-                "getBufferSize" -> 4096
+                "getBufferSize" -> bufferSize
+                "available" -> { availableCalls.incrementAndGet(); free(writes.get()) }
                 "isOpen", "isRunning", "isActive" -> true
                 "getLongFramePosition", "getMicrosecondPosition" -> 0L
-                "getFramePosition", "available" -> 0
+                "getFramePosition" -> 0
                 "getLevel" -> 0f
                 else -> null
             }
@@ -242,6 +247,75 @@ class JvmAudioOutputRegressionTest {
         for (frames in listOf(-1, 0, Int.MAX_VALUE)) {
             assertFailsWith<IllegalArgumentException> { openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), frames) }
         }
+    }
+
+    /**
+     * Plays [blocks] blocks of 16 bytes on a line of 32 bytes, short where [short] says so, then
+     * stops from the renderer. Returns every event with the number of writes made when it arrived.
+     */
+    private fun play(device: FakeDevice, output: AudioOutput, relay: Relay, blocks: Int, short: (Int) -> Boolean = { false }): List<Pair<AudioOutputEvent, Int>> {
+        val renders = AtomicInteger()
+        val ended = CountDownLatch(1)
+        val events = mutableListOf<Pair<AudioOutputEvent, Int>>()
+        relay.target = { event ->
+            synchronized(events) { events += event to device.writes.get() }
+            if (event is AudioOutputEvent.Stopped) ended.countDown()
+        }
+        startAfterUnwind(output) { _, frames ->
+            val block = renders.incrementAndGet()
+            if (block > blocks) { output.stop(); frames } else if (short(block)) frames - 1 else frames
+        }
+        await(ended)
+        return synchronized(events) { events.toList() }
+    }
+
+    private class Relay { @Volatile var target: (AudioOutputEvent) -> Unit = {} }
+
+    private fun lineOfTwoBlocks(): Pair<FakeDevice, Relay> = FakeDevice().apply { bufferSize = 32 } to Relay()
+
+    @Test
+    fun anEmptyLineBeforeAFullBlockIsOneDeviceUnderrunAfterTheWrite() {
+        val (device, relay) = lineOfTwoBlocks()
+        // The line is empty before writes 1, 2, 4 and 6. The first two fill an empty line at the start.
+        device.free = { writes -> if (writes in setOf(0, 1, 3, 5)) 32 else 0 }
+        val output = device.open { relay.target(it) }
+        try {
+            val events = play(device, output, relay, blocks = 7)
+            assertEquals(
+                listOf(AudioOutputEvent.DeviceUnderrun(1, 1) to 4, AudioOutputEvent.DeviceUnderrun(1, 2) to 6),
+                events.filter { it.first is AudioOutputEvent.DeviceUnderrun },
+            )
+            assertTrue(events.none { it.first is AudioOutputEvent.Underrun }, "$events")
+            // At most one look at the line for each block, and none before the line was full once.
+            assertEquals(5, device.availableCalls.get())
+        } finally { output.close() }
+    }
+
+    @Test
+    fun aShortRenderOnAnEmptyLineSendsOnlyUnderrun() {
+        val (device, relay) = lineOfTwoBlocks()
+        device.free = { 32 }
+        val output = device.open { relay.target(it) }
+        try {
+            val events = play(device, output, relay, blocks = 4) { it >= 3 }
+            assertTrue(events.none { it.first is AudioOutputEvent.DeviceUnderrun }, "$events")
+            assertEquals(2, events.count { it.first == AudioOutputEvent.Underrun(1) })
+        } finally { output.close() }
+    }
+
+    @Test
+    fun totalsContinueAcrossStopAndStartAndEachStreamSkipsItsOwnStart() {
+        val (device, relay) = lineOfTwoBlocks()
+        device.free = { 32 }
+        val output = device.open { relay.target(it) }
+        try {
+            // Blocks 3 and 4 of each stream find the line empty. Blocks 1 and 2 fill it at the start.
+            val first = play(device, output, relay, blocks = 4).filter { it.first is AudioOutputEvent.DeviceUnderrun }
+            val second = play(device, output, relay, blocks = 4).filter { it.first is AudioOutputEvent.DeviceUnderrun }
+            assertEquals(listOf<AudioOutputEvent>(AudioOutputEvent.DeviceUnderrun(1, 1), AudioOutputEvent.DeviceUnderrun(1, 2)), first.map { it.first })
+            assertEquals(listOf<AudioOutputEvent>(AudioOutputEvent.DeviceUnderrun(1, 3), AudioOutputEvent.DeviceUnderrun(1, 4)), second.map { it.first })
+            assertEquals(listOf(7, 8), second.map { it.second })
+        } finally { output.close() }
     }
 
     @Test

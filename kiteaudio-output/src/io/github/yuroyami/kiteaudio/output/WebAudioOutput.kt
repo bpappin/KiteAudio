@@ -97,7 +97,7 @@ internal enum class BrowserTechnique {
     /**
      * A page timer renders ahead and books each block as an `AudioBuffer` at an exact context
      * time. Works in any page that has Web Audio, but allocates a buffer and a source node for
-     * every block, and underruns are worked out from the context clock. Browsers slow timers in a
+     * every block, and device underruns are worked out from the context clock. Browsers slow timers in a
      * hidden tab, which should play as gaps; that has not been checked yet.
      */
     Buffers,
@@ -252,6 +252,9 @@ internal class WebAudioOutput<H : Any>(
         var timer: H? = null
         var block: H? = null
         var nextTime = 0.0
+
+        /** True when a render was short since the worklet last handed a block back. */
+        var shortRender = false
         val observer: (AudioOutputEvent) -> Unit = { event ->
             if (event is AudioOutputEvent.Failed) active = false
             deliverAudioEvent(onEvent, event)
@@ -264,6 +267,7 @@ internal class WebAudioOutput<H : Any>(
     private var loadFailure = ""
     private var closed = false
     private var generation: Generation? = null
+    private val deviceUnderruns = DeviceUnderrunCounter()
     private val scratch = FloatArray(bufferFrames * format.channels)
     private val deadlineMicros = format.framesToMicros(bufferFrames)
     private val blockSeconds = bufferFrames.toDouble() / format.sampleRate
@@ -376,30 +380,38 @@ internal class WebAudioOutput<H : Any>(
         }
     }
 
+    /**
+     * Renders the next block into the one the worklet handed back. Silence that the worklet played
+     * after a short render is the callback's, and goes out as an underrun in frames. Silence after
+     * full renders is one device underrun, sent once the next block is posted.
+     */
     private fun returned(current: Generation, slot: Int, underrunFrames: Int, block: H) {
         if (!current.active) return
-        if (underrunFrames > 0) deliverAudioEvent(onEvent, AudioOutputEvent.Underrun(underrunFrames))
-        renderAndPost(current, slot, block)
+        val afterShortRender = current.shortRender
+        current.shortRender = false
+        if (underrunFrames > 0 && afterShortRender) deliverAudioEvent(onEvent, AudioOutputEvent.Underrun(underrunFrames))
+        if (!renderAndPost(current, slot, block)) return
+        // A short render already sent Underrun, so its block counts no device underrun.
+        if (underrunFrames > 0 && !afterShortRender && !current.shortRender && current.active) deviceUnderruns.report(1, onEvent)
     }
 
     /**
      * Books blocks until [WEB_AUDIO_BLOCKS] of them lie ahead of the context's clock. A timer that
-     * fired too late to keep the next block's start in the future is an underrun. Scheduling
-     * restarts a block ahead of now, so the silence counted runs from where the last booked block
-     * ended to where the next one will start.
+     * fired too late to keep the next block's start in the future is one device underrun, sent
+     * once the next block is booked. Scheduling restarts a block ahead of now.
      */
     private fun schedule(current: Generation) {
         if (!current.active) return
         val now = api.currentTime(context)
+        var ranDry = false
         if (current.nextTime < now) {
-            val restart = now + blockSeconds
-            val missed = ((restart - current.nextTime) * format.sampleRate).roundToInt()
-            if (missed > 0) deliverAudioEvent(onEvent, AudioOutputEvent.Underrun(missed))
-            current.nextTime = restart
+            ranDry = true
+            current.nextTime = now + blockSeconds
         }
         // Half a frame short of the horizon, so a block that would start exactly on it waits for the next tick.
         val horizon = now + blockSeconds * WEB_AUDIO_BLOCKS - 0.5 / format.sampleRate
         while (current.nextTime < horizon) {
+            current.shortRender = false
             if (!render(current)) return
             val node = current.node ?: return
             try {
@@ -411,6 +423,11 @@ internal class WebAudioOutput<H : Any>(
                 return
             }
             current.nextTime += blockSeconds
+            if (ranDry) {
+                ranDry = false
+                // A short render already sent Underrun, so its block counts no device underrun.
+                if (!current.shortRender) deviceUnderruns.report(1, onEvent)
+            }
         }
     }
 
@@ -421,12 +438,13 @@ internal class WebAudioOutput<H : Any>(
             return false
         }
         current.rendering = true
-        val rendered = try {
+        val filled = try {
             renderAudioBlock(current.callback, scratch, bufferFrames, deadlineMicros, current.observer)
         } finally {
             current.rendering = false
         }
-        if (!rendered || !current.active || current.node == null) {
+        if (filled in 0 until bufferFrames) current.shortRender = true
+        if (filled == RENDER_FAILED || !current.active || current.node == null) {
             end(current, null)
             return false
         }

@@ -16,6 +16,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.TimeSource
 import platform.AudioToolbox.AudioQueueBufferRef
 import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
@@ -170,6 +171,48 @@ class AppleAudioOutputTest {
         } finally {
             output.close()
         }
+    }
+
+    /** The events of a live run, and its render gaps that are longer than the queue holds. */
+    private class LiveRun(val events: List<AudioOutputEvent>, val longGaps: Int)
+
+    /** Plays silence for [millis], and blocks the render callback for [stallMicros] in the renders listed in [stalls]. */
+    private fun playWithStalls(millis: Int, stalls: Set<Int>, stallMicros: UInt): LiveRun {
+        val events = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        val renders = AtomicInt(0)
+        val origin = TimeSource.Monotonic.markNow()
+        val renderMicros = LongArray(4096)
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), bufferFrames = 512) { events.append(it) }
+        try {
+            output.start { out, frames ->
+                out.fill(0f)
+                val render = renders.fetchAndAdd(1)
+                if (render < renderMicros.size) renderMicros[render] = origin.elapsedNow().inWholeMicroseconds
+                if (render in stalls) usleep(stallMicros)
+                frames
+            }
+            usleep((millis * 1000).toUInt())
+            assertTrue(renders.load() > 100, "the queue asked for only ${renders.load()} blocks")
+        } finally {
+            output.close()
+        }
+        awaitTrue("no Stopped after close") { events.load().contains(AudioOutputEvent.Stopped) }
+        // Three buffers of 512 frames hold 32 ms. A shorter gap cannot empty a full queue. The three
+        // priming renders and the first callback after the start are not checked.
+        return LiveRun(events.load(), longRenderGaps(renderMicros, renders.load(), 32_000L, stalls, firstChecked = 4))
+    }
+
+    @Test
+    fun aRealQueueThatKeepsUpReportsADropoutOnlyForALongGap() {
+        val run = playWithStalls(2_500, emptySet(), 0u)
+        assertDeviceUnderruns(run.events, deliberate = 0, longGaps = run.longGaps)
+    }
+
+    @Test
+    fun aRealQueueThatRunsDryWhileTheCallbackBlocksReportsEachDropoutOnce() {
+        // Each stall of 150 ms empties the queue once.
+        val run = playWithStalls(2_500, setOf(40, 100), 150_000u)
+        assertDeviceUnderruns(run.events, deliberate = 2, longGaps = run.longGaps)
     }
 
     @Test
