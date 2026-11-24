@@ -36,8 +36,10 @@ public data class Latency(
  * Fills a buffer with sound.
  *
  * Called serially on a platform worker or callback queue, on a deadline. Apple also primes
- * buffers on that callback queue before start returns. Thread identity is not guaranteed.
- * Everything the usual advice says applies: no
+ * buffers on that callback queue before start returns. In a browser it runs on the page's main
+ * thread, between other events: whenever the audio worklet hands back a block it has played, or
+ * on a timer when the output plays by scheduled buffers. A long task elsewhere on the page delays
+ * it. Thread identity is not guaranteed. Everything the usual advice says applies: no
  * allocation, no locks, no logging, no file access. Missing the deadline is a click, and a click
  * is the one thing a listener always notices.
  */
@@ -67,7 +69,10 @@ public sealed interface AudioOutputEvent {
     /** Rendering took longer than the buffer lasts, even if every frame was filled. */
     public data class Overrun(val deadlineMicros: Long, val tookMicros: Long) : AudioOutputEvent
 
-    /** The device went away: headphones unplugged, an interface removed. */
+    /**
+     * The device went away: headphones unplugged, an interface removed. In a browser, also an audio
+     * context that closed, or that the browser suspended or interrupted after the stream started.
+     */
     public data class DeviceLost(val reason: String) : AudioOutputEvent
 
     /** Something failed and the stream cannot continue. */
@@ -102,7 +107,8 @@ public interface AudioOutput {
     /**
      * Cancels the current render generation. In-progress rendering, writes, or event delivery
      * may finish after this returns. Restart is rejected until that generation has unwound.
-     * JVM/Android wait up to 500 ms after unblocking output; Apple schedules teardown.
+     * JVM/Android wait up to 500 ms after unblocking output; Apple schedules teardown. The web
+     * stops at once, or when a render in progress returns if called from the renderer.
      * A call from the renderer never waits for itself. Safe when already stopped.
      */
     public fun stop()
@@ -170,10 +176,17 @@ internal fun renderAudioBlock(
  * [IllegalArgumentException] before any device access.
  *
  * [bufferFrames] must be positive and fit four interleaved 16-bit PCM blocks in an Int.
- * [onEvent] runs on platform workers/control queues, and may run on the caller for an open
- * failure. Keep it brief. Observer exceptions are contained and ignored.
+ * [onEvent] runs on platform workers/control queues, or on the page's main thread in a browser,
+ * and may run on the caller for an open failure. Keep it brief. Observer exceptions are contained
+ * and ignored.
+ *
+ * In a browser the output is Web Audio: an audio worklet where the page can run one, otherwise
+ * scheduled buffers. [AudioOutputEvent.Started] arrives only once the browser lets the page play
+ * sound, which usually takes a click or a key press first. A start made before then waits, and
+ * calling [AudioOutput.start] again from the click or key handler asks the browser once more.
  *
  * @throws IllegalArgumentException for an invalid buffer size or a layout of more than two channels.
+ * @throws UnsupportedOperationException on the web, in a host with no Web Audio such as Node.js.
  */
 @Throws(Exception::class)
 public expect fun openAudioOutput(
@@ -183,5 +196,5 @@ public expect fun openAudioOutput(
     onEvent: (AudioOutputEvent) -> Unit = {},
 ): AudioOutput
 
-/** True when this platform has an output at all. */
+/** True when this platform has an output at all. On the web, true in a page with Web Audio and false in Node.js. */
 public expect fun audioOutputAvailable(): Boolean

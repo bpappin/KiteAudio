@@ -87,10 +87,10 @@ The MIDI, synth and output modules have their own JVM tests:
 ./kotlin test -m kiteaudio-synth -p jvm
 ./kotlin test -m kiteaudio-output -p jvm
 python3 kiteaudio-output/verification/android/run.py --java-home "$JAVA_HOME"
-python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth
+python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth --module kiteaudio-output
 ```
 
-The last command runs the MIDI and synth tests on JS and wasmJs in Node, as the
+The last command runs the MIDI, synth and output tests on JS and wasmJs in Node, as the
 codec modules' web tests run below.
 
 The `kiteaudio-output` JVM tests open the default output device and play a quiet tone.
