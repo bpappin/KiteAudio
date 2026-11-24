@@ -1,5 +1,9 @@
+@file:OptIn(kotlin.concurrent.atomics.ExperimentalAtomicApi::class)
+
 package io.github.yuroyami.kiteaudio.output
 
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.AtomicReference
 import kotlin.math.PI
 import kotlin.math.sin
 import kotlin.test.Test
@@ -16,14 +20,23 @@ import platform.posix.usleep
  */
 class AppleAudioSinkTest {
 
+    /** Appends without a lock: the event queue of the sink and the test thread both touch the list. */
+    private fun AtomicReference<List<AudioSinkEvent>>.append(event: AudioSinkEvent) {
+        while (true) {
+            val current = load()
+            if (compareAndSet(current, current + event)) return
+        }
+    }
+
     @Test
     fun theQueuePullsFromTheCallback() {
-        var blocks = 0
+        val blocks = AtomicInt(0)
+        // Only the render callback touches the phase, and the sink runs it on one serial queue.
         var phase = 0.0
-        val events = mutableListOf<AudioSinkEvent>()
+        val events = AtomicReference<List<AudioSinkEvent>>(emptyList())
         val format = AudioFormat(48_000)
 
-        val sink = openAudioSink(format, bufferFrames = 512) { events += it }
+        val sink = openAudioSink(format, bufferFrames = 512) { events.append(it) }
         try {
             sink.start { out, frames ->
                 for (i in 0 until frames) {
@@ -32,40 +45,42 @@ class AppleAudioSinkTest {
                     out[i * 2 + 1] = value
                     phase += 2.0 * PI * 440.0 / format.sampleRate
                 }
-                blocks++
+                blocks.fetchAndAdd(1)
                 frames
             }
 
             // Half a second is plenty: 512 frames at 48 kHz is about 11 ms a block.
             var waited = 0
-            while (blocks < 8 && waited < 500) {
+            while (blocks.load() < 8 && waited < 500) {
                 usleep(20_000u)
                 waited += 20
             }
-            assertTrue(blocks >= 8, "the queue asked for only $blocks blocks in $waited ms")
+            assertTrue(blocks.load() >= 8, "the queue asked for only ${blocks.load()} blocks in $waited ms")
             assertTrue(sink.isRunning)
         } finally {
             sink.stop()
             sink.close()
         }
 
-        assertTrue(events.any { it is AudioSinkEvent.Started }, "no Started event: $events")
-        assertTrue(events.none { it is AudioSinkEvent.Failed }, "the sink failed: $events")
+        val seen = events.load()
+        assertTrue(seen.any { it is AudioSinkEvent.Started }, "no Started event: $seen")
+        assertTrue(seen.none { it is AudioSinkEvent.Failed }, "the sink failed: $seen")
     }
 
     @Test
     fun theBuffersArePrimedBeforeTheQueueStarts() {
         // Starting with empty buffers is an audible click. Priming means the callback has
         // already run before start() returns.
-        var blocks = 0
+        val blocks = AtomicInt(0)
         val sink = openAudioSink(AudioFormat(48_000), bufferFrames = 256)
         try {
             sink.start { out, frames ->
-                blocks++
+                blocks.fetchAndAdd(1)
                 for (i in 0 until frames * 2) out[i] = 0f
                 frames
             }
-            assertTrue(blocks >= 3, "only $blocks buffers were primed before the queue started")
+            val primed = blocks.load()
+            assertTrue(primed >= 3, "only $primed buffers were primed before the queue started")
         } finally {
             sink.close()
         }
