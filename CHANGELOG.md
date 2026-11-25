@@ -200,7 +200,7 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
   format conversion, TPDF dither, interleaving and channel remapping.
 - Pull-based streaming decoder with sample-accurate seeking.
 - Header-only probing.
-- A sniffer that names 29 audio formats.
+- A sniffer that names 30 audio formats.
 - Guards for truncated, corrupt and hostile input, with a typed exception
   hierarchy and an allocation ceiling.
 - Tag reading on any file, decodable or not: ID3v2.2, 2.3 and 2.4, ID3v1 and
@@ -376,7 +376,7 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
 - Vorbis, decoded: floor type 1, residue types 0, 1 and 2, channel coupling,
   block switching, and up to eight channels reordered into AudioKodec's channel
   order. Checked against libvorbis sample for sample at every quality level.
-  Floor type 0 is parsed and refused, because no encoder has emitted it since
+  Floor type 0 is decoded as well, although no encoder has emitted it since
   the format's 2001 beta releases.
 - An inverse MDCT and a complex FFT in `commonMain`, checked against the
   transforms' own definitions rather than only against another decoder.
