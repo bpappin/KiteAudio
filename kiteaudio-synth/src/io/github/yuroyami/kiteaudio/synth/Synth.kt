@@ -19,6 +19,10 @@ import kotlin.native.HiddenFromObjC
  * half way through the block, not at its start. Anything else quantises every note to the block
  * size, which at 256 frames is 5 ms of slop that a player can hear as sloppiness.
  *
+ * **A linked stereo pair plays as one.** When a left and a right sample link to each other and both
+ * zones play the note, both sides start together at the right side's pitch, each with its own level
+ * and pan. Any other link plays each zone as its own voice, at its own pitch.
+ *
  * **Nothing here talks to a MIDI library.** Messages arrive as their raw status and data bytes,
  * which every source can produce, so this stays a library about sound rather than about MIDI.
  */
@@ -395,7 +399,8 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
         stopNote(channel, key, force = true)
         state.keyDown[key] = true
 
-        val regions = presetFor(state)?.regions ?: return
+        val preset = presetFor(state) ?: return
+        val regions = preset.regions
         val fixed = tableCents(state, key)
         val tuning = bendCents(channel) + channelCents(state) + fixed
 
@@ -430,6 +435,8 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
                         channelPressure = state.channelPressure,
                         polyPressure = state.polyPressure[key],
                         bendRange = state.bendRangeSemitones,
+                        // Both sides of a stereo pair start here, on this frame, at the right side's pitch.
+                        pitchPlan = preset.pitchPlan(regionIndex, key, velocity),
                     )
                 }
             }

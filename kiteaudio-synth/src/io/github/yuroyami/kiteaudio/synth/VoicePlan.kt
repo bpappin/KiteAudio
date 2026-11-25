@@ -100,6 +100,9 @@ public class EnvelopeSpec(
  * 60" means sixty quieter than whatever the instrument chose, not exactly sixty. Getting this
  * backwards makes every layered font too loud or too quiet in a way that is hard to hear as a
  * bug and easy to hear as bad.
+ *
+ * Each plan holds its own zone's pitch. A [Synth] plays the left side of a valid stereo pair at
+ * the right side's pitch, but these plans are not paired.
  */
 public fun SoundFont.voicesFor(preset: Preset, key: Int, velocity: Int): List<VoicePlan> {
     val plans = ArrayList<VoicePlan>(2)
@@ -145,6 +148,12 @@ internal class PreparedVoiceRegion(
     val velocityLow: Int,
     val velocityHigh: Int,
 ) {
+    /**
+     * For a left sample with a valid stereo link: the regions of the same preset zone that play its
+     * right partner, in zone order. Empty for every other region.
+     */
+    var rightPartners: IntArray = NO_PARTNERS
+
     fun matches(key: Int, velocity: Int): Boolean =
         key >= keyLow && key <= keyHigh &&
             velocity >= velocityLow && velocity <= velocityHigh
@@ -155,7 +164,27 @@ internal class PreparedPreset(
     val program: Int,
     val regions: Array<PreparedVoiceRegion>,
     val source: Preset,
-)
+) {
+    /**
+     * The plan that sets the pitch of region [index] for this note. The left side of a valid stereo
+     * pair takes the plan of the first right partner that also plays the note. Every other region keeps its own.
+     */
+    fun pitchPlan(index: Int, key: Int, velocity: Int): VoicePlan {
+        val region = regions[index]
+        val partners = region.rightPartners
+        var at = 0
+        while (at < partners.size) {
+            val right = regions[partners[at]]
+            if (right.matches(key, velocity)) return right.plan
+            at++
+        }
+        return region.plan
+    }
+}
+
+private const val STEREO_RIGHT = 2
+private const val STEREO_LEFT = 4
+private val NO_PARTNERS = IntArray(0)
 
 /** A compact, allocation-free lookup table for the presets of one exact SoundFont. */
 internal class PreparedSoundFont private constructor(
@@ -243,9 +272,30 @@ private fun PresetZone.overlaps(zone: InstrumentZone): Boolean =
     maxOf(keys.low, zone.keys.low) <= minOf(keys.high, zone.keys.high) &&
         maxOf(velocities.low, zone.velocities.low) <= minOf(velocities.high, zone.velocities.high)
 
+/**
+ * The stereo side of sample [id]: [STEREO_LEFT] or [STEREO_RIGHT] when it and the sample it links
+ * to name each other and are one left and one right sample (SoundFont 2.04, section 7.10). Else 0,
+ * and the sample plays on its own. The four low bits of the type say mono, right, left or linked,
+ * so the ROM bit does not count.
+ */
+private fun SoundFont.stereoSide(id: Int): Int {
+    val sample = samples.getOrNull(id) ?: return 0
+    val side = sample.type and 0x0F
+    if (side != STEREO_LEFT && side != STEREO_RIGHT) return 0
+    val partner = samples.getOrNull(sample.link) ?: return 0
+    val otherSide = if (side == STEREO_LEFT) STEREO_RIGHT else STEREO_LEFT
+    if ((partner.type and 0x0F) != otherSide || partner.link != id) return 0
+    return side
+}
+
+private fun zoneAndSample(presetZone: Int, sampleId: Int): Long = (presetZone.toLong() shl 32) or (sampleId.toLong() and 0xFFFFFFFFL)
+
 /** Flattens zone relationships once, while construction is still off the audio callback. */
 private fun SoundFont.prepare(preset: Preset, samplePeaks: DoubleArray): PreparedPreset {
     val regions = ArrayList<PreparedVoiceRegion>()
+    val presetZones = ArrayList<Int>()
+    val sampleIds = ArrayList<Int>()
+    val sides = ArrayList<Int>()
     var presetIndex = 0
     while (presetIndex < preset.zones.size) {
         val presetZone = preset.zones[presetIndex]
@@ -284,12 +334,30 @@ private fun SoundFont.prepare(preset: Preset, samplePeaks: DoubleArray): Prepare
                                 velocityHigh = velocityHigh,
                             ),
                         )
+                        presetZones.add(presetIndex)
+                        sampleIds.add(sampleId)
+                        sides.add(stereoSide(sampleId))
                     }
                 }
                 instrumentIndex++
             }
         }
         presetIndex++
+    }
+    // A pair lives in one instrument, so a left side looks for its right side only in its own preset
+    // zone. The index keeps this linear in the number of regions, whatever the font holds.
+    val rightSides = HashMap<Long, ArrayList<Int>>()
+    for (index in regions.indices) {
+        if (sides[index] != STEREO_RIGHT) continue
+        rightSides.getOrPut(zoneAndSample(presetZones[index], sampleIds[index])) { ArrayList(1) }.add(index)
+    }
+    // Left sides of one right sample share one array, so many zones of one sample stay cheap.
+    val shared = HashMap<Long, IntArray>()
+    for (index in regions.indices) {
+        if (sides[index] != STEREO_LEFT) continue
+        val partnerKey = zoneAndSample(presetZones[index], samples[sampleIds[index]].link)
+        val partners = rightSides[partnerKey] ?: continue
+        regions[index].rightPartners = shared.getOrPut(partnerKey) { partners.toIntArray() }
     }
     return PreparedPreset(preset.bank, preset.program, regions.toTypedArray(), preset)
 }

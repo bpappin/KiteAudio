@@ -103,6 +103,18 @@ public class Voice {
     /** What the modulators add to each generator, by operator number. */
     private val modSum = DoubleArray(GENERATOR_COUNT)
 
+    /**
+     * The plan whose pitch values set this voice's pitch. It is [plan], except for the left side
+     * of a stereo pair, which takes the right side's pitch (SoundFont 2.04, section 7.10).
+     */
+    private var pitchPlan: VoicePlan? = null
+    private var paired = false
+    private var pitchKey = 0
+    private var pitchVelocity = 0
+    /** The right side's modulator sums for a paired voice. Unpaired, [pitchSum] is [modSum]. */
+    private val pairedSum = DoubleArray(GENERATOR_COUNT)
+    private var pitchSum = modSum
+
     private var pool: ShortArray = ShortArray(0)
     private var startFrame = 0
     private var endFrame = 0
@@ -143,19 +155,16 @@ public class Voice {
     /** The attack rises in amplitude, not in decibels, which is what the format says. */
     private var attackLevel = 0.0
 
-    // The modulation envelope runs 0 to 1 through the same stages, and turns with the same key and release.
-    private var modStage = EnvelopeStage.Finished
-    private var modDelayFrames = 0
-    private var modAttackFrames = 0
-    private var modHoldFrames = 0
-    private var modDecayFrames = 0
-    private var modReleaseFrames = 0
-    private var modSustain = 0.0
-    private var modStageFrames = 0
-    private var modValue = 0.0
-
+    private val modEnvelope = ModEnvelope()
     private val modLfo = Lfo()
     private val vibLfo = Lfo()
+
+    // A paired voice runs the right side's modulation envelope and LFO a second time, for its pitch
+    // only. Its own envelope and LFO still move its filter and volume. Unpaired, these are its own.
+    private val pairedEnvelope = ModEnvelope()
+    private val pairedLfo = Lfo()
+    private var pitchEnvelope = modEnvelope
+    private var pitchLfo = modLfo
 
     // How far each source moves its destination at full scale: cents of pitch, cents of cutoff, centibels.
     private var modEnvToPitch = 0.0
@@ -223,12 +232,31 @@ public class Voice {
         channelPressure: Int = 0,
         polyPressure: Int = 0,
         bendRange: Double = 2.0,
+        /** The plan that sets the pitch: the right side's for the left side of a stereo pair. */
+        pitchPlan: VoicePlan = plan,
     ) {
         this.plan = plan
         val fixedVelocity = plan[Generator.Velocity]
         val fixedKey = plan[Generator.Keynum]
         this.velocity = if (fixedVelocity in 0..127) fixedVelocity else velocity
         this.effectiveKey = if (fixedKey in 0..127) fixedKey else key
+        this.pitchPlan = pitchPlan
+        paired = pitchPlan !== plan
+        if (paired) {
+            val pitchFixedVelocity = pitchPlan[Generator.Velocity]
+            val pitchFixedKey = pitchPlan[Generator.Keynum]
+            pitchVelocity = if (pitchFixedVelocity in 0..127) pitchFixedVelocity else velocity
+            pitchKey = if (pitchFixedKey in 0..127) pitchFixedKey else key
+            pitchSum = pairedSum
+            pitchEnvelope = pairedEnvelope
+            pitchLfo = pairedLfo
+        } else {
+            pitchVelocity = this.velocity
+            pitchKey = effectiveKey
+            pitchSum = modSum
+            pitchEnvelope = modEnvelope
+            pitchLfo = modLfo
+        }
         this.fixedCents = fixedCents
         this.pool = plan.sample.data
         this.channel = channel
@@ -249,10 +277,11 @@ public class Voice {
         wrappedOnce = false
 
         // Modulators first: the envelope times take theirs here, once, and never again.
-        evaluate(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+        evaluateAll(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
 
-        val cents = Units.keyCents(effectiveKey, plan.rootKey, plan.scaleTuning, plan.tuneCents)
-        unbentStep = Units.centsToRatio(cents) * plan.sample.sampleRate / sampleRate
+        // The pitch plan's sample rate too, so both sides of a pair move by the same step.
+        val cents = Units.keyCents(pitchKey, pitchPlan.rootKey, pitchPlan.scaleTuning, pitchPlan.tuneCents)
+        unbentStep = Units.centsToRatio(cents) * pitchPlan.sample.sampleRate / sampleRate
         pitchCents = 0.0
         retune(tuningCents)
 
@@ -266,25 +295,12 @@ public class Voice {
         releaseFrames = framesOf(spec.releaseTimecents + moved(Generator.ReleaseVolEnv), sampleRate)
         sustainCb = (spec.sustainCb + modSum[Generator.SustainVolEnv.id]).coerceIn(0.0, 1440.0)
 
-        modDelayFrames = framesOf(plan[Generator.DelayModEnv] + moved(Generator.DelayModEnv), sampleRate)
-        modAttackFrames = framesOf(plan[Generator.AttackModEnv] + moved(Generator.AttackModEnv), sampleRate)
-        modHoldFrames = framesOf(
-            plan[Generator.HoldModEnv] + moved(Generator.HoldModEnv) + plan[Generator.KeynumToModEnvHold] * fromMiddle, sampleRate,
-        )
-        modDecayFrames = framesOf(
-            plan[Generator.DecayModEnv] + moved(Generator.DecayModEnv) + plan[Generator.KeynumToModEnvDecay] * fromMiddle, sampleRate,
-        )
-        modReleaseFrames = framesOf(plan[Generator.ReleaseModEnv] + moved(Generator.ReleaseModEnv), sampleRate)
-        modSustain = (1.0 - (plan[Generator.SustainModEnv] + modSum[Generator.SustainModEnv.id]) / 1000.0).coerceIn(0.0, 1.0)
-        modValue = 0.0
-        enterMod(EnvelopeStage.Delay)
-        modLfo.start(
-            framesOf(plan[Generator.DelayModLfo] + moved(Generator.DelayModLfo), sampleRate),
-            Lfo.hertzOf(plan[Generator.FreqModLfo] + moved(Generator.FreqModLfo)), sampleRate,
-        )
+        startModulation(plan, modSum, effectiveKey, modEnvelope, modLfo, sampleRate)
+        if (paired) startModulation(pitchPlan, pairedSum, pitchKey, pairedEnvelope, pairedLfo, sampleRate)
+        // The vibrato LFO moves only the pitch, so it is the pitch plan's alone.
         vibLfo.start(
-            framesOf(plan[Generator.DelayVibLfo] + moved(Generator.DelayVibLfo), sampleRate),
-            Lfo.hertzOf(plan[Generator.FreqVibLfo] + moved(Generator.FreqVibLfo)), sampleRate,
+            framesOf(pitchPlan[Generator.DelayVibLfo] + moved(pitchSum, Generator.DelayVibLfo), sampleRate),
+            Lfo.hertzOf(pitchPlan[Generator.FreqVibLfo] + moved(pitchSum, Generator.FreqVibLfo)), sampleRate,
         )
 
         filter.reset()
@@ -308,17 +324,22 @@ public class Voice {
     /** A controller, the wheel or a pressure moved: the modulators run again, and the note carries on. */
     internal fun modulate(controllers: IntArray, pitchWheel: Int, channelPressure: Int, polyPressure: Int, bendRange: Double) {
         if (!active) return
-        evaluate(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+        evaluateAll(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
         derive()
     }
 
-    internal fun watches(controller: Int): Boolean = plan?.watchedControllers?.get(controller) == true
+    // A paired voice also hears what moves the right side's pitch modulators.
+    internal fun watches(controller: Int): Boolean =
+        plan?.watchedControllers?.get(controller) == true || (paired && pitchPlan?.watchedControllers?.get(controller) == true)
 
-    internal val watchesPressure: Boolean get() = plan?.watchesPressure == true
+    internal val watchesPressure: Boolean
+        get() = plan?.watchesPressure == true || (paired && pitchPlan?.watchesPressure == true)
 
-    internal val watchesPolyPressure: Boolean get() = plan?.watchesPolyPressure == true
+    internal val watchesPolyPressure: Boolean
+        get() = plan?.watchesPolyPressure == true || (paired && pitchPlan?.watchesPolyPressure == true)
 
-    internal val watchesWheel: Boolean get() = plan?.watchesWheel == true
+    internal val watchesWheel: Boolean
+        get() = plan?.watchesWheel == true || (paired && pitchPlan?.watchesWheel == true)
 
     /** The key came up. The note fades from wherever its envelope is, at the full-scale rate. */
     public fun release() {
@@ -331,11 +352,8 @@ public class Voice {
         releasing = true
         stage = if (releaseFrames <= 0 || envelopeCb >= SILENT) EnvelopeStage.Finished else EnvelopeStage.Release
         stageFrames = 0
-        if (modStage != EnvelopeStage.Finished) {
-            modStage = if (modReleaseFrames <= 0) EnvelopeStage.Finished else EnvelopeStage.Release
-            if (modStage == EnvelopeStage.Finished) modValue = 0.0
-            modStageFrames = 0
-        }
+        modEnvelope.release()
+        if (paired) pairedEnvelope.release()
     }
 
     /** Stops at once. Used when a voice is stolen and there is no time to fade. */
@@ -346,6 +364,8 @@ public class Voice {
         levelStep = 0.0
         currentGain = 0.0
         plan = null
+        pitchPlan = null
+        paired = false
         pool = EMPTY_POOL
     }
 
@@ -384,9 +404,13 @@ public class Voice {
                     return
                 }
                 advanceEnvelope(CONTROL_FRAMES)
-                advanceModEnvelope(CONTROL_FRAMES)
+                modEnvelope.advance(CONTROL_FRAMES)
                 modLfo.advance(CONTROL_FRAMES)
                 vibLfo.advance(CONTROL_FRAMES)
+                if (paired) {
+                    pairedEnvelope.advance(CONTROL_FRAMES)
+                    pairedLfo.advance(CONTROL_FRAMES)
+                }
                 applyModulation()
                 val envelope = envelopeLevel()
                 levelStep = (envelope * baseGain * tremolo - level) / CONTROL_FRAMES
@@ -488,11 +512,31 @@ public class Voice {
 
     // ------------------------------------------------------------------ modulation
 
-    private fun moved(generator: Generator): Int = modSum[generator.id].roundToInt()
+    private fun moved(generator: Generator): Int = moved(modSum, generator)
 
-    /** Every modulator's contribution, summed by destination. */
-    private fun evaluate(controllers: IntArray, pitchWheel: Int, channelPressure: Int, polyPressure: Int, bendRange: Double) {
-        modSum.fill(0.0)
+    private fun moved(sum: DoubleArray, generator: Generator): Int = sum[generator.id].roundToInt()
+
+    /** This voice's own modulator sums, and for a paired voice the right side's too. */
+    private fun evaluateAll(controllers: IntArray, pitchWheel: Int, channelPressure: Int, polyPressure: Int, bendRange: Double) {
+        evaluate(plan, modSum, effectiveKey, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+        if (paired) {
+            evaluate(pitchPlan, pairedSum, pitchKey, pitchVelocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+        }
+    }
+
+    /** Every modulator's contribution in [plan], summed by destination into [sum]. */
+    private fun evaluate(
+        plan: VoicePlan?,
+        sum: DoubleArray,
+        key: Int,
+        velocity: Int,
+        controllers: IntArray,
+        pitchWheel: Int,
+        channelPressure: Int,
+        polyPressure: Int,
+        bendRange: Double,
+    ) {
+        sum.fill(0.0)
         val modulators = plan?.modulatorArray ?: return
         var index = 0
         while (index < modulators.size) {
@@ -500,22 +544,31 @@ public class Voice {
             val destination = modulator.destinationId
             // A link feeds another modulator, which nothing here does yet; it reads as nothing.
             if (destination < 0 || destination >= GENERATOR_COUNT) continue
-            val primary = sourceValue(modulator.source, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+            val primary = sourceValue(modulator.source, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
             if (primary == 0.0) continue
-            val secondary = sourceValue(modulator.amountSource, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+            val secondary = sourceValue(modulator.amountSource, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
             var value = modulator.amount * primary * secondary
             if (modulator.transform == ABSOLUTE) value = abs(value)
-            modSum[destination] += value
+            sum[destination] += value
         }
     }
 
-    private fun sourceValue(source: Int, controllers: IntArray, pitchWheel: Int, channelPressure: Int, polyPressure: Int, bendRange: Double): Double {
+    private fun sourceValue(
+        source: Int,
+        key: Int,
+        velocity: Int,
+        controllers: IntArray,
+        pitchWheel: Int,
+        channelPressure: Int,
+        polyPressure: Int,
+        bendRange: Double,
+    ): Double {
         if ((source and CC_FLAG) != 0) return sourceCurve(source, controllers[source and 0x7F])
         val raw = when (source and 0x7F) {
             // No controller counts as a full one, so an amount source of nothing leaves the amount as it is.
             SOURCE_NONE -> return 1.0
             SOURCE_VELOCITY -> velocity
-            SOURCE_KEY -> effectiveKey
+            SOURCE_KEY -> key
             SOURCE_POLY_PRESSURE -> polyPressure
             SOURCE_PRESSURE -> channelPressure
             SOURCE_WHEEL -> pitchWheel + 8192
@@ -533,13 +586,16 @@ public class Voice {
         val pan = ((plan.pan + modSum[Generator.Pan.id]) / 500.0).coerceIn(-1.0, 1.0)
         gainLeft = (1.0 - pan) * 0.5
         gainRight = (1.0 + pan) * 0.5
-        modEnvToPitch = plan[Generator.ModEnvToPitch] + modSum[Generator.ModEnvToPitch.id]
-        modLfoToPitch = plan[Generator.ModLfoToPitch] + modSum[Generator.ModLfoToPitch.id]
-        vibLfoToPitch = plan[Generator.VibLfoToPitch] + modSum[Generator.VibLfoToPitch.id]
+        // The pitch depths and the modulated tune come from the pitch plan, the right side's for a pair.
+        val pitchPlan = pitchPlan ?: plan
+        val pitchSum = pitchSum
+        modEnvToPitch = pitchPlan[Generator.ModEnvToPitch] + pitchSum[Generator.ModEnvToPitch.id]
+        modLfoToPitch = pitchPlan[Generator.ModLfoToPitch] + pitchSum[Generator.ModLfoToPitch.id]
+        vibLfoToPitch = pitchPlan[Generator.VibLfoToPitch] + pitchSum[Generator.VibLfoToPitch.id]
+        pitchOffset = pitchSum[Generator.FineTune.id] + 100.0 * pitchSum[Generator.CoarseTune.id]
         modEnvToCutoff = plan[Generator.ModEnvToFilterFc] + modSum[Generator.ModEnvToFilterFc.id]
         modLfoToCutoff = plan[Generator.ModLfoToFilterFc] + modSum[Generator.ModLfoToFilterFc.id]
         modLfoToVolume = plan[Generator.ModLfoToVolume] + modSum[Generator.ModLfoToVolume.id]
-        pitchOffset = modSum[Generator.FineTune.id] + 100.0 * modSum[Generator.CoarseTune.id]
         // SoundFont sends are in tenths of a percent: 200 is 20%, 1000 is full level.
         reverbSend = ((plan[Generator.ReverbEffectsSend] + modSum[Generator.ReverbEffectsSend.id]) / 1000.0).coerceIn(0.0, 1.0)
         chorusSend = ((plan[Generator.ChorusEffectsSend] + modSum[Generator.ChorusEffectsSend.id]) / 1000.0).coerceIn(0.0, 1.0)
@@ -551,11 +607,12 @@ public class Voice {
 
     /** Pitch, cutoff and tremolo from where the modulation envelope and the LFOs are now. */
     private fun applyModulation() {
-        val pitch = pitchOffset + modValue * modEnvToPitch + modLfo.value * modLfoToPitch + vibLfo.value * vibLfoToPitch
+        val pitch = pitchOffset + pitchEnvelope.value * modEnvToPitch + pitchLfo.value * modLfoToPitch + vibLfo.value * vibLfoToPitch
         if (pitch != pitchCents) {
             pitchCents = pitch
             step = unbentStep * Units.centsToRatio(tuningCents + pitch)
         }
+        val modValue = modEnvelope.value
         val fc = cutoff + modValue * modEnvToCutoff + modLfo.value * modLfoToCutoff
         if (fc != cutoffCents) {
             cutoffCents = fc
@@ -649,69 +706,26 @@ public class Voice {
         else -> Units.gainOf(envelopeCb)
     }
 
-    /** The modulation envelope, straight lines between 0 and 1 at the full-scale rate. */
-    private fun advanceModEnvelope(frames: Int) {
-        var left = frames
-        while (left > 0) {
-            when (modStage) {
-                EnvelopeStage.Delay -> {
-                    val take = min(left, modDelayFrames - modStageFrames)
-                    modStageFrames += take
-                    left -= take
-                    if (modStageFrames >= modDelayFrames) enterMod(EnvelopeStage.Attack)
-                }
-                EnvelopeStage.Attack -> {
-                    val take = min(left, modAttackFrames - modStageFrames)
-                    modStageFrames += take
-                    left -= take
-                    modValue = modStageFrames.toDouble() / modAttackFrames
-                    if (modStageFrames >= modAttackFrames) enterMod(EnvelopeStage.Hold)
-                }
-                EnvelopeStage.Hold -> {
-                    val take = min(left, modHoldFrames - modStageFrames)
-                    modStageFrames += take
-                    left -= take
-                    if (modStageFrames >= modHoldFrames) enterMod(EnvelopeStage.Decay)
-                }
-                EnvelopeStage.Decay -> {
-                    val rate = 1.0 / modDecayFrames
-                    val take = min(left, ceil((modValue - modSustain) / rate).toInt().coerceAtLeast(0))
-                    modValue -= rate * take
-                    left -= take
-                    if (modValue <= modSustain) {
-                        modValue = modSustain
-                        modStage = EnvelopeStage.Sustain
-                    }
-                }
-                EnvelopeStage.Release -> {
-                    modValue -= left.toDouble() / modReleaseFrames
-                    left = 0
-                    if (modValue <= 0.0) {
-                        modValue = 0.0
-                        modStage = EnvelopeStage.Finished
-                    }
-                }
-                EnvelopeStage.Sustain, EnvelopeStage.Finished -> left = 0
-            }
-        }
-    }
-
-    private fun enterMod(next: EnvelopeStage) {
-        modStage = next
-        modStageFrames = 0
-        when (next) {
-            EnvelopeStage.Delay -> if (modDelayFrames <= 0) enterMod(EnvelopeStage.Attack)
-            EnvelopeStage.Attack -> if (modAttackFrames <= 0) enterMod(EnvelopeStage.Hold)
-            EnvelopeStage.Hold -> {
-                modValue = 1.0
-                if (modHoldFrames <= 0) enterMod(EnvelopeStage.Decay)
-            }
-            EnvelopeStage.Decay -> if (modDecayFrames <= 0) {
-                modValue = modSustain
-                modStage = EnvelopeStage.Sustain
-            }
-            else -> Unit
-        }
+    /** Starts a modulation envelope and the modulation LFO from [plan], its modulator sums and its key. */
+    private fun startModulation(plan: VoicePlan, sum: DoubleArray, key: Int, envelope: ModEnvelope, lfo: Lfo, sampleRate: Int) {
+        // Hold and decay can shorten for high keys and lengthen for low ones, key 60 being the pivot.
+        val fromMiddle = 60 - key
+        envelope.start(
+            delayFrames = framesOf(plan[Generator.DelayModEnv] + moved(sum, Generator.DelayModEnv), sampleRate),
+            attackFrames = framesOf(plan[Generator.AttackModEnv] + moved(sum, Generator.AttackModEnv), sampleRate),
+            holdFrames = framesOf(
+                plan[Generator.HoldModEnv] + moved(sum, Generator.HoldModEnv) + plan[Generator.KeynumToModEnvHold] * fromMiddle, sampleRate,
+            ),
+            decayFrames = framesOf(
+                plan[Generator.DecayModEnv] + moved(sum, Generator.DecayModEnv) + plan[Generator.KeynumToModEnvDecay] * fromMiddle, sampleRate,
+            ),
+            releaseFrames = framesOf(plan[Generator.ReleaseModEnv] + moved(sum, Generator.ReleaseModEnv), sampleRate),
+            sustain = (1.0 - (plan[Generator.SustainModEnv] + sum[Generator.SustainModEnv.id]) / 1000.0).coerceIn(0.0, 1.0),
+        )
+        lfo.start(
+            framesOf(plan[Generator.DelayModLfo] + moved(sum, Generator.DelayModLfo), sampleRate),
+            Lfo.hertzOf(plan[Generator.FreqModLfo] + moved(sum, Generator.FreqModLfo)), sampleRate,
+        )
     }
 
     private fun framesOf(timecents: Int, sampleRate: Int): Int {
@@ -736,6 +750,106 @@ public class Voice {
             it[10] = 64
             it[11] = 127
             it[91] = 127
+        }
+    }
+}
+
+/**
+ * The modulation envelope: it runs from 0 to 1 through the same stages as the volume envelope, and
+ * turns with the same key and release. It moves in straight lines at the full-scale rate.
+ */
+internal class ModEnvelope {
+    var value = 0.0
+        private set
+    private var stage = EnvelopeStage.Finished
+    private var delayFrames = 0
+    private var attackFrames = 0
+    private var holdFrames = 0
+    private var decayFrames = 0
+    private var releaseFrames = 0
+    private var sustain = 0.0
+    private var stageFrames = 0
+
+    fun start(delayFrames: Int, attackFrames: Int, holdFrames: Int, decayFrames: Int, releaseFrames: Int, sustain: Double) {
+        this.delayFrames = delayFrames
+        this.attackFrames = attackFrames
+        this.holdFrames = holdFrames
+        this.decayFrames = decayFrames
+        this.releaseFrames = releaseFrames
+        this.sustain = sustain
+        value = 0.0
+        enter(EnvelopeStage.Delay)
+    }
+
+    /** The key came up: the envelope falls from where it is. */
+    fun release() {
+        if (stage == EnvelopeStage.Finished) return
+        stage = if (releaseFrames <= 0) EnvelopeStage.Finished else EnvelopeStage.Release
+        if (stage == EnvelopeStage.Finished) value = 0.0
+        stageFrames = 0
+    }
+
+    fun advance(frames: Int) {
+        var left = frames
+        while (left > 0) {
+            when (stage) {
+                EnvelopeStage.Delay -> {
+                    val take = min(left, delayFrames - stageFrames)
+                    stageFrames += take
+                    left -= take
+                    if (stageFrames >= delayFrames) enter(EnvelopeStage.Attack)
+                }
+                EnvelopeStage.Attack -> {
+                    val take = min(left, attackFrames - stageFrames)
+                    stageFrames += take
+                    left -= take
+                    value = stageFrames.toDouble() / attackFrames
+                    if (stageFrames >= attackFrames) enter(EnvelopeStage.Hold)
+                }
+                EnvelopeStage.Hold -> {
+                    val take = min(left, holdFrames - stageFrames)
+                    stageFrames += take
+                    left -= take
+                    if (stageFrames >= holdFrames) enter(EnvelopeStage.Decay)
+                }
+                EnvelopeStage.Decay -> {
+                    val rate = 1.0 / decayFrames
+                    val take = min(left, ceil((value - sustain) / rate).toInt().coerceAtLeast(0))
+                    value -= rate * take
+                    left -= take
+                    if (value <= sustain) {
+                        value = sustain
+                        stage = EnvelopeStage.Sustain
+                    }
+                }
+                EnvelopeStage.Release -> {
+                    value -= left.toDouble() / releaseFrames
+                    left = 0
+                    if (value <= 0.0) {
+                        value = 0.0
+                        stage = EnvelopeStage.Finished
+                    }
+                }
+                EnvelopeStage.Sustain, EnvelopeStage.Finished -> left = 0
+            }
+        }
+    }
+
+    private fun enter(next: EnvelopeStage) {
+        stage = next
+        stageFrames = 0
+        when (next) {
+            EnvelopeStage.Delay -> if (delayFrames <= 0) enter(EnvelopeStage.Attack)
+            EnvelopeStage.Attack -> if (attackFrames <= 0) enter(EnvelopeStage.Hold)
+            EnvelopeStage.Hold -> {
+                value = 1.0
+                if (holdFrames <= 0) enter(EnvelopeStage.Decay)
+            }
+            EnvelopeStage.Decay -> if (decayFrames <= 0) {
+                value = sustain
+                stage = EnvelopeStage.Sustain
+            }
+            else -> Unit
         }
     }
 }
