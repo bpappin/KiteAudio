@@ -1,4 +1,5 @@
-# Plays mono or stereo Float32 PCM on the default audio device of each platform.
+# Plays mono or stereo Float32 PCM on an audio output device: Java Sound on the JVM, AudioTrack on
+# Android, AudioQueue on Apple platforms and Web Audio in a browser.
 product:
   type: kmp/lib
   platforms:
@@ -28,7 +29,7 @@ settings:
       description: >-
         Callback-based mono and stereo audio output for Kotlin Multiplatform. Accepts interleaved Float32 samples and
         outputs 16-bit PCM through Java Sound on the JVM, AudioTrack on Android and AudioQueue on Apple platforms, and
-        Float32 through a Web Audio worklet in the browser.
+        Float32 through Web Audio in the browser.
 
 # Pin the klib name to "io.github.yuroyami:kiteaudio-output", the group and artifact name. The committed
 # klib ABI dump records this name. Set it per platform: on @native, it also renames the

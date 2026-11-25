@@ -1,28 +1,23 @@
-# KiteSynth
+# kiteaudio-synth
 
-<p align="center">
-  A sample-based synthesiser written in common Kotlin: read SoundFont banks, send MIDI
-  messages and render stereo Float32 PCM from <code>commonMain</code>.
-</p>
+`kiteaudio-synth` is the synthesizer module of [KiteAudio](../README.md). It is a sample-based
+synthesizer written in common Kotlin. It reads SoundFont banks, takes MIDI messages and renders
+stereo Float32 PCM from `commonMain`.
 
-<p align="center">
-  <sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
-  and review of its author.</sub>
-</p>
+<sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
+and review of its author.</sub>
 
-<p align="center">
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin 2.4.21"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
-</p>
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](../LICENSE)
 
 ## What you get
 
-KiteSynth brings its own synthesis engine. It depends only on `kotlin-stdlib`, with no JNI,
-platform synthesiser or bundled SoundFont. Your app supplies the font bytes and the audio output;
-[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output) is the companion library for sending PCM to a device,
-and [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) handles MIDI files and connections.
+`kiteaudio-synth` brings its own synthesis engine. It depends only on `kotlin-stdlib`, with no JNI,
+platform synthesizer or bundled SoundFont. Your app supplies the font bytes and the audio output.
+[`kiteaudio-output`](../kiteaudio-output/README.md) sends PCM to a device, and
+[`kiteaudio-midi`](../kiteaudio-midi/README.md) handles MIDI files and connections.
 
-| Task | What KiteSynth provides |
+| Task | What `kiteaudio-synth` provides |
 | --- | --- |
 | Read | SF2 presets, instruments, zones, generators, modulators, INFO text, 16-bit sample frames and the `sm24` low bytes of 24-bit samples. SF3 compressed samples can be retained for an external decoder. |
 | Play | Layered sample voices, velocity and key ranges, loop modes, exclusive classes, a fixed voice pool and voice stealing. |
@@ -51,14 +46,12 @@ The result is 512 **frames**, each containing a left and a right sample. Creatin
 and prepares its regions; a callback should reuse that synth and its output buffer.
 
 > [!NOTE]
-> The source version is `0.3.0`. The API is still evolving; [CHANGELOG.md](../CHANGELOG.md) lists the
-> breaking changes from `0.1`. As of 29 September 2026, this repository has no GitHub releases
-> and the `io.github.yuroyami:kiteaudio-synth` Maven Central metadata endpoint returns 404. The source
-> version is not a verified Maven Central release.
+> The version is `0.3.0`. The API can still change, and [CHANGELOG.md](../CHANGELOG.md) lists the
+> breaking changes. 0.3.0 is not published to Maven Central yet.
 
 ## Install from source
 
-KiteSynth builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain), the
+`kiteaudio-synth` builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain), the
 `./kotlin` script in the repository root. Publish the checkout to your local Maven repository:
 
 ```sh
@@ -151,8 +144,9 @@ synth.enqueue(status = 0x90, data1 = 60, data2 = 100, atFrame = 0)
 synth.enqueue(status = 0xD0, data1 = 64, data2 = 0, atFrame = 0) // channel pressure
 ```
 
-KiteSynth accepts channel voice messages; it does not parse MIDI byte streams, play an SMF timeline
-or interpret SysEx/UMP messages. Those responsibilities belong to the caller or a MIDI library.
+`Synth` accepts channel voice messages; it does not parse MIDI byte streams, play an SMF timeline
+or interpret SysEx/UMP messages. Those responsibilities belong to the caller or a MIDI library,
+for example `kiteaudio-midi`.
 
 ### Use pedals, drums and tuning
 
@@ -265,7 +259,7 @@ fun decodeSf3(
 ```
 
 The callback receives one compressed sample's Ogg Vorbis bytes and returns decoded **mono 16-bit
-frames**. It is synchronous and called once per compressed sample. KiteSynth supplies no Vorbis
+frames**. It is synchronous and called once per compressed sample. `kiteaudio-synth` supplies no Vorbis
 decoder; the decoder and its resource limits are the caller's responsibility. Without
 `keepCompressed`, the reader rejects compressed samples, and `Synth` refuses a still-compressed
 font. `SoundFontWriter` can preserve a font loaded with its compressed samples intact.
@@ -276,11 +270,11 @@ All production code is common Kotlin in `kiteaudio-synth/src`. These are the tar
 
 | Target | Details |
 | --- | --- |
-| Android | Android KMP library, minSdk 23 and compileSdk 36. The host provides audio and MIDI access. |
+| Android | Android KMP library, minSdk 23 and compileSdk 37.2. The host provides audio and MIDI access. |
 | JVM | Java 21 toolchain. |
-| iOS devices | `iosArm64`; a dynamic framework named `KiteSynth` is configured. |
-| iOS simulators | `iosSimulatorArm64` and `iosX64`; both configure the same framework name. |
-| macOS Native | `macosArm64`. |
+| iOS devices | `iosArm64`. `.github/scripts/apple_frameworks.py` links a dynamic framework named `KiteSynth`. |
+| iOS simulators | `iosSimulatorArm64` and `iosX64`. The script links the same framework name. |
+| macOS Native | `macosArm64`. The script links the same framework name. |
 | Web | `js` and `wasmJs`. Rendering is the same common code; sending the samples to Web Audio is the app's job. |
 | Linux Native | `linuxX64` and `linuxArm64`. |
 | Windows Native | `mingwX64`. |
@@ -294,8 +288,7 @@ audio fidelity or runtime parity. `readFont`, `Synth` construction and `replaceF
 expected errors through `@Throws`, so Swift can use `do`/`try`/`catch`. Swift reads a synth's font
 through `currentFont()` and replaces it through `try replaceFont(newFont:)`; the Kotlin `font`
 property is hidden from Objective-C because a property setter cannot export a throwing contract.
-Kotlin and JVM callers retain ordinary property access. This changes the earlier Swift property
-surface; regenerate and rebuild the framework and its consumers together.
+Kotlin and JVM callers keep ordinary property access.
 
 ## Buffers, threads and ownership
 
@@ -313,12 +306,12 @@ a supported concurrent queue. Kotlin/Native's memory manager does not add synchr
   construction, decoding and `voicesFor` allocate and should stay off the callback.
 - Treat a font's lists, generator maps and sample arrays as read-only while any synth uses them.
   Public arrays remain mutable, and merged fonts share sample frames.
-- KiteSynth opens no file, audio device, coroutine or worker thread. There is no `close` operation;
+- `kiteaudio-synth` opens no file, audio device, coroutine or worker thread. There is no `close` operation;
   the host manages its own device, scheduling and lifetime.
 
 ## Known limits
 
-| Topic | Current behaviour |
+| Topic | Current behavior |
 | --- | --- |
 | SoundFont precision | Playback uses the 16-bit `smpl` frames only. The reader keeps a valid `sm24` chunk in `SampleHeader.lowBytes`, and the writer writes it back, so a read and write keeps every bit of a 24-bit font. `frame24` gives the full signed value of one frame. The low bytes cost one more byte for each frame of a 24-bit font, and nothing for a 16-bit font. |
 | Modulators | Generator destinations and linked modulators are evaluated (SoundFont 2.04, section 9.5.4). A linked modulator feeds its output to the modulator that its link names, and a chain of links can have any length. The target must have the link source as its primary source. The output reaches the target unchanged: the curve, polarity and direction bits of a link source are not applied. A modulator in a cycle, a link to itself or past the end of its list, a link into a modulator that reads a controller, and every modulator that feeds one of these add nothing. The reader and the writer keep every modulator. The reader stores a link past the end of its list as `0x7FFF`. A preset-level link counts places in the preset zone's own list and does not change the amount of an instrument-level link. |
@@ -328,7 +321,7 @@ a supported concurrent queue. Kotlin/Native's memory manager does not add synchr
 | MIDI scope | Channel voice messages only. Bank selection uses CC 0, and there is no portamento/legato mode, NRPN synthesis control, MPE manager or MIDI 2.0 interface. |
 | Resource bounds | Reading defaults to 64 MiB of cumulative retained sample payload, counting overlapping ranges separately and the low bytes of 24-bit samples. Preparation defaults to 4,194,304 examined zone pairs, 16,384 regions and 1,048,576 retained modulator entries. Explicit overloads allow larger trusted fonts; limits are checked before expansion. SF3 decoding still needs a separate host-owned bound. |
 | Output and integration | No bundled sound bank, audio output backend, file I/O, Compose UI or timeline player. |
-| Verification | Tests use synthetic fonts. The repository has no CI workflow and no differential suite against a reference synthesiser or physical-device audio tests. |
+| Verification | Tests use synthetic fonts. CI runs them on the JVM, on JS and wasmJs in Node, and on `macosArm64`, `linuxX64` and `mingwX64` (see [Build and test](#build-and-test)). There is no differential suite against a reference synthesizer and no audio test on a physical device. |
 
 For a larger trusted bank, supply explicit budgets:
 
@@ -340,14 +333,12 @@ val synth = Synth(font, sampleRate = 48_000, maxVoices = 256,
 ```
 
 The reader rejects zero sample rates and unsigned rates that do not fit a positive Kotlin `Int`.
-Valid high rates such as 96 kHz remain supported. Quiet releases retain their authored envelope
-and sample lifetime; release-heavy passages can therefore use more CPU than the former early
-pruning behavior. Effect sends use SoundFont units directly, which corrects the previous overly
-wet mix.
+Valid high rates such as 96 kHz remain supported. Quiet releases keep their authored envelope
+and sample lifetime, so a passage with many releases can use more CPU time. Effect sends use
+SoundFont units directly.
 
-Java callers now see declared checked exceptions on applicable `@Throws` entry points and
-may need to catch or declare them. Existing JVM method descriptors are retained; Kotlin callers
-keep Kotlin's ordinary exception-handling rules.
+Java callers see declared checked exceptions on the `@Throws` entry points and may need to
+catch or declare them. Kotlin callers keep the ordinary exception rules of Kotlin.
 
 ## Build and test
 
@@ -356,18 +347,25 @@ and Kotlin/Native that it needs. Android builds need an Android SDK with API lev
 and Apple native tests need macOS and a compatible Xcode installation.
 
 ```sh
-./kotlin test -p jvm
-./kotlin test -p macosArm64
-./kotlin build -p iosSimulatorArm64
+./kotlin test -m kiteaudio-synth -p jvm
+./kotlin test -m kiteaudio-synth -p macosArm64
+python3 .github/scripts/web-tests/run.py --module kiteaudio-synth
+./kotlin build -m kiteaudio-synth -p iosSimulatorArm64
 python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --build-type debug --no-xcframework
 ./kotlin do dokka
 ```
 
-The Kotlin Toolchain does not link Apple frameworks. The script links `KiteSynth.framework` from the
-klibs that `./kotlin build` writes. `./kotlin check abi klibAbi` compares the public API with the
-dumps in `kiteaudio-synth/api`. Build every platform first, because the klib check reads the built klibs.
+The `web-tests` script runs the JS and wasmJs tests in Node. The Kotlin Toolchain does not link
+Apple frameworks. The `apple_frameworks.py` script links `KiteSynth.framework` from the klibs that
+`./kotlin build` writes. `./kotlin check abi -m kiteaudio-synth` and
+`./kotlin check klibAbi -m kiteaudio-synth` compare the public API with the dumps in
+`kiteaudio-synth/api`. Build every platform first, because the klib check reads the built klibs.
 A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run only on
 Linux, and the `mingwX64` tests run only on Windows.
+
+The workflow `.github/workflows/instruments.yml` runs the tests in CI on the JVM, on JS and wasmJs
+in Node, and on `macosArm64`, `linuxX64` and `mingwX64`. It also runs the public API checks and
+the Android build.
 
 Common tests construct SoundFont bytes deliberately, then check parsing, round trips, channels,
 voice selection, envelopes, filtering and effects. JVM tests also write a short demonstration WAV
@@ -381,7 +379,7 @@ Known defects, open proposals and platform limits are tracked as
 
 Open an [issue](https://github.com/yuroyami/KiteAudio/issues) with the smallest font or MIDI
 sequence that shows the problem, the sample rate and render block size, target and toolchain,
-and the observed and expected behaviour. A generated fixture is welcome when a real SoundFont
+and the observed and expected behavior. A generated fixture is welcome when a real SoundFont
 cannot be redistributed. For an audio mismatch, a short output WAV and a reference render help.
 
 Keep shared synthesis and format logic in `kiteaudio-synth/src`; add a focused regression test for the
@@ -390,8 +388,9 @@ API changes should include an entry in [CHANGELOG.md](../CHANGELOG.md).
 
 ## License
 
-Apache-2.0. See [LICENSE](../LICENSE). KiteSynth bundles no SoundFont bank; fonts and decoders supplied
+Apache-2.0. See [LICENSE](../LICENSE). `kiteaudio-synth` bundles no SoundFont bank; fonts and decoders supplied
 by an application have their own licenses.
 
-Part of the Kite family: [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi),
-[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output), [KitePDF](https://github.com/yuroyami/KitePDF).
+`kiteaudio-synth` is part of [KiteAudio](../README.md). The other KiteAudio modules are listed
+there, among them [`kiteaudio-midi`](../kiteaudio-midi/README.md) and
+[`kiteaudio-output`](../kiteaudio-output/README.md).

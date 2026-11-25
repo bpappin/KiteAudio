@@ -44,6 +44,34 @@ The artifacts and packages have new names:
 - `AudioFormat.floatFrameBytes` is removed. Nothing used it.
 - The output takes a decoded format with no conversion: `openAudioOutput(decoded.format)`.
 
+### Added in the MIDI modules
+
+- `kiteaudio-midi` reads and writes Standard MIDI Files of formats 0, 1 and 2 with
+  `KiteMidi.read` and `KiteMidi.write`. A file has PPQ or SMPTE timing (`Division`). The module
+  depends on kotlin-stdlib only.
+- Typed MIDI 1.0 messages: the channel messages, such as `NoteOn`, `ControlChange` and
+  `PitchBend`, the system common and real-time messages, and `SysEx`. `toBytes()` encodes a
+  message, and `KiteMidi.parseMessage` decodes one.
+- Typed meta events, such as `SetTempo`, `TimeSignature`, `KeySignature` and `TextEvent`. An
+  unknown meta event reads as `UnknownMeta`, and system exclusive data in a file reads as
+  `SysExChunk`. Both keep their bytes.
+- `SmfFile.toTimeline()` and `KiteMidi.readTimeline` give a `MidiTimeline`. It holds the events of
+  every track at absolute ticks, the notes paired from presses and releases (`MidiNote`), and a
+  `TempoMap` that converts ticks to microseconds and back.
+- `UniversalSysEx` builds device inquiry, master volume and master tuning messages, and reads a
+  device inquiry reply.
+- `kiteaudio-midi-devices` lists MIDI ports, opens them and sends and receives typed messages
+  through one `MidiDevices` interface. It uses MidiManager on Android (`androidMidiDevices`),
+  CoreMIDI on iOS and macOS (`appleMidiDevices`) and `javax.sound.midi` on the JVM
+  (`jvmMidiDevices`). On Android, `openBluetoothMidiDevice` connects a Bluetooth instrument.
+- `MidiStreamParser` turns a byte stream into messages. It handles running status, system
+  exclusive messages split across packets, and real-time bytes between them.
+- `kiteaudio-midi-coremidi` gives a macOS desktop JVM CoreMIDI ports through the foreign function
+  API (`coreMidiDevices`). It needs JDK 22 or later at runtime. `coreMidiAvailable()` checks for
+  macOS, that JDK and the CoreMIDI framework.
+- `kiteaudio-midi` builds for the JVM, Android, iOS, macOS, JS, wasmJs, Linux and Windows.
+  `kiteaudio-midi-devices` builds for the JVM, Android, iOS and macOS.
+
 ### Changed in the MIDI module
 
 - `SequenceNumber`, `ChannelPrefix`, `PortPrefix`, `SmpteOffset` and `TempoEntry` reject values that a
@@ -69,6 +97,27 @@ The artifacts and packages have new names:
   other one could reach that dead device.
 - When a group of identical devices on the JVM gets smaller, every open port of that group is lost. The
   JDK gives no way to tell identical devices apart, so this can also end a port whose device still works.
+
+### Added in the output module
+
+- `kiteaudio-output` plays mono or stereo PCM. `openAudioOutput` opens an output, and an
+  `AudioRenderCallback` fills interleaved Float32 frames on demand.
+- The backends are Java Sound on the JVM, `AudioTrack` on Android, AudioQueue on iOS and macOS,
+  and Web Audio in a browser for JS and wasmJs. The native backends write signed 16-bit PCM. The
+  browser plays Float32 through an `AudioWorkletNode`, or through scheduled `AudioBuffer`s where a
+  page cannot run a worklet.
+- `audioOutputDevices()` lists the output devices, and `openAudioOutput` plays on the default
+  device or on a chosen one. `AudioFormatPolicy.Nearest` opens the closest format that the
+  device accepts. `AudioOutput.format` holds the format to render in, and
+  `AudioOutput.deviceFormat` holds the format of the hardware, or null.
+- `AudioOutputEvent` reports a start, a stop, a short render (`Underrun`), a slow render
+  (`Overrun`), a dropout of the device (`DeviceUnderrun`), a stream that the system ended
+  (`DeviceLost`) and a failure.
+- `AudioOutput.latency` gives a `Latency` value, and its `LatencyQuality` says whether the value is
+  an estimate or a measurement.
+- `audioOutputAvailable()` is a quick check before an open. It does not prove that a stream can
+  open.
+- The module depends on `kiteaudio-core` and exposes it.
 
 ### Changed in the output module
 
@@ -99,6 +148,28 @@ The artifacts and packages have new names:
   Before, it checked one fixed format.
 
 ### Added in the synth module
+
+`kiteaudio-synth` brings these parts to 0.3.0. It depends on kotlin-stdlib only and builds for the
+JVM, Android, iOS, macOS, JS, wasmJs, Linux and Windows.
+
+- `KiteSynth.readFont` reads an SF2 font into a `SoundFont`, with its presets, instruments, zones,
+  generators, modulators, INFO text and samples. With `keepCompressed = true` it also reads an SF3
+  font, and `SoundFont.decoded` turns the compressed samples into frames with a decoder that the
+  caller passes in.
+- `SoundFontWriter.write` writes a font back as SF2, or as SF3 when samples are still compressed.
+  `merged` joins two fonts. `pruned` drops the instruments that no preset uses and the samples
+  that no instrument uses.
+- `Synth` renders stereo interleaved Float32 PCM from 16 MIDI channels. It plays layered sample
+  voices with volume and modulation envelopes, two LFOs, a resonant low-pass filter, modulators,
+  reverb and chorus, from a fixed voice pool with voice stealing.
+- `Synth` takes channel voice messages, also at a frame offset inside the next render. It handles
+  bank and program selection, percussion channels, the sustain and sostenuto pedals, pressure,
+  pitch bend and RPN tuning. `referenceA4` and `tuningCents` set the tuning.
+- `Synth.interpolation` chooses `Interpolation.Linear`, `Cubic` or `BandLimited`.
+- The reader and `Synth` limit the sample bytes, regions, modulator entries and zone pairs that a
+  font can claim. Overloads take larger limits for a trusted font.
+
+These parts are new since 0.2.0, the last version in [KiteSynth before the merge](#kitesynth-before-the-merge):
 
 - 24-bit SoundFonts keep every bit. `SampleHeader.lowBytes` holds the low byte of each frame from the `sm24` chunk, `SampleHeader.frame24` gives the full signed value, and `SoundFontWriter` writes the chunk back. Playback still uses the 16-bit frames. The new constructor parameter changes the JVM signature of the `SampleHeader` constructor.
 - `Synth.loopBoundary` sets how voices read the frames next to a loop boundary. `LoopBoundary.GuardFrames` is the default and reads the guard frames that the font stores, as before. `LoopBoundary.Wrapped` reads the loop as a circle after the first wrap, so guard frames that do not match the loop cannot change its sound.
@@ -354,7 +425,7 @@ Breaking changes:
 
 Added:
 
-- `SoundFontWriter`, which writes a font that reads back unchanged.
+- `SoundFontWriter`, which writes a font that reads back unchanged. In 0.2.0 this held for 16-bit samples only: the reader ignored the `sm24` chunk, so a 24-bit font lost the low 8 bits of each frame. 0.3.0 keeps them.
 - `SoundFont.merged` and `SoundFont.pruned`. The merged font is pruned. Both keep stereo and linked samples together, and a link to a missing sample becomes a mono sample.
 - Modulators on every zone.
 - Percussion channels with `setPercussion` and `isPercussion`, and bank 128 kits.

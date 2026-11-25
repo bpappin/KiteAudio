@@ -1,30 +1,21 @@
-<h1 align="center">KiteMIDI</h1>
+# kiteaudio-midi
 
-<p align="center">
-  MIDI for Kotlin Multiplatform: read and write Standard MIDI Files, work with typed
-  MIDI 1.0 messages, and connect to instruments through the platform's MIDI service.
-</p>
+`kiteaudio-midi`, `kiteaudio-midi-devices` and `kiteaudio-midi-coremidi` are the MIDI modules of
+[KiteAudio](../README.md). They read and write Standard MIDI Files, work with typed MIDI 1.0
+messages, and connect to instruments through the MIDI service of the platform.
 
-<p align="center">
-  <sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
-  and review of its author.</sub>
-</p>
+<sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
+and review of its author.</sub>
 
-<p align="center">
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4.21"></a>
-  <a href="#platforms"><img src="https://img.shields.io/badge/targets-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM%20%7C%20JS%20%7C%20Wasm%20%7C%20Linux%20%7C%20Windows-1f6feb" alt="Targets: Android, iOS, macOS, JVM, JS, Wasm, Linux and Windows"></a>
-  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
-</p>
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](../LICENSE)
 
-<p align="center">
-  <b>Documentation</b> · the README contains the current tour;
-  the source KDoc describes individual APIs.
-</p>
+This README gives a tour of the three MIDI modules. The KDoc in the source describes each API.
 
 ## What you get
 
-The file and message engine lives in `commonMain` and depends only on Kotlin's standard
-library. Device access is optional, in separate modules that use Android MIDI,
+`kiteaudio-midi` holds the file and message code in `commonMain` and depends only on the Kotlin
+standard library. Device access is optional. It is in two separate modules that use Android MIDI,
 CoreMIDI or `javax.sound.midi`.
 
 <table>
@@ -83,20 +74,20 @@ firstNote?.let {
 }
 ```
 
-KiteMIDI provides MIDI data and device I/O. Audio synthesis, playback scheduling and
-Compose UI belong to the application or another library.
+The MIDI modules provide MIDI data and device I/O. [`kiteaudio-synth`](../kiteaudio-synth/README.md)
+renders SoundFont instruments to PCM, and [`kiteaudio-output`](../kiteaudio-output/README.md) plays PCM on a
+device. Playback scheduling and Compose UI belong to the application.
 
 > [!NOTE]
-> The source version is `0.3.0`. The API is still evolving and may change between minor versions.
+> The version is `0.3.0`. The API can still change between minor versions.
 
 ## Install
 
-This checkout declares three modules at `0.3.0`. Published Maven Central artifacts and
-GitHub releases were not available when checked on 29 September 2026. Publish the source
-checkout to your local Maven repository first, as [Build and test](#build-and-test) shows,
-and add `mavenLocal()` to the repositories of your application.
+0.3.0 is not published to Maven Central yet. Until then, publish the modules to your local
+Maven repository, as [Build and test](#build-and-test) shows. Then add `mavenLocal()` to the
+repositories of your application.
 
-Then add the modules you need:
+Add the modules you need:
 
 ```kotlin
 kotlin {
@@ -304,15 +295,15 @@ instrument testing.
 
 | Module / backend | Platforms | Requirements and behavior |
 | --- | --- | --- |
-| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64`, `linuxX64`, `linuxArm64`, `mingwX64` | Android minSdk 23. Core file operations are synchronous computation over byte arrays. |
+| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64`, `linuxX64`, `linuxArm64`, `mingwX64` | Android minSdk 23. File operations are synchronous computation over byte arrays. |
 | `kiteaudio-midi-devices` Android | Android | minSdk 23; uses the byte-stream MIDI transport. Devices without MIDI support produce no ports. |
 | `kiteaudio-midi-devices` JVM | JVM on macOS, Linux or Windows with an available Java MIDI provider | Uses `javax.sound.midi`; scans once per second. Physical transport is reported as `UNKNOWN`. Provider availability varies by runtime and OS. |
 | `kiteaudio-midi-devices` Apple | iOS device and simulator targets above, native macOS arm64 | CoreMIDI platform bindings; callbacks arrive on CoreMIDI threads. |
 | `kiteaudio-midi-coremidi` | macOS desktop JVM | Runtime JDK 22+ and native access enabled; the source build requests JDK 25. |
 
-For a plain Swift application, the generated `KiteMIDIIO` framework exports the core message
-types. Import that umbrella framework for device access and messages; a separate `KiteMIDI`
-framework is unnecessary. Parsing, file writing, port opening and sending export their declared
+For a plain Swift application, `.github/scripts/apple_frameworks.py` links the `KiteMIDIIO`
+framework, which exports the message types of `kiteaudio-midi`. Import that umbrella framework
+for device access and messages; a separate `KiteMIDI` framework is unnecessary. Parsing, file writing, port opening and sending export their declared
 expected exceptions. Use Swift `do`/`try`/`catch` (or the suspend completion error parameter).
 The exported Kotlin model still uses Kotlin collections and byte-array wrappers.
 
@@ -350,26 +341,28 @@ desktop app on Linux, Windows or an Intel Mac can also use the JVM artifact.
 
 </details>
 
-Java callers now see declared checked exceptions on applicable `@Throws` entry points and
-may need to catch or declare them. Existing JVM method descriptors are retained; Kotlin callers
-keep Kotlin's ordinary exception-handling rules.
+Java callers see declared checked exceptions on the `@Throws` entry points and may need to
+catch or declare them. Kotlin callers keep the ordinary exception rules of Kotlin.
 
 ## Build and test
 
 The project builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain):
-the `./kotlin` script in the repository root (`kotlin.bat` on Windows). Core and device
-modules use JDK 21. The desktop CoreMIDI module compiles with JDK 25. The script downloads
+the `./kotlin` script in the repository root (`kotlin.bat` on Windows). `kiteaudio-midi` and
+`kiteaudio-midi-devices` use JDK 21. `kiteaudio-midi-coremidi` compiles with JDK 25. The script downloads
 both JDKs. Android builds also need an Android SDK with API level 37.2, and Apple
 compilation and tests need macOS and the applicable Xcode toolchain.
 
 ```sh
-./kotlin test -p jvm
-./kotlin test -p macosArm64
-./kotlin check abi klibAbi
+./kotlin test -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -p jvm
+./kotlin test -m kiteaudio-midi -m kiteaudio-midi-devices -p macosArm64
+python3 .github/scripts/web-tests/run.py --module kiteaudio-midi
+./kotlin check abi -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi
+./kotlin check klibAbi -m kiteaudio-midi -m kiteaudio-midi-devices
 ./kotlin do dokka && ./kotlin do dokkaSite
 ```
 
-The klib check reads the built klibs, so run `./kotlin build` for every platform first.
+The `web-tests` script runs the JS and wasmJs tests in Node. The klib check reads the built klibs, so run
+`./kotlin build` for every platform first.
 A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run
 only on Linux, and the `mingwX64` tests run only on Windows.
 The Kotlin Toolchain does not link Apple frameworks.
@@ -394,8 +387,14 @@ sources; they do not verify a physical keyboard, USB connection or Bluetooth tra
 The optional corpus tests read the folder that the environment variable
 `KITEAUDIO_MIDI_CORPUS` names. They report themselves as skipped when the variable is unset or the
 folder is absent, so a green clone does not establish corpus coverage. There are no Android
-device tests in this checkout. The CI workflow does not run the MIDI modules yet. Commands above describe available checks; consult
-their actual output for the targets and tests that ran.
+device tests in this checkout. The commands above describe the available checks. Read their
+output for the targets and tests that ran.
+
+The workflow `.github/workflows/instruments.yml` runs these checks in CI. It runs the JVM tests
+of the three modules, the public API checks and the Android build. It also runs the JS and
+wasmJs tests in Node, and the macOS tests. The CoreMIDI tests run on the macOS runner. The
+`kiteaudio-midi` tests also run on `linuxX64` and `mingwX64`. No CI job tests a physical
+instrument.
 
 Known defects, open proposals and platform limits are tracked as
 [GitHub issues](https://github.com/yuroyami/KiteAudio/issues).
@@ -405,9 +404,9 @@ Known defects, open proposals and platform limits are tracked as
 For a file-format issue, include a minimal MIDI file or a short byte sequence, the API
 call and the expected events or timing. For device issues, include the OS, runtime,
 backend, port direction, connection type and whether the failure occurs while opening,
-sending, receiving, cancelling or closing. Remove personal data from attachments.
+sending, receiving, canceling or closing. Remove personal data from attachments.
 
-Changes to the core and shared I/O API should include their applicable tests and ABI
+Changes to the public API of the MIDI modules should include their applicable tests and ABI
 checks. Keep a runtime result distinct from compilation, virtual endpoints and physical
 instrument behavior. Report issues through [GitHub](https://github.com/yuroyami/KiteAudio/issues).
 
@@ -417,5 +416,6 @@ Apache-2.0. See [LICENSE](../LICENSE). MIDI file and message formats follow the 
 Manufacturers Association specifications; the implementation is Kotlin source in this
 repository.
 
-Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth),
-[KiteRT](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-output), [KitePDF](https://github.com/yuroyami/KitePDF).
+The MIDI modules are part of [KiteAudio](../README.md). The other KiteAudio modules are listed
+there, among them [`kiteaudio-synth`](../kiteaudio-synth/README.md) and
+[`kiteaudio-output`](../kiteaudio-output/README.md).

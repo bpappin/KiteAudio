@@ -1,23 +1,18 @@
-<h1 align="center">KiteRT</h1>
+# kiteaudio-output
 
-<p align="center">
-  Audio output for Kotlin Multiplatform: fill interleaved floating-point samples in
-  <code>commonMain</code>, and send them to the platform's audio backend.
-</p>
+`kiteaudio-output` is the audio output module of [KiteAudio](../README.md). Your code fills
+interleaved floating-point samples in `commonMain`, and the module sends them to the audio
+backend of the platform.
 
-<p align="center">
-  <sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
-  and review of its author.</sub>
-</p>
+<sub>AI tools wrote much of the code, tests and documentation in this project, under the direction
+and review of its author.</sub>
 
-<p align="center">
-  <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white" alt="Kotlin 2.4.21"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
-</p>
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](../LICENSE)
 
 ## What you get
 
-KiteRT provides one small output API backed by Java Sound on the JVM, `AudioTrack` on
+`kiteaudio-output` provides one small output API backed by Java Sound on the JVM, `AudioTrack` on
 Android, AudioQueue on Apple, and Web Audio in the browser. Your renderer supplies
 mono or stereo `FloatArray` samples; the native backends clamp them and convert them to signed
 16-bit PCM, and the browser plays them as Float32.
@@ -34,19 +29,20 @@ mono or stereo `FloatArray` samples; the native backends clamp them and convert 
 | `AudioOutputEvent` | Reports startup, stops, short renders, slow renders, a device that ran out of sound although every render was full (`DeviceUnderrun`), failures, and a stream that the system ended (`DeviceLost`). What can end a stream differs by platform. The rule after a loss is the same everywhere. |
 
 `kiteaudio-core` is the KiteAudio module that holds the audio format types that several KiteAudio modules share.
-KiteRT depends on it and exposes it, so you do not add it yourself.
+`kiteaudio-output` depends on it and exposes it, so you do not add it yourself.
 
 There is no Compose dependency, UI, audio decoder, synthesizer or input stream. Pair it
-with [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth) to generate sound and
-[KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) to read MIDI messages.
+with [`kiteaudio-synth`](../kiteaudio-synth/README.md) to generate sound,
+[`kiteaudio-midi`](../kiteaudio-midi/README.md) to read MIDI messages, and [`kiteaudio-codec`](../README.md#the-codec)
+to decode audio files.
 
 > [!NOTE]
-> The configured project version is `0.3.0`. The API is early and can change. A Maven Central
-> release is not available at the time of this README update; use a source checkout.
+> The version is `0.3.0`. The API can still change. 0.3.0 is not published to Maven Central yet,
+> so build it from a source checkout.
 
 ## Install from source
 
-KiteRT builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain), the
+`kiteaudio-output` builds with the [Kotlin Toolchain](https://github.com/JetBrains/kotlin-toolchain), the
 `./kotlin` script in the repository root. Clone this repository, then publish it to your local
 Maven repository:
 
@@ -246,8 +242,8 @@ counter, the count is a measurement. Elsewhere the output estimates it.
 | --- | --- | --- |
 | JVM | `javax.sound.sampled.SourceDataLine` | JDK 21 toolchain; an installed Java Sound output provider supporting signed 16-bit PCM. The repository includes live audio tests. Linux and Windows use this JVM backend; there are no native Linux or Windows targets. |
 | Android | Streaming `AudioTrack` | minSdk 23, compileSdk 37.2. Requests low-latency performance mode on API 26 and above; the system may choose a different performance path. The repository includes host tests that drive the output with a fake track; they are not a device test. |
-| iOS arm64 | AudioQueue | Built as a dynamic `KiteRT` framework. The host app owns its audio session: its category, its activation and its background-audio policy. The output never changes them. An interruption that begins, a route change that removes the output device, or a loss or reset of the media services ends the stream with `DeviceLost`. No iOS test sources are included. The macOS tests cover the shared logic with a fake queue, not the iOS observers. |
-| iOS simulator arm64 and x64 | AudioQueue | Framework targets are configured. Simulator support does not establish physical-device behavior. |
+| iOS arm64 | AudioQueue | `.github/scripts/apple_frameworks.py` links a dynamic framework named `KiteRT`. The host app owns its audio session: its category, its activation and its background-audio policy. The output never changes them. An interruption that begins, a route change that removes the output device, or a loss or reset of the media services ends the stream with `DeviceLost`. No iOS test sources are included. The macOS tests cover the shared logic with a fake queue, not the iOS observers. |
+| iOS simulator arm64 and x64 | AudioQueue | The script links the same framework for both. Simulator support does not establish physical-device behavior. |
 | macOS arm64 | AudioQueue | Uses the system AudioToolbox platform bindings. The repository includes live audio tests. A queue that stops running ends the stream with `DeviceLost`. A move to a new default device that keeps the queue running sends nothing. |
 | JS and wasmJs in a browser | An `AudioWorkletNode` fed from the page, or `AudioBuffer`s scheduled by a page timer | `openAudioOutput` uses the worklet where the page can, and falls back to scheduled buffers in a page that is not a secure context or whose content security policy blocks a `blob:` worklet module. `Started` arrives once the browser lets the page play sound, usually after a click or a key press; a `start()` made before then waits, and calling `start()` again from the click or key handler asks the browser once more. Node.js has no Web Audio: opening an output throws `UnsupportedOperationException` there. Checked by hand with [verification/web](verification/web/README.md) in Chrome 156, Safari 27.2 and Firefox 159 on macOS; not yet on iOS. |
 
@@ -319,9 +315,8 @@ See the [issue tracker](https://github.com/yuroyami/KiteAudio/issues) for defect
 improvements. This README describes the current implementation; it does not certify audio
 quality, route recovery or device coverage.
 
-Java callers now see declared checked exceptions on applicable `@Throws` entry points and
-may need to catch or declare them. Existing JVM method descriptors are retained; Kotlin callers
-keep Kotlin's ordinary exception-handling rules.
+Java callers see declared checked exceptions on the `@Throws` entry points and may need to
+catch or declare them. Kotlin callers keep the ordinary exception rules of Kotlin.
 
 ## Build and test
 
@@ -330,8 +325,8 @@ JDK and Kotlin/Native that it needs. Android compilation needs an Android SDK wi
 Apple compilation and linking need macOS and an appropriate Xcode SDK.
 
 ```sh
-./kotlin build -p jvm -p android
-./kotlin build -p macosArm64 -p iosSimulatorArm64
+./kotlin build -m kiteaudio-output -p jvm -p android
+./kotlin build -m kiteaudio-output -p macosArm64 -p iosSimulatorArm64
 ```
 
 The Kotlin Toolchain does not link Apple frameworks. After a build of an iOS platform,
@@ -341,9 +336,9 @@ links `KiteRT.framework` from the klibs.
 Deterministic lifecycle and transfer regressions use fake JVM/native drivers without opening audio:
 
 ```sh
-./kotlin test -p jvm --include-classes='*RegressionTest'
-./kotlin test -p macosArm64 --include-classes='*RegressionTest'
-./kotlin test -p android --include-classes='*RegressionTest'
+./kotlin test -m kiteaudio-output -p jvm --include-classes='*RegressionTest'
+./kotlin test -m kiteaudio-output -p macosArm64 --include-classes='*RegressionTest'
+./kotlin test -m kiteaudio-output -p android --include-classes='*RegressionTest'
 ```
 
 The Android tests run on the host JVM and need the Android SDK in `ANDROID_HOME`. They drive the
@@ -351,8 +346,8 @@ production Android output with a fake track, so they do not open a device or che
 The unfiltered JVM and macOS suites also include live tests that open output and play a quiet tone:
 
 ```sh
-./kotlin test -p jvm
-./kotlin test -p macosArm64
+./kotlin test -m kiteaudio-output -p jvm
+./kotlin test -m kiteaudio-output -p macosArm64
 ```
 
 The browser output's lifecycle runs against a stand-in for Web Audio on every platform, and its
@@ -364,10 +359,15 @@ python3 .github/scripts/web-tests/run.py --module kiteaudio-output
 
 Playback in a real browser is a manual check; [verification/web](verification/web/README.md) says how.
 
-JVM audio tests report themselves as skipped if the default Java Sound format is unsupported; that is
-not proof of successful playback. macOS audio tests require a working output. Neither
-suite establishes Android or physical iOS behavior. The repository currently has no GitHub
-Actions workflow. Fake-driver results establish tested control flow, not hardware playback.
+JVM audio tests report themselves as skipped when no Java Sound mixer offers an output line for
+signed 16-bit PCM; a skip is not proof of successful playback. macOS audio tests require a working
+output. Neither suite establishes Android or physical iOS behavior. Fake-driver results establish
+tested control flow, not hardware playback.
+
+The workflow `.github/workflows/instruments.yml` runs these checks in CI. It runs the JVM tests,
+the public API checks, the Android build and the Android host tests. It also runs the JS and
+wasmJs tests in Node, and the macOS tests on a runner with a virtual output device. No CI job
+plays sound on a physical device or in a real browser.
 
 Known defects, open proposals and platform limits are tracked as
 [GitHub issues](https://github.com/yuroyami/KiteAudio/issues).
@@ -385,6 +385,6 @@ interruption, stop, restart or removal.
 
 [Apache-2.0](../LICENSE).
 
-Part of the Kite family: [KiteSynth](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-synth),
-[KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi),
-[KitePDF](https://github.com/yuroyami/KitePDF).
+`kiteaudio-output` is part of [KiteAudio](../README.md). The other KiteAudio modules are listed
+there, among them [`kiteaudio-synth`](../kiteaudio-synth/README.md) and
+[`kiteaudio-midi`](../kiteaudio-midi/README.md).

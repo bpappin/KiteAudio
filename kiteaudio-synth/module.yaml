@@ -1,5 +1,5 @@
-# A sample-based synthesiser in common Kotlin. It reads a SoundFont, takes MIDI messages and renders
-# Float32 PCM. It depends on kotlin-stdlib only. Handing those samples to a real device is KiteRT's job.
+# A sample-based synthesizer in common Kotlin. It reads a SoundFont, takes MIDI messages and renders
+# Float32 PCM. It depends on kotlin-stdlib only. kiteaudio-output sends those samples to a device.
 product:
   type: kmp/lib
   platforms:
