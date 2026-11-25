@@ -94,8 +94,9 @@ fun dumpKlibAbi(
     val merged: KlibDump = tools.createKlibDump()
     for (platform in platforms) {
         val task = platform.replaceFirstChar { it.uppercase() }
-        // Native platforms compile a debug and a release klib. Web platforms compile one.
-        val klib = listOf("_${moduleName}_compile${task}Debug", "_${moduleName}_compile$task")
+        // Native platforms compile a debug and a release klib with the same API. Web platforms compile one.
+        // The publish workflow compiles only the release klibs.
+        val klib = listOf("Debug", "Release", "").map { "_${moduleName}_compile$task$it" }
             .map { Path(buildDir, "tasks", it, "$moduleName.klib") }
             .firstOrNull { it.exists() }
             ?: error("No $platform klib of $moduleName. Run `./kotlin build -p $platform` first.")
