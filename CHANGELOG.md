@@ -21,8 +21,15 @@ The artifacts and packages have new names:
 | `io.github.yuroyami:kitert` | `io.github.yuroyami:kiteaudio-output` | `io.github.yuroyami.kiteaudio.output` |
 
 - The public types and objects keep their names, for example `AudioKodec`, `KiteMidi`,
-  `KiteSynth` and `AudioKodecException`. The `AUDIOKODEC_*` environment variables and the
-  Apple framework names also stay.
+  `KiteSynth` and `AudioKodecException`. The `AUDIOKODEC_*` environment variables also stay.
+- The Apple frameworks `AudioKodec`, `AudioKodecIO` and `KiteSynth` keep their names. Three
+  frameworks have new names: `KiteMidi` (was `KiteMIDI`), `KiteMidiDevices` (was `KiteMIDIIO`)
+  and `KiteAudioOutput` (was `KiteRT`). Swift code imports the new names.
+- The names that a debugger, a profiler or a MIDI tool shows now start with `KiteAudio`. The
+  CoreMIDI client is `KiteAudio`. Its port names start with `KiteAudio in` or `KiteAudio out`.
+  The threads and dispatch queues are `KiteAudio-output-*` and `KiteAudio-midi-*`.
+- The default `clientName` of `coreMidiDevices` is `KiteAudio`. Its log messages go to the
+  logger `io.github.yuroyami.kiteaudio.midi.coremidi`.
 - The klib names follow the artifact names, for example `io.github.yuroyami:kiteaudio-codec`.
 - The temporary files of the codec use the prefix `kiteaudio-codec-`. The benchmark reads the
   system property `kiteaudio-codec.benchmark.cache`.

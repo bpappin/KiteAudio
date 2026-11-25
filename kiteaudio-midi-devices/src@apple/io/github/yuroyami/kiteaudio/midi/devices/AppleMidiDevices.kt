@@ -145,7 +145,7 @@ private class AppleMidiDevices(private val scope: CoroutineScope) : MidiDevices 
     private val loop = NativeMidiLoop {
         val clientStatus = memScoped {
             val out = alloc<MIDIClientRefVar>()
-            val status = withCfString("KiteMIDI") { name ->
+            val status = withCfString("KiteAudio") { name ->
                 MIDIClientCreate(name, notifyProc, selfRef.asCPointer(), out.ptr)
             }
             if (status == NO_ERROR) client = out.value
@@ -158,7 +158,7 @@ private class AppleMidiDevices(private val scope: CoroutineScope) : MidiDevices 
 
         val portStatus = memScoped {
             val out = alloc<MIDIPortRefVar>()
-            val status = withCfString("KiteMIDI out") { name ->
+            val status = withCfString("KiteAudio out") { name ->
                 MIDIOutputPortCreate(client, name, out.ptr)
             }
             if (status == NO_ERROR) outputPort = out.value
@@ -169,7 +169,7 @@ private class AppleMidiDevices(private val scope: CoroutineScope) : MidiDevices 
             var disposal = MIDIClientDispose(client)
             repeat(2) { if (disposal != NO_ERROR) disposal = MIDIClientDispose(client) }
             if (disposal == NO_ERROR) selfRef.dispose() else {
-                println("KiteMIDI client disposal failed (OSStatus $disposal); native reference retained")
+                println("KiteAudio MIDI client disposal failed (OSStatus $disposal); native reference retained")
             }
             throw MidiPortException("CoreMIDI would not create an output port (OSStatus $portStatus)")
         }
@@ -227,7 +227,7 @@ private class AppleMidiDevices(private val scope: CoroutineScope) : MidiDevices 
         try {
             val status = memScoped {
                 val out = alloc<MIDIPortRefVar>()
-                val result = withCfString("KiteMIDI in ${port.name}") { name ->
+                val result = withCfString("KiteAudio in ${port.name}") { name ->
                     MIDIInputPortCreate(client, name, readProc, input.refCon, out.ptr)
                 }
                 if (result == NO_ERROR) input.attach(out.value)
@@ -532,7 +532,7 @@ private inline fun <T> NSRecursiveLock.locked(block: () -> T): T {
 
 private inline fun containNativeCallbackFailure(block: () -> Unit) {
     try { block() } catch (error: Throwable) {
-        try { println("KiteMIDI callback failed; packet dropped: $error") } catch (_: Throwable) { }
+        try { println("KiteAudio MIDI callback failed; packet dropped: $error") } catch (_: Throwable) { }
     }
 }
 
@@ -561,7 +561,7 @@ private class NativeMidiLoop(createClient: () -> Unit) {
                         if (done) break
                         if (next != null) {
                             try { next() } catch (error: Throwable) {
-                                println("KiteMIDI cleanup task failed; native references retained: $error")
+                                println("KiteAudio MIDI cleanup task failed; native references retained: $error")
                             }
                         } else {
                             val result = CFRunLoopRunInMode(kCFRunLoopDefaultMode, 0.05, false)
@@ -570,7 +570,7 @@ private class NativeMidiLoop(createClient: () -> Unit) {
                     }
                 }
             }
-        }.apply { name = "KiteMIDI CoreMIDI"; start() }
+        }.apply { name = "KiteAudio-midi-coremidi"; start() }
         condition.lock()
         while (!ready) condition.wait()
         condition.unlock()
@@ -585,13 +585,13 @@ private class NativeMidiLoop(createClient: () -> Unit) {
     fun dispose(label: String, action: () -> Int, onDisposed: () -> Unit) {
         fun attempt(remaining: Int) {
             val status = try { action() } catch (error: Throwable) {
-                println("KiteMIDI $label disposal threw; native references retained: $error")
+                println("KiteAudio MIDI $label disposal threw; native references retained: $error")
                 return
             }
             if (status == NO_ERROR) onDisposed() else if (remaining > 1) {
                 NSThread.sleepForTimeInterval(0.01)
                 execute { attempt(remaining - 1) }
-            } else println("KiteMIDI $label disposal failed (OSStatus $status); native references retained")
+            } else println("KiteAudio MIDI $label disposal failed (OSStatus $status); native references retained")
         }
         execute { attempt(3) }
     }

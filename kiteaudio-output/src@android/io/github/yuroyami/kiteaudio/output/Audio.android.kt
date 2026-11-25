@@ -83,7 +83,7 @@ internal class AndroidAudioOutput(
             if (previous?.active == true) return
             check(previous == null) { "the previous audio callback is still stopping" }
             val next = Generation()
-            next.worker = Thread({ pump(next, callback) }, "KiteRT-android-audio").apply {
+            next.worker = Thread({ pump(next, callback) }, "KiteAudio-output-android").apply {
                 isDaemon = true
 
             }

@@ -31,7 +31,7 @@ import kotlinx.coroutines.launch
  * Callback failures are logged and the affected packet is dropped. Close disables delivery
  * immediately; native port/client cleanup runs on a dedicated thread after callbacks return.
  */
-public fun coreMidiDevices(scope: CoroutineScope, clientName: String = "KiteMIDI"): MidiDevices = CoreMidiDevices(scope, clientName)
+public fun coreMidiDevices(scope: CoroutineScope, clientName: String = "KiteAudio"): MidiDevices = CoreMidiDevices(scope, clientName)
 
 internal class CoreMidiDevices(private val scope: CoroutineScope, clientName: String) : MidiDevices {
     private val arena = Arena.ofShared()
@@ -66,7 +66,7 @@ internal class CoreMidiDevices(private val scope: CoroutineScope, clientName: St
                 // 1 is finished: nothing is registered on the loop yet, so do not spin.
                 if (result == 1) Thread.sleep(50L)
             }
-        }, "KiteMIDI CoreMIDI").apply { isDaemon = true }
+        }, "KiteAudio-midi-coremidi").apply { isDaemon = true }
         loopThread.start()
         created.await()
         if (status != 0) {
@@ -231,7 +231,7 @@ internal class CoreMidiInput(
 
     init {
         val out = arena.allocate(ValueLayout.JAVA_INT)
-        val status = CoreMidi.withCfString(arena, "KiteMIDI in ${port.name}") { name ->
+        val status = CoreMidi.withCfString(arena, "KiteAudio in ${port.name}") { name ->
             CoreMidi.inputPortCreate.invoke(owner.clientRef, name, stub, MemorySegment.NULL, out) as Int
         }
         if (status != 0) {
@@ -289,7 +289,7 @@ internal class CoreMidiOutput(private val owner: CoreMidiDevices, override val p
 
     init {
         val out = arena.allocate(ValueLayout.JAVA_INT)
-        val status = CoreMidi.withCfString(arena, "KiteMIDI out ${port.name}") { name ->
+        val status = CoreMidi.withCfString(arena, "KiteAudio out ${port.name}") { name ->
             CoreMidi.outputPortCreate.invoke(owner.clientRef, name, out) as Int
         }
         if (status != 0) {
@@ -327,7 +327,7 @@ internal class CoreMidiOutput(private val owner: CoreMidiDevices, override val p
 /** All upcalls contain application/decoder failures; the affected packet is dropped and logged. */
 internal inline fun containCallbackFailure(block: () -> Unit) {
     try { block() } catch (error: Throwable) {
-        try { System.getLogger("KiteMIDI").log(System.Logger.Level.WARNING, "MIDI callback failed; packet dropped", error) }
+        try { System.getLogger("io.github.yuroyami.kiteaudio.midi.coremidi").log(System.Logger.Level.WARNING, "MIDI callback failed; packet dropped", error) }
         catch (_: Throwable) { /* Nothing may escape a foreign-function upcall. */ }
     }
 }
@@ -335,7 +335,7 @@ internal inline fun containCallbackFailure(block: () -> Unit) {
 /** A callback can close its own input. Dispose only after returning through the native stub. */
 internal object CoreMidiCleanup {
     private val executor = Executors.newSingleThreadScheduledExecutor { action ->
-        Thread(action, "KiteMIDI cleanup").apply { isDaemon = true }
+        Thread(action, "KiteAudio-midi-cleanup").apply { isDaemon = true }
     }
     // Failed disposal must retain the object and its arena; native code may still own the stub.
     private val retainedFailures = java.util.concurrent.ConcurrentHashMap.newKeySet<Any>()
@@ -343,7 +343,7 @@ internal object CoreMidiCleanup {
     fun execute(action: () -> Unit) {
         executor.execute {
             try { action() } catch (error: Throwable) {
-                System.getLogger("KiteMIDI").log(System.Logger.Level.ERROR, "cleanup failed; native references retained", error)
+                System.getLogger("io.github.yuroyami.kiteaudio.midi.coremidi").log(System.Logger.Level.ERROR, "cleanup failed; native references retained", error)
             }
         }
     }
@@ -351,7 +351,7 @@ internal object CoreMidiCleanup {
         fun attempt(remaining: Int) {
             val status = try { action() } catch (error: Throwable) {
                 retainedFailures += resource
-                System.getLogger("KiteMIDI").log(System.Logger.Level.ERROR, "$label disposal threw; native references retained", error)
+                System.getLogger("io.github.yuroyami.kiteaudio.midi.coremidi").log(System.Logger.Level.ERROR, "$label disposal threw; native references retained", error)
                 return
             }
             if (status == 0) {
@@ -360,13 +360,13 @@ internal object CoreMidiCleanup {
                     retainedFailures -= resource
                 } catch (error: Throwable) {
                     retainedFailures += resource
-                    System.getLogger("KiteMIDI").log(System.Logger.Level.ERROR, "$label cleanup failed; references retained", error)
+                    System.getLogger("io.github.yuroyami.kiteaudio.midi.coremidi").log(System.Logger.Level.ERROR, "$label cleanup failed; references retained", error)
                 }
             } else if (remaining > 1) {
                 executor.schedule({ attempt(remaining - 1) }, 10, TimeUnit.MILLISECONDS)
             } else {
                 retainedFailures += resource
-                System.getLogger("KiteMIDI").log(System.Logger.Level.ERROR, "$label disposal failed (OSStatus $status); native references retained")
+                System.getLogger("io.github.yuroyami.kiteaudio.midi.coremidi").log(System.Logger.Level.ERROR, "$label disposal failed (OSStatus $status); native references retained")
             }
         }
         executor.execute { attempt(3) }

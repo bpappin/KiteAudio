@@ -242,7 +242,7 @@ counter, the count is a measurement. Elsewhere the output estimates it.
 | --- | --- | --- |
 | JVM | `javax.sound.sampled.SourceDataLine` | JDK 21 toolchain; an installed Java Sound output provider supporting signed 16-bit PCM. The repository includes live audio tests. Linux and Windows use this JVM backend; there are no native Linux or Windows targets. |
 | Android | Streaming `AudioTrack` | minSdk 23, compileSdk 37.2. Requests low-latency performance mode on API 26 and above; the system may choose a different performance path. The repository includes host tests that drive the output with a fake track; they are not a device test. |
-| iOS arm64 | AudioQueue | `.github/scripts/apple_frameworks.py` links a dynamic framework named `KiteRT`. The host app owns its audio session: its category, its activation and its background-audio policy. The output never changes them. An interruption that begins, a route change that removes the output device, or a loss or reset of the media services ends the stream with `DeviceLost`. No iOS test sources are included. The macOS tests cover the shared logic with a fake queue, not the iOS observers. |
+| iOS arm64 | AudioQueue | `.github/scripts/apple_frameworks.py` links a dynamic framework named `KiteAudioOutput`. The host app owns its audio session: its category, its activation and its background-audio policy. The output never changes them. An interruption that begins, a route change that removes the output device, or a loss or reset of the media services ends the stream with `DeviceLost`. No iOS test sources are included. The macOS tests cover the shared logic with a fake queue, not the iOS observers. |
 | iOS simulator arm64 and x64 | AudioQueue | The script links the same framework for both. Simulator support does not establish physical-device behavior. |
 | macOS arm64 | AudioQueue | Uses the system AudioToolbox platform bindings. The repository includes live audio tests. A queue that stops running ends the stream with `DeviceLost`. A move to a new default device that keeps the queue running sends nothing. |
 | JS and wasmJs in a browser | An `AudioWorkletNode` fed from the page, or `AudioBuffer`s scheduled by a page timer | `openAudioOutput` uses the worklet where the page can, and falls back to scheduled buffers in a page that is not a secure context or whose content security policy blocks a `blob:` worklet module. `Started` arrives once the browser lets the page play sound, usually after a click or a key press; a `start()` made before then waits, and calling `start()` again from the click or key handler asks the browser once more. Node.js has no Web Audio: opening an output throws `UnsupportedOperationException` there. Checked by hand with [verification/web](verification/web/README.md) in Chrome 156, Safari 27.2 and Firefox 159 on macOS; not yet on iOS. |
@@ -331,7 +331,7 @@ Apple compilation and linking need macOS and an appropriate Xcode SDK.
 
 The Kotlin Toolchain does not link Apple frameworks. After a build of an iOS platform,
 `python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --build-type debug --no-xcframework`
-links `KiteRT.framework` from the klibs.
+links `KiteAudioOutput.framework` from the klibs.
 
 Deterministic lifecycle and transfer regressions use fake JVM/native drivers without opening audio:
 

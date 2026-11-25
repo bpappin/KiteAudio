@@ -43,7 +43,7 @@ internal class JvmAudioOutput(
             if (previous?.active == true) return
             check(previous == null) { "the previous audio callback is still stopping" }
             val next = Generation()
-            next.worker = Thread({ pump(next, callback) }, "KiteRT-jvm-audio").apply {
+            next.worker = Thread({ pump(next, callback) }, "KiteAudio-output-jvm").apply {
                 isDaemon = true
                 priority = Thread.NORM_PRIORITY + 2
             }

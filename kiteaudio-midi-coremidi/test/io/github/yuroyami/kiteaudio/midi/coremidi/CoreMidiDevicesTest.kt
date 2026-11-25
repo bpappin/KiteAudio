@@ -97,10 +97,10 @@ class CoreMidiDevicesTest {
     @Test
     fun sendOnAClosedOutputThrowsAlsoForAnEmptyArray() = runBlocking<Unit>(Dispatchers.Default) {
         assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
-        val devices = CoreMidiDevices(this, "KiteMIDI closed output test")
+        val devices = CoreMidiDevices(this, "KiteAudio closed output test")
         try {
             // Sending is never reached, so the output needs no real destination.
-            val port = MidiPort("out:test", "KiteMIDI closed output", null, MidiDirection.OUTPUT, MidiTransport.VIRTUAL)
+            val port = MidiPort("out:test", "KiteAudio closed output", null, MidiDirection.OUTPUT, MidiTransport.VIRTUAL)
             val output = CoreMidiOutput(devices, port, 0)
             output.sendRaw(ByteArray(0))
             output.close()
@@ -116,14 +116,14 @@ class CoreMidiDevicesTest {
     fun aCallbackCanCloseItsInputAndOwnerAndDisableFurtherDelivery() = runBlocking(Dispatchers.Default) {
         assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
-        val virtual = VirtualSource("KiteMIDI FFM callback close source")
+        val virtual = VirtualSource("KiteAudio FFM callback close source")
         val input = AtomicReference<MidiInput?>()
         val deliveries = AtomicInteger()
         val closeReturned = CompletableDeferred<Unit>()
         try {
             devices.refresh()
             val port = devices.ports.value.first {
-                it.name == "KiteMIDI FFM callback close source" && it.direction == MidiDirection.INPUT
+                it.name == "KiteAudio FFM callback close source" && it.direction == MidiDirection.INPUT
             }
             input.set(devices.openInput(port) {
                 deliveries.incrementAndGet()
@@ -150,14 +150,14 @@ class CoreMidiDevicesTest {
     fun aVirtualSourceIsListedAndItsNoteComesThrough() = runBlocking(Dispatchers.Default) {
         assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
-        val virtual = VirtualSource("KiteMIDI test source")
+        val virtual = VirtualSource("KiteAudio test source")
         try {
             val port = withTimeout(5_000L) {
-                var found = devices.ports.value.firstOrNull { it.name == "KiteMIDI test source" && it.direction == MidiDirection.INPUT }
+                var found = devices.ports.value.firstOrNull { it.name == "KiteAudio test source" && it.direction == MidiDirection.INPUT }
                 while (found == null) {
                     delay(50L)
                     devices.refresh()
-                    found = devices.ports.value.firstOrNull { it.name == "KiteMIDI test source" && it.direction == MidiDirection.INPUT }
+                    found = devices.ports.value.firstOrNull { it.name == "KiteAudio test source" && it.direction == MidiDirection.INPUT }
                 }
                 found
             }
@@ -177,17 +177,17 @@ class CoreMidiDevicesTest {
         assumeTrue(coreMidiAvailable(), "CoreMIDI is not available on this machine")
         val devices = coreMidiDevices(this)
         try {
-            val virtual = VirtualSource("KiteMIDI late source")
+            val virtual = VirtualSource("KiteAudio late source")
             try {
                 withTimeout(5_000L) {
-                    while (devices.ports.value.none { it.name == "KiteMIDI late source" }) delay(50L)
+                    while (devices.ports.value.none { it.name == "KiteAudio late source" }) delay(50L)
                 }
                 assertTrue(true)
             } finally {
                 virtual.close()
             }
             withTimeout(5_000L) {
-                while (devices.ports.value.any { it.name == "KiteMIDI late source" }) delay(50L)
+                while (devices.ports.value.any { it.name == "KiteAudio late source" }) delay(50L)
             }
         } finally {
             devices.close()

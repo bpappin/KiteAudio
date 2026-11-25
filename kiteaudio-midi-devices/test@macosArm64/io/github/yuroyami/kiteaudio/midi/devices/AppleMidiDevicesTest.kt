@@ -93,7 +93,7 @@ class AppleMidiDevicesTest {
     fun aCallbackCanCloseItsInputAndOwnerAndDisableFurtherDelivery() = runBlocking {
         val scope = scope()
         val devices = appleMidiDevices(scope)
-        val helper = VirtualSource("KiteMIDI native callback close source")
+        val helper = VirtualSource("KiteAudio native callback close source")
         val inputState = MutableStateFlow<MidiInput?>(null)
         val deliveries = MutableStateFlow(0)
         val closeReturned = MutableStateFlow(false)
@@ -129,7 +129,7 @@ class AppleMidiDevicesTest {
     fun aVirtualSourceIsFoundAndItsMessagesArrive() = runBlocking {
         val scope = scope()
         val devices = appleMidiDevices(scope)
-        val helper = VirtualSource("KiteMIDI test source")
+        val helper = VirtualSource("KiteAudio test source")
         val received = MutableStateFlow<List<TimedMidiMessage>>(emptyList())
         try {
             devices.refresh()
@@ -175,7 +175,7 @@ private class VirtualSource(val name: String) {
     init {
         memScoped {
             val clientOut = alloc<MIDIClientRefVar>()
-            val clientStatus = withTestCfString("KiteMIDI test client") { cfName ->
+            val clientStatus = withTestCfString("KiteAudio test client") { cfName ->
                 MIDIClientCreate(cfName, null, null, clientOut.ptr)
             }
             check(clientStatus == 0) { "MIDIClientCreate failed with $clientStatus" }

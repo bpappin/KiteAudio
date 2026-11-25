@@ -19,7 +19,7 @@ internal class FakeMidiSystem {
 
 /** A device that both sends and takes messages. Two with the same [name] are identical twins. */
 internal class FakeMidiDevice(name: String) : MidiDevice {
-    val info: MidiDevice.Info = object : MidiDevice.Info(name, "KiteMIDI", "fixture", "1") {}
+    val info: MidiDevice.Info = object : MidiDevice.Info(name, "KiteAudio", "fixture", "1") {}
     val sent = CopyOnWriteArrayList<ByteArray>()
     val transmitters = CopyOnWriteArrayList<FakeTransmitter>()
     val opens = AtomicInteger()

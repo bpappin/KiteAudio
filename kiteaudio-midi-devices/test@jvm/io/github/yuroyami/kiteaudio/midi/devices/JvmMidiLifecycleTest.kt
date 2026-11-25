@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.first
 
 class JvmMidiLifecycleTest {
     private class FakeDevice : MidiDevice {
-        val info = object : MidiDevice.Info("Fake", "KiteMIDI", "fixture", "1") {}
+        val info = object : MidiDevice.Info("Fake", "KiteAudio", "fixture", "1") {}
         val receiverEntered = CountDownLatch(1)
         val allowReceiver = CountDownLatch(1)
         val closes = AtomicInteger()

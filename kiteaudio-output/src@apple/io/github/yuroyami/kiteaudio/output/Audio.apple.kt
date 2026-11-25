@@ -98,8 +98,8 @@ internal class AppleAudioOutput(
         }
     }
 
-    private val controlQueue = dispatch_queue_create("KiteRT-audio-control", null)
-    private val renderQueue = dispatch_queue_create("KiteRT-audio-render", null)
+    private val controlQueue = dispatch_queue_create("KiteAudio-output-control", null)
+    private val renderQueue = dispatch_queue_create("KiteAudio-output-render", null)
     private val closed = AtomicBoolean(false)
     private val startPending = AtomicBoolean(false)
     private val generation = AtomicReference<Generation?>(null)
@@ -473,7 +473,7 @@ private fun probeQueue(driver: AppleAudioQueueDriver, format: AudioFormat, queue
     routed
 }
 
-private val probeDispatchQueue = dispatch_queue_create("KiteRT-audio-probe", null)
+private val probeDispatchQueue = dispatch_queue_create("KiteAudio-output-probe", null)
 
 /** The Apple body of [openAudioOutput], over [driver] and [hardware]. */
 @Throws(Exception::class)

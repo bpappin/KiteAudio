@@ -301,9 +301,9 @@ instrument testing.
 | `kiteaudio-midi-devices` Apple | iOS device and simulator targets above, native macOS arm64 | CoreMIDI platform bindings; callbacks arrive on CoreMIDI threads. |
 | `kiteaudio-midi-coremidi` | macOS desktop JVM | Runtime JDK 22+ and native access enabled; the source build requests JDK 25. |
 
-For a plain Swift application, `.github/scripts/apple_frameworks.py` links the `KiteMIDIIO`
+For a plain Swift application, `.github/scripts/apple_frameworks.py` links the `KiteMidiDevices`
 framework, which exports the message types of `kiteaudio-midi`. Import that umbrella framework
-for device access and messages; a separate `KiteMIDI` framework is unnecessary. Parsing, file writing, port opening and sending export their declared
+for device access and messages; a separate `KiteMidi` framework is unnecessary. Parsing, file writing, port opening and sending export their declared
 expected exceptions. Use Swift `do`/`try`/`catch` (or the suspend completion error parameter).
 The exported Kotlin model still uses Kotlin collections and byte-array wrappers.
 
@@ -366,7 +366,7 @@ The `web-tests` script runs the JS and wasmJs tests in Node. The klib check read
 A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run
 only on Linux, and the `mingwX64` tests run only on Windows.
 The Kotlin Toolchain does not link Apple frameworks.
-`.github/scripts/apple_frameworks.py` links `KiteMIDI.framework` and `KiteMIDIIO.framework`
+`.github/scripts/apple_frameworks.py` links `KiteMidi.framework` and `KiteMidiDevices.framework`
 from the klibs.
 
 To publish the modules to your local Maven repository:
