@@ -30,6 +30,11 @@ The following components were written from published specifications:
   AC-3                                   ATSC A/52:2012, Digital Audio
                                          Compression Standard (AC-3, E-AC-3)
   zlib inflate                           IETF RFC 1950 and RFC 1951
+  Standard MIDI Files                    MMA Standard MIDI Files (RP-001)
+  MIDI 1.0 messages                      MMA MIDI 1.0 Detailed Specification
+  General MIDI channel defaults          MMA General MIDI System Level 1
+  SoundFont 2 files, generators and      E-mu SoundFont Technical
+  modulators                             Specification, version 2.04
 
 Translated components
 
@@ -457,9 +462,15 @@ Kotlin and adapted for AudioKodec's streaming, allocation and channel APIs.
 Formats named by the sniffer but not decoded are identified from their
 published magic numbers only.
 
+The reverb of kiteaudio-synth uses the delay lengths and gains of Freeverb
+by Jezar at Dreampoint. Julius O. Smith III's Physical Audio Signal
+Processing describes Freeverb as a public domain program.
+
 Test oracles run as external programs or through their public APIs. Copyleft
-implementation source is never read or redistributed. The suites that compare
-against ffmpeg skip themselves when it is not installed.
+implementation source is never redistributed, and the project's rule is that
+it is not read. reference/REFERENCES.md records one known break of that rule,
+in kiteaudio-midi-devices, and one open question, in kiteaudio-synth. The
+suites that compare against ffmpeg skip themselves when it is not installed.
 
 reference/REFERENCES.md records the specifications consulted and the exact
 revisions and licences of translated implementations. GPL and LGPL sources

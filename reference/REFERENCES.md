@@ -1,6 +1,12 @@
 # References
 
-What AudioKodec was written from, and what it may be written from next.
+What KiteAudio was written from, and what it may be written from next.
+
+Most of this file covers the codec, `kiteaudio-codec`. `AudioKodec` is the
+name of its API object. The other modules have their own sections:
+[Core module](#core-module), [MIDI modules](#midi-modules),
+[Synth module](#synth-module) and [Output module](#output-module). The rules
+below apply to every module.
 
 Nothing listed here is redistributed. Specifications are read; implementations
 are either studied under a permissive license or left unopened. The
@@ -21,6 +27,8 @@ can hold checkouts without them ever reaching the repository.
    program is not deriving from it. Its source stays unopened.
 
 ## Specifications
+
+These are the specifications of the codec. Each other module lists its own.
 
 | Format | Specification |
 |---|---|
@@ -77,7 +85,7 @@ can hold checkouts without them ever reaching the repository.
 
 ## Test oracles
 
-Run as programs, never read as source.
+Run as programs, never read as source. These are the oracles of the codec.
 
 | Tool | Used for |
 |---|---|
@@ -1141,6 +1149,220 @@ The extraction found no disagreement. Table 4.141 is identical to Table
 4.139, and one array serves both. Table 4.157 lists no noise shaping limits
 for 7.35 kHz, which uses the 8 kHz tables throughout, and takes 8 kHz's.
 
+## Core module
+
+`kiteaudio-core` holds the four format types that the codec and the output
+module share: `AudioChannel`, `ChannelLayout`, `AudioFormat` and
+`PcmSource`. They moved out of the codec, so the codec's sources apply.
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| Channel order, `dwChannelMask` bits and the default layout for a channel count | The WAVE_FORMAT_EXTENSIBLE row of [Specifications](#specifications) | `AudioFormat.kt` calls the order "the order WAV and SMPTE use". It names no SMPTE document |
+| Frames to microseconds and back | None needed | Integer arithmetic only |
+
+No test oracle runs against this module. The code names no other
+implementation as its base.
+
+## MIDI modules
+
+There are three MIDI modules:
+
+- `kiteaudio-midi` reads and writes Standard MIDI Files and MIDI 1.0
+  messages, in common code.
+- `kiteaudio-midi-devices` opens MIDI ports through MidiManager on Android,
+  CoreMIDI on iOS and macOS, and `javax.sound.midi` on the JVM.
+- `kiteaudio-midi-coremidi` opens CoreMIDI ports on a macOS desktop JVM,
+  through the Java foreign function API.
+
+The three modules came into this repository on 20 November 2026 as a
+snapshot of the KiteMIDI repository at commit `644672b`. The history before
+that snapshot is not in this repository.
+
+### kiteaudio-midi
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| File chunks, formats 0 to 2, division, delta times, meta events and the default tempo of 120 beats per minute | MMA, [Standard MIDI Files](https://midi.org/standard-midi-files/) (RP-001) | "The specification", with no version. `VarLenTest` copies the table of variable-length quantities from it. `Fixtures.kt` builds its smallest file "by hand from the specification" |
+| Channel, system common and system real-time messages, and running status | MMA, [MIDI 1.0 Detailed Specification](https://midi.org/midi-1-0-detailed-specification/), 1996 revision | No document named. The module README says the formats follow the MIDI Manufacturers Association specifications |
+| Universal system exclusive: device inquiry, master volume, master fine and coarse tuning | MIDI 1.0 Detailed Specification; MMA CA-025 for the master tuning messages | No document named |
+| Port prefix meta event (`0x21`) | None | "Not in the original specification, but common" |
+| Manufacturer names in a device inquiry reply | None | No source stated for the nine IDs in `UniversalSysEx.kt` |
+
+The tests run no other program. `CorpusTest` reads `.mid` files from the
+folder that `KITEAUDIO_MIDI_CORPUS` names. Other people's tools wrote those
+files. They are test data, and they are not in this repository.
+
+### kiteaudio-midi-devices
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| Android ports and Bluetooth instruments | [android.media.midi](https://developer.android.com/reference/android/media/midi/package-summary) API reference | Public platform API only |
+| iOS and macOS ports | Apple [Core MIDI](https://developer.apple.com/documentation/coremidi) documentation | Public platform API only |
+| JVM ports | Java SE 21 [javax.sound.midi](https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/javax/sound/midi/package-summary.html) API | Public API only. See the note on the JDK below |
+| Byte stream to messages: running status, real-time bytes inside a message, system exclusive split over reads | MIDI 1.0 Detailed Specification | `MidiStreamParser.kt` names no document |
+
+The JVM backend reacts to how the JDK reuses `MidiDevice.Info` objects
+after a rescan. When the device count changes, the JDK gives the remaining
+device of two identical devices the old `Info` and device object of the
+other one. A comment on issue #154 of this repository names the
+JDK-internal method `AbstractMidiDeviceProvider.readDeviceInfos` of JDK 21
+as the place of this behavior. That method is not public API, so somebody
+read OpenJDK source to learn it. OpenJDK is GPL-2.0 with the Classpath
+Exception, so this is in conflict with rule 1.
+
+The code itself calls only public `javax.sound.midi` types. It does not copy
+the JDK's logic. It drops every open port that it cannot trust after a
+rescan. `JvmMidiLostDeviceTest` imitates the behavior with `FakeMidiSystem`,
+through the public interfaces. From now on, OpenJDK source stays unopened.
+Learn platform behavior from its documentation or by running it.
+
+The JVM tests open the JDK's own software synthesizer, Gervill, and its
+sequencer as devices. They run them; they do not read them. The Apple tests
+create virtual CoreMIDI sources.
+
+### kiteaudio-midi-coremidi
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| CoreMIDI and CoreFoundation functions | Apple [Core MIDI](https://developer.apple.com/documentation/coremidi) documentation | `CoreMidi.kt` writes out each C signature in a comment |
+| Memory layout of `MIDIPacketList` and `MIDIPacket` | Apple Core MIDI documentation | No source stated for the packing rule: 4 bytes on Apple silicon, 1 byte on Intel |
+| Calls into native code | Java SE 22 [java.lang.foreign](https://docs.oracle.com/en/java/javase/22/docs/api/java.base/java/lang/foreign/package-summary.html) API | Public API only |
+
+For all three MIDI modules, the code names no other implementation as its
+base, and no permissive implementation is recorded under rule 2. The
+projects in [Never opened](#never-opened) stay unopened. For MIDI that
+includes OpenJDK, TiMidity++, WildMIDI, alsa-lib and JACK2.
+
+## Synth module
+
+`kiteaudio-synth` reads and writes SoundFont 2 and SF3 fonts and renders
+them to stereo PCM. It came into this repository on 20 November 2026 as a
+snapshot of the KiteSynth repository at commit `195e04e`. The history before
+that snapshot is not in this repository.
+
+### Specifications
+
+The SoundFont specification is E-mu Systems, *SoundFont Technical
+Specification*, version 2.04. Its title page is dated 3 February 2006. No
+official copy remains online, and this repository pins no copy or checksum.
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| RIFF chunk layout, `ifil`, `sm24` and its version rule | SoundFont 2.04, sections 6 and 6.2 | `SoundFontReader.kt` and `SoundFontWriter.kt` cite both sections |
+| Guard frames around a loop | SoundFont 2.04, section 6.3 | `Voice.kt` cites the section |
+| Generators, their defaults and their limits | SoundFont 2.04 | `SoundFont.kt`, `VoicePlan.kt` and `defaultGenerators` say "the format" or "the specification", with no section |
+| Default modulators | SoundFont 2.04, section 8.4 | `Modulators.kt` cites the section. It states two deviations: the pitch wheel modulator is the built-in bend, and the pan modulator amount is 500, half of the format's 1000 |
+| Source curves: linear, concave, convex and switch | SoundFont 2.04 | `Modulators.kt` calls the concave curve "the format's own curve", with no section |
+| Linked modulators | SoundFont 2.04, sections 9.5.4, 7.4 and 7.8 | `Modulators.kt` cites the sections |
+| Stereo sample pairs | SoundFont 2.04, section 7.10 | `VoicePlan.kt` and `Voice.kt` cite the section |
+| Units: timecents, centibels, cents and absolute cents from 8.176 Hz | SoundFont 2.04 | `Units.kt`, `Lfo.kt` and `Filter.kt` say "the format", with no section |
+| Volume envelope: attack linear in amplitude, decay and release linear in centibels | SoundFont 2.04 | `Voice.kt` says "what the format says", with no section |
+| SF3: Ogg Vorbis samples, `ifil` version 3, sample type bit `0x10` | None named | `SoundFontReader.kt`, `SoundFont.kt` and `SoundFontWriter.kt` name no document. The module does not decode Vorbis; the caller passes a decoder |
+| Drum channel and Reset All Controllers | MMA, [General MIDI](https://midi.org/general-midi) System Level 1 | `Synth.kt` says "as General MIDI says", with no document |
+| Drum kits on bank 128 | None named | `Synth.kt` says "where every SoundFont keeps its drum kits", with no document |
+| RPN 0, 1 and 2: bend range, fine tune and coarse tune | MIDI 1.0 Detailed Specification | `Synth.kt` names no document |
+
+### Signal processing
+
+| Block | What the code states |
+|---|---|
+| Reverb | Freeverb. See [Freeverb numbers](#freeverb-numbers) |
+| Chorus: three taps about 30 ms late, 3.6 ms deep at 0.36 Hz, a third of a cycle apart | "GeneralUser GS's own suggested settings" (`Chorus.kt`). GeneralUser GS is a SoundFont bank. The code names no document or version, and this file has not confirmed the numbers |
+| Low-pass filter | "The standard biquad low-pass" (`Filter.kt`). The coefficients have the form of the low-pass filter in the [Audio EQ Cookbook](https://www.w3.org/TR/audio-eq-cookbook/) by Robert Bristow-Johnson, which the code does not cite. [The low-pass filter](#the-low-pass-filter) gives the public source of each rule |
+| LFOs: a triangle from -1 to 1 | "Both of the format's LFOs are this shape" (`Lfo.kt`) |
+| Linear and four-point Hermite interpolation | No source stated (`Voice.kt`) |
+| Band-limited interpolation: a Kaiser-windowed sinc with 16 zero crossings, 512 entries for each crossing and a beta of 10 | No source stated. `SincKernel.kt` computes the window and the Bessel function I0 from their definitions |
+| Pan law: `(1 - pan) / 2` and `(1 + pan) / 2` | No source stated (`Voice.kt`) |
+| Control rate of 16 frames | No source stated (`Voice.kt`) |
+
+### Freeverb numbers
+
+`Reverb` follows the design of Freeverb, a reverb by Jezar at Dreampoint.
+The code says that the design "has been described publicly for decades and
+the numbers below are that description's". It names no document.
+
+| Field | Value |
+|---|---|
+| Numbers taken | The comb delays 1116, 1188, 1277, 1356, 1422, 1491, 1557 and 1617 samples at 44,100 Hz; the allpass delays 556, 441, 341 and 225; a stereo spread of 23; feedback `0.7 + roomSize * 0.28`; a damping scale of 0.4; an input gain of 0.015; an allpass feedback of 0.5; and the width mix of the two wet gains |
+| Where | `Reverb.kt`; `ReverbTest.kt` and `ReviewFindingsTest.kt` test the delay scaling and the feedback formula |
+| Published description | Julius O. Smith III, *Physical Audio Signal Processing*, W3K Publishing, 2010, section [Freeverb](https://ccrma.stanford.edu/~jos/pasp/Freeverb.html). Its text states the stereo spread of 23. The other values are not in its text, and this record has not checked its figures |
+| License | The same page calls Freeverb a public domain program. Rule 1 does not apply to it, and the `NOTICE` names it |
+| Not known | Whether the numbers came from that page, from another description or from Freeverb's own source |
+
+The reverb adds its own parts: the scaling of the delays to the sample rate,
+the presets and the quiet detection.
+
+### The low-pass filter
+
+Until commit `c1d61ca` of 20 November 2026, the comment on `LowPassFilter`
+said that the filter used "FluidSynth's coefficients". FluidSynth is
+LGPL-2.1 and is in [Never opened](#never-opened). That commit changed the
+comment to "the standard biquad low-pass" and did not change the code. The
+repository does not show how the first version of the filter was written.
+
+Each rule of the filter as it is today has a public source. The section
+numbers are those of SoundFont 2.04.
+
+| Rule in `Filter.kt` | Public source |
+|---|---|
+| The five coefficients | The low-pass filter of the [Audio EQ Cookbook](https://www.w3.org/TR/audio-eq-cookbook/) |
+| A filter of second order, a cutoff of 1500 to 13500 absolute cents and a resonance of 0 to 960 centibels | Section 8.1.2, generators 8 and 9, and the limits in section 8.1.3 |
+| No filtering when the cutoff is 13500 cents and the resonance is zero | Section 8.1.2, generators 8 and 9. Above 20 kHz with no resonance, the filter does not change the signal |
+| A resonance of zero gives a Q of 1 / sqrt(2), which is 3.01 dB less | Section 8.1.2, generator 9. A value of zero means no resonance. A Q of 1 / sqrt(2) is the Butterworth response, the highest Q that has no peak |
+| The gain falls by 1 / sqrt(Q) as the resonance rises | Section 8.1.2, generator 9. The gain at DC "is reduced by half the specified gain" |
+| A cutoff limit of 0.45 times the sample rate | None. The limit keeps the cutoff below the Nyquist frequency |
+
+The filter differs from the text of generator 9 in two points. It takes half
+of the resonance after the offset of 3.01 dB, not half of the specified
+value. It never raises the gain above 1.
+
+Not known: whether the first version was written from these documents or
+with FluidSynth's source at hand. FluidSynth stays unopened.
+
+### Test oracles and unopened sources
+
+No other synthesizer runs as an oracle. The tests use synthetic fonts, and
+the module README says that there is no differential suite against a
+reference synthesizer. `RenderToWavTest` writes WAV files for a person to
+listen to.
+
+The code names Freeverb, GeneralUser GS and, until `c1d61ca`, FluidSynth.
+It names no other implementation. No permissive implementation is recorded
+under rule 2. The projects in [Never opened](#never-opened) stay unopened.
+For SoundFont synthesis that includes FluidSynth, FluidLite, TiMidity++,
+WildMIDI, libADLMIDI, Polyphone, JUCE and OpenJDK, which holds Gervill.
+
+## Output module
+
+`kiteaudio-output` plays PCM through the platform's audio output. It came
+into this repository on 20 November 2026 as a snapshot of the KiteRT
+repository at commit `1783d83`. The history before that snapshot is not in
+this repository.
+
+| Subject | Specification | What the code states |
+|---|---|---|
+| JVM | Java SE 21 [javax.sound.sampled](https://docs.oracle.com/en/java/javase/21/docs/api/java.desktop/javax/sound/sampled/package-summary.html) API | Public API only |
+| Android | [AudioTrack](https://developer.android.com/reference/android/media/AudioTrack) and `AudioManager` API reference | Public platform API only |
+| iOS and macOS | Apple [Audio Queue Services](https://developer.apple.com/documentation/audiotoolbox/audio-queue-services) and [Core Audio](https://developer.apple.com/documentation/coreaudio) documentation | Public platform API only |
+| Browser | W3C [Web Audio API 1.1](https://www.w3.org/TR/webaudio/), Working Draft of 22 September 2026, for `AudioWorkletNode`, `AudioBuffer` and the `sinkId` of `AudioContext`; W3C [Media Capture and Streams](https://www.w3.org/TR/mediacapture-streams/) for `enumerateDevices` | Public browser API only |
+| Float to signed 16-bit PCM | None | Clamp to -1 to 1, then multiply by 32767. No source stated |
+| wasmJs: a block of floats packed into one string, four code units for each float | KitePlayer, a library of the same owner, under Apache-2.0 | `Audio.wasmJs.kt` names no source. Pull request #171 says the block is "packed into a string as KitePlayer does" |
+
+The public API names also follow KitePlayer on purpose. Until commit
+`fd7611f`, the module's `module.yaml` said so.
+
+The browser backend came from pull request #171 by an outside contributor,
+merged as `1bb1587` with the single commit `3d0015b`.
+
+No program runs as an oracle. Some tests run a backend against a stand-in
+for the platform API. The JVM and macOS live audio tests play on the
+machine's own output. According to pull request #171, the browser backend
+was checked by hand in Chrome, Safari and Firefox.
+
+The code names KitePlayer and no other implementation. The projects in
+[Never opened](#never-opened) stay unopened. For audio output that includes
+OpenJDK, alsa-lib, PulseAudio, JACK2 and JUCE.
+
 ## Never opened
 
 These are copyleft or otherwise incompatible with an Apache-2.0 release. The
@@ -1150,6 +1372,23 @@ ffmpeg and libav source, libmad, mpg123, LAME, Shine, TwoLAME, FAAD2,
 FDK-AAC, liba52, libdca, libebml, libmatroska, mkvtoolnix, taglib, mutagen,
 jaudiotagger, JLayer, FluidSynth, libopenmpt, the sox source tree, spandsp,
 and the ITU-T Software Tool Library.
+
+For the MIDI, synth and output modules, these also stay unopened. Each
+license comes from the project's own license file or official page, read on
+25 November 2026:
+
+| Project | License |
+|---|---|
+| OpenJDK, which holds Gervill and the Java Sound implementation | GPL-2.0 with the Classpath Exception |
+| FluidLite | LGPL-2.1 or later |
+| TiMidity++ | GPL |
+| WildMIDI | LGPL-3.0 for the library, GPL-3.0 for the player |
+| libADLMIDI | GPL-3.0 in its license file |
+| Polyphone | GPL-3.0 |
+| JUCE | AGPL-3.0, or a commercial license |
+| alsa-lib | LGPL-2.1 |
+| PulseAudio | LGPL, with optional GPL parts in the server |
+| JACK2 | GPL-2.0 |
 
 If a search result shows code from any of them, stop at the license header.
 

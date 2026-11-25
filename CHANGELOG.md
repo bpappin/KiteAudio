@@ -407,6 +407,9 @@ artifact `kitesynth`, which is `kiteaudio-synth` now.
 
 Build:
 
+- `reference/REFERENCES.md` covers the core, MIDI, synth and output modules. Each section lists the
+  specifications that the code names, the numbers it takes from Freeverb and the implementations that
+  must stay unopened (#176).
 - The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle, on Kotlin 2.4.21.
 - Android builds compile against API level 37.2.
 
