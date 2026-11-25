@@ -76,12 +76,17 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
     @Throws(SoundFontFormatException::class, IllegalArgumentException::class)
     public fun replaceFont(newFont: SoundFont) {
         val replacement = PreparedSoundFont.build(newFont, maxPreparedRegions, maxPreparedModulators, maxPreparedPairs)
+        // Room for the new font's linked modulators before any of its plans can start, so a note allocates nothing.
+        for (voice in voices) voice.reserveLinks(replacement.linkRoom)
         allSoundOff()
         loadedFont = newFont
         preparedFont = replacement
     }
 
-    private val voices = Array(maxVoices) { Voice() }
+    private val voices = Array(maxVoices) { Voice().also { it.reserveLinks(preparedFont.linkRoom) } }
+
+    /** The smallest link room among the voices, for tests. */
+    internal val linkRoom: Int get() = voices.minOf { it.linkRoom }
 
     /**
      * The room the sound is in.

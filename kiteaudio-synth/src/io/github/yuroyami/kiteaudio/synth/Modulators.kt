@@ -65,13 +65,132 @@ private fun concave(t: Double): Double = when {
 /**
  * The modulators one voice runs: the defaults, less any an identical instrument modulator
  * replaces, then the instrument's, then the preset's, which add to whatever they match.
+ * A link counts places in its own level's list, so it is renumbered to count places in the result.
  */
 internal fun mergedModulators(instrument: List<Modulator>, preset: List<Modulator>): List<Modulator> {
     val merged = ArrayList<Modulator>(DefaultModulators.size + instrument.size + preset.size)
     for (default in DefaultModulators) if (instrument.none { it.sameAs(default) }) merged += default
-    merged += instrument
-    merged += preset
+    merged.addLevel(instrument)
+    merged.addLevel(preset)
     return merged
+}
+
+private fun MutableList<Modulator>.addLevel(level: List<Modulator>) {
+    val start = size
+    for (modulator in level) add(relinked(modulator, start, level.size))
+}
+
+/**
+ * [modulator] with its link moved [start] places on. A link past the end of its own list of [count]
+ * becomes [NO_LINK_TARGET], so it cannot land in a list laid after it.
+ */
+private fun relinked(modulator: Modulator, start: Int, count: Int): Modulator {
+    val destination = modulator.destinationId
+    if ((destination and LINK_FLAG) == 0) return modulator
+    val index = destination and NO_LINK_TARGET
+    val moved = if (index < count && start + index < NO_LINK_TARGET) start + index else NO_LINK_TARGET
+    if (moved == index) return modulator
+    return Modulator(modulator.source, LINK_FLAG or moved, modulator.amount, modulator.amountSource, modulator.transform)
+}
+
+/** True when [source] is the link source: the output of the modulators that link to this one. */
+internal fun isLinkSource(source: Int): Boolean = (source and 0xFF) == SOURCE_LINK
+
+/**
+ * The evaluation order of a plan whose modulators link to each other (SoundFont 2.04, section 9.5.4).
+ * It is built once, with the plan, so a voice only walks it.
+ *
+ * A modulator is in [order] when its links lead to a generator. Each link must land inside the list,
+ * on a modulator whose source is the link source. A modulator in a cycle, one that links to itself or
+ * past the end, and every modulator that feeds one of these, contribute nothing (sections 7.4 and 7.8).
+ */
+internal class ModulatorLinks private constructor(
+    /** Indices into the plan's modulators. Each feeder comes before its target, and generators are reached in list order. */
+    val order: IntArray,
+    /** For each modulator, the modulator its output feeds, or -1 when it feeds a generator. */
+    val target: IntArray,
+) {
+    companion object {
+        private const val UNKNOWN = 0
+        private const val ON_PATH = 1
+        private const val VALID = 2
+        private const val INVALID = 3
+        private const val TERMINAL = -1
+        private const val BROKEN = -2
+
+        /** The order for [modulators], or null when none of them links, so the voice keeps its plain walk. */
+        fun of(modulators: Array<Modulator>): ModulatorLinks? {
+            if (modulators.none { (it.destinationId and LINK_FLAG) != 0 }) return null
+            val count = modulators.size
+            // Where each modulator's output goes: a modulator, a generator, or nowhere.
+            val next = IntArray(count) { index ->
+                val destination = modulators[index].destinationId
+                if ((destination and LINK_FLAG) == 0) {
+                    if (destination in 0 until GENERATOR_COUNT) TERMINAL else BROKEN
+                } else {
+                    val to = destination and NO_LINK_TARGET
+                    if (to < count && to != NO_LINK_TARGET && isLinkSource(modulators[to].source)) to else BROKEN
+                }
+            }
+            // Each walk follows the links until it meets a known modulator, a generator, a break or its own path.
+            val state = IntArray(count)
+            val root = IntArray(count)
+            val depth = IntArray(count)
+            val path = IntArray(count)
+            for (start in 0 until count) {
+                if (state[start] != UNKNOWN) continue
+                var length = 0
+                var at = start
+                var valid: Boolean
+                var reached = -1
+                var distance = 0
+                while (true) {
+                    val seen = state[at]
+                    if (seen == VALID) {
+                        valid = true
+                        reached = root[at]
+                        distance = depth[at]
+                        break
+                    }
+                    if (seen != UNKNOWN) {
+                        valid = false
+                        break
+                    }
+                    state[at] = ON_PATH
+                    path[length++] = at
+                    val to = next[at]
+                    if (to == TERMINAL) {
+                        valid = true
+                        reached = at
+                        distance = -1
+                        break
+                    }
+                    if (to == BROKEN) {
+                        valid = false
+                        break
+                    }
+                    at = to
+                }
+                while (length > 0) {
+                    val node = path[--length]
+                    if (valid) {
+                        distance++
+                        state[node] = VALID
+                        root[node] = reached
+                        depth[node] = distance
+                    } else {
+                        state[node] = INVALID
+                    }
+                }
+            }
+            // By the generator each chain reaches, in list order; inside a chain, the farthest feeder first.
+            val order = (0 until count).filter { state[it] == VALID }
+                .sortedWith(compareBy<Int>({ root[it] }, { -depth[it] }, { it }))
+                .toIntArray()
+            val target = IntArray(count) { if (next[it] >= 0) next[it] else -1 }
+            return ModulatorLinks(order, target)
+        }
+    }
 }
 
 /** True when [modulator] reads the non-controller source [index], as its source or its amount source. */
@@ -87,6 +206,13 @@ internal const val SOURCE_POLY_PRESSURE = 10
 internal const val SOURCE_PRESSURE = 13
 internal const val SOURCE_WHEEL = 14
 internal const val SOURCE_WHEEL_RANGE = 16
+internal const val SOURCE_LINK = 127
+
+/** Bit 15 of a destination: the destination is another modulator, not a generator. */
+internal const val LINK_FLAG = 0x8000
+
+/** The link index for a link that has no target. It is past the end of every list a plan can place. */
+internal const val NO_LINK_TARGET = 0x7FFF
 
 private const val LINEAR = 0
 private const val CONCAVE = 1

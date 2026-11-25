@@ -35,7 +35,10 @@ public class VoicePlan(
      * then the instrument's value, then the preset's offset added. What the fields above do not name.
      */
     public val generators: IntArray = defaultGenerators(),
-    /** What the voice's modulators are: the format's defaults, the instrument's and the preset's, merged. */
+    /**
+     * What the voice's modulators are: the format's defaults, the instrument's and the preset's, merged.
+     * A link counts places in this list.
+     */
     public val modulators: List<Modulator> = DefaultModulators,
 ) {
     /** Peak sample amplitude cached during preparation, so voice stealing does not scan audio in render. */
@@ -46,6 +49,12 @@ public class VoicePlan(
 
     /** The same list as an array, so a voice walks it without an iterator. */
     internal val modulatorArray: Array<Modulator> = modulators.toTypedArray()
+
+    /** The order that linked modulators evaluate in, decided here once. Null when no modulator links. */
+    internal val links: ModulatorLinks? = ModulatorLinks.of(modulatorArray)
+
+    /** How many link sums a voice needs room for to play this plan: one per modulator, or none without links. */
+    internal val linkRoom: Int get() = if (links == null) 0 else modulatorArray.size
 
     /** Which controllers the modulators read, so a controller change only reaches the voices it moves. */
     internal val watchedControllers: BooleanArray = BooleanArray(128).also { watched ->
@@ -192,6 +201,9 @@ internal class PreparedSoundFont private constructor(
     /** The font's first preset, as [SoundFont.defaultPreset] picks it. */
     val fallback: PreparedPreset?,
 ) {
+    /** The largest [VoicePlan.linkRoom] of any region, so a synth can size its voices before a note needs it. */
+    val linkRoom: Int = presets.maxOfOrNull { preset -> preset.regions.maxOfOrNull { it.plan.linkRoom } ?: 0 } ?: 0
+
     /** The preset at exactly this bank and program, or null. What a miss means is the synthesiser's call. */
     fun preset(bank: Int, program: Int): PreparedPreset? {
         var index = 0

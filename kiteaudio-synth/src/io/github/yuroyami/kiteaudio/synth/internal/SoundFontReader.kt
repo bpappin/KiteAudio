@@ -4,7 +4,9 @@ import io.github.yuroyami.kiteaudio.synth.Generator
 import io.github.yuroyami.kiteaudio.synth.GeneratorSet
 import io.github.yuroyami.kiteaudio.synth.Instrument
 import io.github.yuroyami.kiteaudio.synth.InstrumentZone
+import io.github.yuroyami.kiteaudio.synth.LINK_FLAG
 import io.github.yuroyami.kiteaudio.synth.Modulator
+import io.github.yuroyami.kiteaudio.synth.NO_LINK_TARGET
 import io.github.yuroyami.kiteaudio.synth.Preset
 import io.github.yuroyami.kiteaudio.synth.PresetZone
 import io.github.yuroyami.kiteaudio.synth.SAMPLE_COMPRESSED
@@ -491,7 +493,8 @@ private fun modulatorsOf(zones: List<RawZone>, modulators: List<Modulator>, inde
 /**
  * [raw] laid over [base]: a modulator replaces the one it matches, the rest follow in order.
  * A link (destination bit 15) counts places in [raw]; it is renumbered to count places in the
- * result, so the list a zone keeps is complete on its own.
+ * result, so the list a zone keeps is complete on its own. A link past the end of [raw] becomes
+ * [NO_LINK_TARGET], so it stays past the end of the result.
  */
 private fun layered(base: List<Modulator>, raw: List<Modulator>): List<Modulator> {
     if (raw.isEmpty()) return base
@@ -502,10 +505,12 @@ private fun layered(base: List<Modulator>, raw: List<Modulator>): List<Modulator
         placedAt[index] = if (at >= 0) at.also { merged[it] = mod } else merged.size.also { merged.add(mod) }
     }
     raw.forEachIndexed { index, mod ->
-        val link = mod.destinationId and 0x7FFF
         // Only a modulator still in its slot: a later identical one may have taken the place.
-        if ((mod.destinationId and 0x8000) != 0 && link < raw.size && merged[placedAt[index]] === mod) {
-            merged[placedAt[index]] = Modulator(mod.source, 0x8000 or placedAt[link], mod.amount, mod.amountSource, mod.transform)
+        if ((mod.destinationId and LINK_FLAG) == 0 || merged[placedAt[index]] !== mod) return@forEachIndexed
+        val link = mod.destinationId and NO_LINK_TARGET
+        val target = if (link < raw.size) placedAt[link].coerceAtMost(NO_LINK_TARGET) else NO_LINK_TARGET
+        if ((LINK_FLAG or target) != mod.destinationId) {
+            merged[placedAt[index]] = Modulator(mod.source, LINK_FLAG or target, mod.amount, mod.amountSource, mod.transform)
         }
     }
     return merged

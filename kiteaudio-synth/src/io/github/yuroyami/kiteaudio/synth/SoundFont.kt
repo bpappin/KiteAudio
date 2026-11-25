@@ -229,7 +229,10 @@ public class SampleHeader(
 public class Modulator(
     /** sfModSrcOper: controller in bits 0 to 6, CC flag bit 7, direction bit 8, polarity bit 9, curve in 10 to 15. */
     public val source: Int,
-    /** The destination. With bit 15 set it feeds another modulator: the rest is that one's place in this zone's list. */
+    /**
+     * The destination. With bit 15 set it feeds another modulator: the rest is that one's place in this zone's list.
+     * The reader sets a link past the end of its list to 0x7FFF, so the link still points past the end.
+     */
     public val destinationId: Int,
     /** Signed: how far the destination moves at full source. */
     public val amount: Int,

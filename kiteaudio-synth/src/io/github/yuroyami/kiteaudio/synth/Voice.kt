@@ -115,6 +115,12 @@ public class Voice {
     private val pairedSum = DoubleArray(GENERATOR_COUNT)
     private var pitchSum = modSum
 
+    /**
+     * What the feeders of each linked modulator sum to, in the evaluation that runs now. The voice's own
+     * plan and the right side's plan share it, because they evaluate one after the other.
+     */
+    private var linkInput = NO_LINKS
+
     private var pool: ShortArray = ShortArray(0)
     private var startFrame = 0
     private var endFrame = 0
@@ -193,6 +199,8 @@ public class Voice {
     /**
      * Begins a note, as if on a channel nobody has touched: full volume and expression, pan in the middle.
      *
+     * The first start of a plan with linked modulators can allocate once, unless a [Synth] already made the room.
+     *
      * @param sampleRate the rate the output runs at, which is usually not the sample's own.
      */
     public fun start(
@@ -210,6 +218,14 @@ public class Voice {
         age = age,
         tuningCents = tuningCents,
     )
+
+    /** Makes room for [count] link sums. It only grows, so a plan that fits once always fits. */
+    internal fun reserveLinks(count: Int) {
+        if (count > linkInput.size) linkInput = DoubleArray(count)
+    }
+
+    /** How many link sums this voice has room for, for tests. */
+    internal val linkRoom: Int get() = linkInput.size
 
     internal fun retune(tuningCents: Double) {
         this.tuningCents = tuningCents
@@ -275,6 +291,9 @@ public class Voice {
 
         position = startFrame.toDouble()
         wrappedOnce = false
+
+        // A voice of a Synth already has room; a voice driven by hand grows here, once.
+        reserveLinks(maxOf(plan.linkRoom, pitchPlan.linkRoom))
 
         // Modulators first: the envelope times take theirs here, once, and never again.
         evaluateAll(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
@@ -524,7 +543,7 @@ public class Voice {
         }
     }
 
-    /** Every modulator's contribution in [plan], summed by destination into [sum]. */
+    /** Every modulator's contribution in [plan], summed by destination into [sum]. A plan with links takes its prepared order. */
     private fun evaluate(
         plan: VoicePlan?,
         sum: DoubleArray,
@@ -537,12 +556,18 @@ public class Voice {
         bendRange: Double,
     ) {
         sum.fill(0.0)
-        val modulators = plan?.modulatorArray ?: return
+        if (plan == null) return
+        val modulators = plan.modulatorArray
+        val links = plan.links
+        if (links != null) {
+            evaluateLinked(modulators, links, sum, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+            return
+        }
         var index = 0
         while (index < modulators.size) {
             val modulator = modulators[index++]
             val destination = modulator.destinationId
-            // A link feeds another modulator, which nothing here does yet; it reads as nothing.
+            // A plan with links never comes here, so this skips only a number that names no generator.
             if (destination < 0 || destination >= GENERATOR_COUNT) continue
             val primary = sourceValue(modulator.source, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
             if (primary == 0.0) continue
@@ -550,6 +575,44 @@ public class Voice {
             var value = modulator.amount * primary * secondary
             if (modulator.transform == ABSOLUTE) value = abs(value)
             sum[destination] += value
+        }
+    }
+
+    /**
+     * The same for a plan with links, in the order the plan prepared. A modulator whose source is the
+     * link source reads what its feeders summed to, and a feeder adds its output there, not to a generator.
+     */
+    private fun evaluateLinked(
+        modulators: Array<Modulator>,
+        links: ModulatorLinks,
+        sum: DoubleArray,
+        key: Int,
+        velocity: Int,
+        controllers: IntArray,
+        pitchWheel: Int,
+        channelPressure: Int,
+        polyPressure: Int,
+        bendRange: Double,
+    ) {
+        val order = links.order
+        val target = links.target
+        val input = linkInput
+        input.fill(0.0, 0, target.size)
+        var at = 0
+        while (at < order.size) {
+            val index = order[at++]
+            val modulator = modulators[index]
+            val primary = if (isLinkSource(modulator.source)) {
+                input[index]
+            } else {
+                sourceValue(modulator.source, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+            }
+            if (primary == 0.0) continue
+            val secondary = sourceValue(modulator.amountSource, key, velocity, controllers, pitchWheel, channelPressure, polyPressure, bendRange)
+            var value = modulator.amount * primary * secondary
+            if (modulator.transform == ABSOLUTE) value = abs(value)
+            val to = target[index]
+            if (to >= 0) input[to] += value else sum[modulator.destinationId] += value
         }
     }
 
@@ -743,6 +806,7 @@ public class Voice {
         const val MAX_TIMECENTS = 8000
         const val ABSOLUTE = 2
         val EMPTY_POOL = ShortArray(0)
+        val NO_LINKS = DoubleArray(0)
 
         /** A channel nobody has touched: full volume, expression and room, pan in the middle, no chorus. */
         val UNTOUCHED_CONTROLLERS = IntArray(128).also {
