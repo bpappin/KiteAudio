@@ -99,10 +99,10 @@ jobs:
         with:
           node-version: '26'
 
-      # `./kotlin test` cannot run the JS tests, and it runs wasmJs only in a
-      # browser. The script links both and runs them in Node, as ci.yml does for
-      # the codec modules.
-      - name: JS and wasmJs tests in Node
+      # `./kotlin test` cannot run the JS and wasmWasi tests, and it runs wasmJs
+      # only in a browser. The script links them and runs them in Node, as ci.yml
+      # does for the codec modules. The output module has no wasmWasi build.
+      - name: JS, wasmJs and wasmWasi tests in Node
         if: ${{ !cancelled() }}
         run: python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteaudio-synth --module kiteaudio-output
 
@@ -110,8 +110,8 @@ jobs:
   # a Mac. This job runs the macOS tests of the four multiplatform modules and the
   # CoreMIDI tests, which do real work only on macOS. The klib check reads the
   # klibs of the four Apple platforms, the js and wasmJs klibs of the modules
-  # that build for the web, and the Linux and Windows klibs of the MIDI and synth
-  # modules. Only a Mac can build all of them.
+  # that build for the web, and the klibs of every other platform of the MIDI
+  # and synth modules. Only a Mac can build all of them.
   apple:
     name: macOS tests, Apple klibs and klib API check
     runs-on: macos-latest
@@ -134,14 +134,18 @@ jobs:
             ./kotlin build -m kiteaudio-midi -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output -p "$platform"
           done
 
+      # The output module does not build for wasmWasi.
       - name: Build the web klibs
-        run: ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -m kiteaudio-output -p js -p wasmJs
+        run: |
+          ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -m kiteaudio-output -p js -p wasmJs
+          ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -p wasmWasi
 
       # One platform per call, as above. The linux and windows jobs run the tests of
-      # linuxX64 and mingwX64. linuxArm64 is built here only.
-      - name: Build the Linux and Windows klibs
+      # linuxX64 and mingwX64. The other platforms are built here only, as ci.yml
+      # does for the codec modules.
+      - name: Build the klibs of the other native platforms
         run: |
-          for platform in linuxX64 linuxArm64 mingwX64; do
+          for platform in tvosArm64 tvosSimulatorArm64 watchosArm32 watchosArm64 watchosDeviceArm64 watchosSimulatorArm64 linuxX64 linuxArm64 mingwX64 androidNativeArm32 androidNativeArm64 androidNativeX86 androidNativeX64; do
             ./kotlin build -m kiteaudio-midi -m kiteaudio-synth -p "$platform"
           done
 

@@ -91,7 +91,7 @@ python3 .github/scripts/web-tests/run.py --module kiteaudio-midi --module kiteau
 ```
 
 The last command runs the MIDI, synth and output tests on JS and wasmJs in Node, as the
-codec modules' web tests run below.
+codec modules' web tests run below. It also runs the MIDI and synth tests on wasmWasi.
 
 The `kiteaudio-output` JVM tests open the default output device and play a quiet tone.
 Set `KITEAUDIO_MIDI_CORPUS` to a folder of `.mid` files to run the MIDI corpus tests.

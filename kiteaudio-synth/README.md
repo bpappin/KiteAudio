@@ -275,12 +275,13 @@ All production code is common Kotlin in `kiteaudio-synth/src`. These are the tar
 | iOS devices | `iosArm64`. `.github/scripts/apple_frameworks.py` links a dynamic framework named `KiteSynth`. |
 | iOS simulators | `iosSimulatorArm64` and `iosX64`. The script links the same framework name. |
 | macOS Native | `macosArm64`. The script links the same framework name. |
-| Web | `js` and `wasmJs`. Rendering is the same common code; sending the samples to Web Audio is the app's job. |
+| tvOS and watchOS | `tvosArm64`, `tvosSimulatorArm64`, `watchosArm32`, `watchosArm64`, `watchosDeviceArm64` and `watchosSimulatorArm64`. CI builds these klibs but runs no tests on them. |
+| Web | `js`, `wasmJs` and `wasmWasi`. Rendering is the same common code; sending the samples to Web Audio is the app's job. |
 | Linux Native | `linuxX64` and `linuxArm64`. |
 | Windows Native | `mingwX64`. |
+| Android Native | `androidNativeArm32`, `androidNativeArm64`, `androidNativeX86` and `androidNativeX64`. CI builds these klibs but runs no tests on them. |
 
-The build leaves out tvOS, watchOS, wasmWasi and Android Native. It also leaves out `macosX64`,
-because Kotlin deprecates Intel macOS. A desktop app on Linux, Windows or an Intel Mac can also use
+The build leaves out `macosX64`, because Kotlin deprecates Intel macOS. A desktop app on Linux, Windows or an Intel Mac can also use
 the JVM artifact.
 
 A declared target establishes build intent. It does not establish device latency, callback safety,
@@ -321,7 +322,7 @@ a supported concurrent queue. Kotlin/Native's memory manager does not add synchr
 | MIDI scope | Channel voice messages only. Bank selection uses CC 0, and there is no portamento/legato mode, NRPN synthesis control, MPE manager or MIDI 2.0 interface. |
 | Resource bounds | Reading defaults to 64 MiB of cumulative retained sample payload, counting overlapping ranges separately and the low bytes of 24-bit samples. Preparation defaults to 4,194,304 examined zone pairs, 16,384 regions and 1,048,576 retained modulator entries. Explicit overloads allow larger trusted fonts; limits are checked before expansion. SF3 decoding still needs a separate host-owned bound. |
 | Output and integration | No bundled sound bank, audio output backend, file I/O, Compose UI or timeline player. |
-| Verification | Tests use synthetic fonts. CI runs them on the JVM, on JS and wasmJs in Node, and on `macosArm64`, `linuxX64` and `mingwX64` (see [Build and test](#build-and-test)). There is no differential suite against a reference synthesizer and no audio test on a physical device. |
+| Verification | Tests use synthetic fonts. CI runs them on the JVM, on JS, wasmJs and wasmWasi in Node, and on `macosArm64`, `linuxX64` and `mingwX64` (see [Build and test](#build-and-test)). There is no differential suite against a reference synthesizer and no audio test on a physical device. |
 
 For a larger trusted bank, supply explicit budgets:
 
@@ -355,16 +356,16 @@ python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --buil
 ./kotlin do dokka
 ```
 
-The `web-tests` script runs the JS and wasmJs tests in Node. The Kotlin Toolchain does not link
+The `web-tests` script runs the JS, wasmJs and wasmWasi tests in Node. The Kotlin Toolchain does not link
 Apple frameworks. The `apple_frameworks.py` script links `KiteSynth.framework` from the klibs that
 `./kotlin build` writes. `./kotlin check abi -m kiteaudio-synth` and
 `./kotlin check klibAbi -m kiteaudio-synth` compare the public API with the dumps in
 `kiteaudio-synth/api`. Build every platform first, because the klib check reads the built klibs.
-A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run only on
-Linux, and the `mingwX64` tests run only on Windows.
+A Mac can build the klibs of every platform. The `linuxX64` tests run only on Linux, and the
+`mingwX64` tests run only on Windows.
 
-The workflow `.github/workflows/instruments.yml` runs the tests in CI on the JVM, on JS and wasmJs
-in Node, and on `macosArm64`, `linuxX64` and `mingwX64`. It also runs the public API checks and
+The workflow `.github/workflows/instruments.yml` runs the tests in CI on the JVM, on JS, wasmJs
+and wasmWasi in Node, and on `macosArm64`, `linuxX64` and `mingwX64`. It also runs the public API checks and
 the Android build.
 
 Common tests construct SoundFont bytes deliberately, then check parsing, round trips, channels,

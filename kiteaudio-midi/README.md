@@ -295,7 +295,7 @@ instrument testing.
 
 | Module / backend | Platforms | Requirements and behavior |
 | --- | --- | --- |
-| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64`, `linuxX64`, `linuxArm64`, `mingwX64` | Android minSdk 23. File operations are synchronous computation over byte arrays. |
+| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `wasmWasi`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64`, `tvosArm64`, `tvosSimulatorArm64`, `watchosArm32`, `watchosArm64`, `watchosDeviceArm64`, `watchosSimulatorArm64`, `linuxX64`, `linuxArm64`, `mingwX64`, `androidNativeArm32`, `androidNativeArm64`, `androidNativeX86`, `androidNativeX64` | Android minSdk 23. File operations are synchronous computation over byte arrays. |
 | `kiteaudio-midi-devices` Android | Android | minSdk 23; uses the byte-stream MIDI transport. Devices without MIDI support produce no ports. |
 | `kiteaudio-midi-devices` JVM | JVM on macOS, Linux or Windows with an available Java MIDI provider | Uses `javax.sound.midi`; scans once per second. Physical transport is reported as `UNKNOWN`. Provider availability varies by runtime and OS. |
 | `kiteaudio-midi-devices` Apple | iOS device and simulator targets above, native macOS arm64 | CoreMIDI platform bindings; callbacks arrive on CoreMIDI threads. |
@@ -315,10 +315,10 @@ no features. To declare MIDI support, add
 `<uses-feature android:name="android.software.midi" android:required="false" />` to the
 app manifest. On Apple, system-connected Bluetooth devices appear through CoreMIDI.
 
-Only `kiteaudio-midi` builds for JS, wasmJs, Linux Native and Windows Native. The device
-modules have no backend on those targets. The build leaves out tvOS, watchOS, wasmWasi and
-Android Native. It also leaves out `macosX64`, because Kotlin deprecates Intel macOS. A
-desktop app on Linux, Windows or an Intel Mac can also use the JVM artifact.
+Only `kiteaudio-midi` builds for JS, wasmJs, wasmWasi, tvOS, watchOS, Linux Native,
+Windows Native and Android Native. The device modules have no backend on those targets.
+The build leaves out `macosX64`, because Kotlin deprecates Intel macOS. A desktop app on
+Linux, Windows or an Intel Mac can also use the JVM artifact.
 
 ## Good to know
 
@@ -361,10 +361,10 @@ python3 .github/scripts/web-tests/run.py --module kiteaudio-midi
 ./kotlin do dokka && ./kotlin do dokkaSite
 ```
 
-The `web-tests` script runs the JS and wasmJs tests in Node. The klib check reads the built klibs, so run
-`./kotlin build` for every platform first.
-A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run
-only on Linux, and the `mingwX64` tests run only on Windows.
+The `web-tests` script runs the JS, wasmJs and wasmWasi tests in Node. The klib check reads the built
+klibs, so run `./kotlin build` for every platform first.
+A Mac can build the klibs of every platform. The `linuxX64` tests run only on Linux, and the
+`mingwX64` tests run only on Windows.
 The Kotlin Toolchain does not link Apple frameworks.
 `.github/scripts/apple_frameworks.py` links `KiteMidi.framework` and `KiteMidiDevices.framework`
 from the klibs.
@@ -391,10 +391,11 @@ device tests in this checkout. The commands above describe the available checks.
 output for the targets and tests that ran.
 
 The workflow `.github/workflows/instruments.yml` runs these checks in CI. It runs the JVM tests
-of the three modules, the public API checks and the Android build. It also runs the JS and
-wasmJs tests in Node, and the macOS tests. The CoreMIDI tests run on the macOS runner. The
-`kiteaudio-midi` tests also run on `linuxX64` and `mingwX64`. No CI job tests a physical
-instrument.
+of the three modules, the public API checks and the Android build. It also runs the JS,
+wasmJs and wasmWasi tests in Node, and the macOS tests. The CoreMIDI tests run on the macOS
+runner. The `kiteaudio-midi` tests also run on `linuxX64` and `mingwX64`. CI builds the tvOS,
+watchOS, `linuxArm64` and Android Native klibs but runs no tests on them. No CI job tests a
+physical instrument.
 
 Known defects, open proposals and platform limits are tracked as
 [GitHub issues](https://github.com/yuroyami/KiteAudio/issues).

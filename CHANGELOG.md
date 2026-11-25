@@ -76,7 +76,7 @@ The artifacts and packages have new names:
 - `kiteaudio-midi-coremidi` gives a macOS desktop JVM CoreMIDI ports through the foreign function
   API (`coreMidiDevices`). It needs JDK 22 or later at runtime. `coreMidiAvailable()` checks for
   macOS, that JDK and the CoreMIDI framework.
-- `kiteaudio-midi` builds for the JVM, Android, iOS, macOS, JS, wasmJs, Linux and Windows.
+- `kiteaudio-midi` builds for the 22 platforms of the codec.
   `kiteaudio-midi-devices` builds for the JVM, Android, iOS and macOS.
 
 ### Changed in the MIDI module
@@ -157,7 +157,7 @@ The artifacts and packages have new names:
 ### Added in the synth module
 
 `kiteaudio-synth` brings these parts to 0.3.0. It depends on kotlin-stdlib only and builds for the
-JVM, Android, iOS, macOS, JS, wasmJs, Linux and Windows.
+22 platforms of the codec.
 
 - `KiteSynth.readFont` reads an SF2 font into a `SoundFont`, with its presets, instruments, zones,
   generators, modulators, INFO text and samples. With `keepCompressed = true` it also reads an SF3
@@ -399,11 +399,17 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
   their tests run there in Node through `.github/scripts/web-tests/run.py` (#164).
 - `kiteaudio-midi` and `kiteaudio-synth` also build for `linuxX64`, `linuxArm64` and
   `mingwX64`. Their common tests run on `linuxX64` and `mingwX64` in CI (#164).
+- `kiteaudio-midi` and `kiteaudio-synth` also build for `wasmWasi`, tvOS, watchOS and Android
+  Native, so they build for the 22 platforms of the codec. Their tests run on `wasmWasi` in Node.
+  CI builds the tvOS, watchOS and Android Native klibs but runs no tests on them (#164).
 - `kiteaudio-output` builds for `js` and `wasmJs` and plays in the browser through a Web Audio worklet, or through scheduled `AudioBuffer`s where a page cannot run one, through `openAudioOutput` and no other new API. A context the browser suspends or interrupts while playing ends the stream with `DeviceLost`. Its tests run in Node the same way, and `kiteaudio-output/verification/web` checks playback in a browser.
 - The tests of the Android output run on the host JVM through `./kotlin test -m kiteaudio-output -p android`, and CI runs them.
 - `.github/workflows/publish.yml` publishes the eight artifacts to Maven Central as one deployment, so a
   release goes out complete or not at all. Before the upload, the project in `consumer-check/` tests the
   signed artifacts on the JVM and on `linuxX64` (#174).
+- `reference/REFERENCES.md` covers the core, MIDI, synth and output modules. Each section lists the
+  specifications that the code names, the numbers it takes from Freeverb and the implementations that
+  must stay unopened (#176).
 
 ## KiteSynth before the merge
 
@@ -414,9 +420,6 @@ artifact `kitesynth`, which is `kiteaudio-synth` now.
 
 Build:
 
-- `reference/REFERENCES.md` covers the core, MIDI, synth and output modules. Each section lists the
-  specifications that the code names, the numbers it takes from Freeverb and the implementations that
-  must stay unopened (#176).
 - The project builds with the Kotlin Toolchain (`./kotlin`) instead of Gradle, on Kotlin 2.4.21.
 - Android builds compile against API level 37.2.
 

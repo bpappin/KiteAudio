@@ -23,9 +23,9 @@ MODULES = {
     "kiteaudio-core": PLATFORMS,
     "kiteaudio-codec": PLATFORMS,
     "kiteaudio-codec-io": PLATFORMS,
-    "kiteaudio-midi": ("js", "wasmJs"),
+    "kiteaudio-midi": PLATFORMS,
     "kiteaudio-output": ("js", "wasmJs"),
-    "kiteaudio-synth": ("js", "wasmJs"),
+    "kiteaudio-synth": PLATFORMS,
 }
 ARTIFACTS = ROOT / "build/artifacts/CompiledWebArtifact"
 CACHE = Path.home() / ("Library/Caches/JetBrains/Kotlin" if sys.platform == "darwin" else ".cache/JetBrains/Kotlin")
