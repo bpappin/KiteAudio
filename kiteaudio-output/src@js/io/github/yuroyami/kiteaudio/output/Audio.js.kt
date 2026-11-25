@@ -121,7 +121,43 @@ internal object JsWebAudio : WebAudioApi<Any> {
     override fun post(node: Any, slot: Int, block: Any) {
         node.asDynamic().port.postMessage(js("({ slot: slot, data: block })"), arrayOf(block.asDynamic().buffer))
     }
+
+    override fun canChooseSink(): Boolean =
+        js("typeof AudioContext !== 'undefined' && 'setSinkId' in AudioContext.prototype").unsafeCast<Boolean>()
+
+    override fun newContextOn(sampleRate: Int, sinkId: String): Any =
+        js("new AudioContext({ sampleRate: sampleRate, latencyHint: 'interactive', sinkId: sinkId })").unsafeCast<Any>()
+
+    override fun onError(context: Any, failed: (String) -> Unit) {
+        context.asDynamic().onerror = { _: dynamic -> failed("the audio context reported an error") }
+    }
+
+    override fun listOutputs(done: (List<Pair<String, String>>) -> Unit, failed: (String) -> Unit) {
+        val media = js("(typeof navigator !== 'undefined' && navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) ? navigator.mediaDevices : null")
+        if (media == null) {
+            done(emptyList())
+            return
+        }
+        try {
+            media.enumerateDevices().then(
+                { list: dynamic ->
+                    val outputs = mutableListOf<Pair<String, String>>()
+                    val count = list.length.unsafeCast<Int>()
+                    for (i in 0 until count) {
+                        val entry = list[i]
+                        if (entry.kind == "audiooutput") outputs += entry.deviceId.unsafeCast<String>() to entry.label.unsafeCast<String>()
+                    }
+                    done(outputs)
+                },
+                { problem: dynamic -> failed(problem.toString().unsafeCast<String>()) },
+            )
+        } catch (problem: Throwable) {
+            failed(problem.toString())
+        }
+    }
 }
+
+private val jsOutputDevices = BrowserOutputDevices(JsWebAudio)
 
 /**
  * Opens an output for this platform.
@@ -133,15 +169,30 @@ internal object JsWebAudio : WebAudioApi<Any> {
  * takes a click or a key press first. A start made before then waits, and calling
  * [AudioOutput.start] again from the click or key handler asks the browser once more.
  *
- * @throws UnsupportedOperationException in a host with no Web Audio, such as Node.js.
+ * A [device] must come from the last call of [audioOutputDevices]. The default entry plays in every
+ * browser. Another entry needs an `AudioContext` that takes a `sinkId`, which is Chromium 110 and
+ * newer today. Chromium 128 and newer report an output that fails while it plays with `DeviceLost`.
+ *
+ * @throws UnsupportedOperationException in a host with no Web Audio, such as Node.js, and for a
+ *   [device] that is not the default in a browser that cannot choose an output.
  * @throws IllegalArgumentException for an invalid buffer size, a layout of more than two channels,
- *   or a sample rate the browser refuses.
+ *   a [device] that the last list did not hold, or a sample rate the browser refuses.
  */
 public actual fun openAudioOutput(
-    preferredFormat: AudioFormat,
+    format: AudioFormat,
     bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
     onEvent: (AudioOutputEvent) -> Unit,
-): AudioOutput = openBrowserOutput(JsWebAudio, preferredFormat, bufferFrames, BrowserTechnique.Auto, onEvent)
+): AudioOutput = openBrowserOutput(JsWebAudio, format, bufferFrames, BrowserTechnique.Auto, device, formatPolicy, jsOutputDevices, onEvent)
+
+/**
+ * The outputs of `navigator.mediaDevices.enumerateDevices()`. The first one is the default. The
+ * names are empty until the page has a media permission, for example from `getUserMedia`, and a
+ * browser may list fewer outputs or none before then. Node.js and a page that is not a secure
+ * context have no `navigator.mediaDevices`, so the list is empty there.
+ */
+public actual suspend fun audioOutputDevices(): List<AudioOutputDevice> = jsOutputDevices.list()
 
 /** True where the host has Web Audio: a browser page, but not Node.js. */
 public actual fun audioOutputAvailable(): Boolean = JsWebAudio.hasAudioContext()

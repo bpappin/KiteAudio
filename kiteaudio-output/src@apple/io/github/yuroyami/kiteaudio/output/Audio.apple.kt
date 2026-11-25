@@ -56,10 +56,16 @@ internal class AppleAudioOutput(
     private val bufferFrames: Int,
     private val onEvent: (AudioOutputEvent) -> Unit,
     private val driver: AppleAudioQueueDriver = NativeAudioQueueDriver,
+    /** The UID of the device that each new queue plays on, or null for the default device. */
+    private val queueDevice: String? = null,
+    private val readDeviceFormat: () -> AudioFormat? = { null },
     private val watchSession: (AppleAudioOutput) -> () -> Unit = ::watchAudioSession,
 ) : AudioOutput {
     override val latency: Latency
         get() = Latency(bufferFrames * BUFFER_COUNT, LatencyQuality.Estimated)
+
+    override val deviceFormat: AudioFormat?
+        get() = try { readDeviceFormat() } catch (_: Throwable) { null }
 
     private class Generation(samples: Int, callback: AudioRenderCallback) {
         val active = AtomicBoolean(true)
@@ -151,16 +157,7 @@ internal class AppleAudioOutput(
         }
         try {
             val status = memScoped {
-                val description = alloc<AudioStreamBasicDescription>().apply {
-                    mSampleRate = format.sampleRate.toDouble()
-                    mFormatID = kAudioFormatLinearPCM
-                    mFormatFlags = kAudioFormatFlagIsSignedInteger or kAudioFormatFlagIsPacked
-                    mBitsPerChannel = 16u
-                    mChannelsPerFrame = format.channels.toUInt()
-                    mFramesPerPacket = 1u
-                    mBytesPerFrame = (2 * format.channels).toUInt()
-                    mBytesPerPacket = (2 * format.channels).toUInt()
-                }
+                val description = alloc<AudioStreamBasicDescription>().apply { describePcm16(format) }
                 val out = alloc<AudioQueueRefVar>()
                 out.value = null
                 val result = driver.create(description.ptr, out.ptr, renderQueue) { queue, buffer ->
@@ -179,6 +176,14 @@ internal class AppleAudioOutput(
                 return
             }
             val queue = next.queue!!
+            if (queueDevice != null) {
+                val routed = driver.setCurrentDevice(queue, queueDevice)
+                if (routed != 0) {
+                    fail(next, "AudioQueue would not play on the audio output device $queueDevice, status $routed")
+                    releaseOnControlQueue(next)
+                    return
+                }
+            }
             val watch = StableRef.create(RunningWatch(this, next))
             listenerRefs.fetchAndAdd(1)
             next.listener = watch
@@ -440,15 +445,89 @@ internal class AppleAudioOutput(
     }
 }
 
+/** Fills this description for interleaved signed 16-bit PCM in [format]. */
+private fun AudioStreamBasicDescription.describePcm16(format: AudioFormat) {
+    mSampleRate = format.sampleRate.toDouble()
+    mFormatID = kAudioFormatLinearPCM
+    mFormatFlags = kAudioFormatFlagIsSignedInteger or kAudioFormatFlagIsPacked
+    mBitsPerChannel = 16u
+    mChannelsPerFrame = format.channels.toUInt()
+    mFramesPerPacket = 1u
+    mBytesPerFrame = (2 * format.channels).toUInt()
+    mBytesPerPacket = (2 * format.channels).toUInt()
+}
+
+/**
+ * True when AudioQueue opens a queue for [format], and plays it on [queueDevice] when that is set.
+ * The queue is disposed again at once and never starts.
+ */
+private fun probeQueue(driver: AppleAudioQueueDriver, format: AudioFormat, queueDevice: String?): Boolean = memScoped {
+    val description = alloc<AudioStreamBasicDescription>().apply { describePcm16(format) }
+    val out = alloc<AudioQueueRefVar>()
+    out.value = null
+    val status = driver.create(description.ptr, out.ptr, probeDispatchQueue) { _, _ -> }
+    val queue = out.value
+    if (status != 0 || queue == null) return@memScoped false
+    val routed = queueDevice == null || driver.setCurrentDevice(queue, queueDevice) == 0
+    driver.dispose(queue)
+    routed
+}
+
+private val probeDispatchQueue = dispatch_queue_create("KiteRT-audio-probe", null)
+
+/** The Apple body of [openAudioOutput], over [driver] and [hardware]. */
+@Throws(Exception::class)
+internal fun openAppleOutput(
+    format: AudioFormat,
+    bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
+    onEvent: (AudioOutputEvent) -> Unit,
+    driver: AppleAudioQueueDriver,
+    hardware: AppleOutputHardware,
+): AppleAudioOutput {
+    requireSupportedLayout(format)
+    validateBufferFrames(format, bufferFrames)
+    // Only a chosen device or a Nearest open needs the list.
+    val devices by lazy { hardware.devices() }
+    val chosen = if (device == null) null else {
+        devices.firstOrNull { it.id == device.id } ?: run {
+            val reason = unknownDeviceReason(device)
+            deliverAudioEvent(onEvent, AudioOutputEvent.Failed(reason))
+            throw UnsupportedOperationException(reason)
+        }
+    }
+    val queueDevice = if (hardware.setsQueueDevice) chosen?.id else null
+    // AudioQueue checks a format only when it opens a queue, which is at start. Exact keeps that.
+    // Nearest opens a queue for each format it tries, and an open where none works fails at start as Exact does.
+    val opened = when (formatPolicy) {
+        AudioFormatPolicy.Exact -> format
+        AudioFormatPolicy.Nearest -> {
+            val rates = (chosen ?: devices.firstOrNull { it.isDefault })?.sampleRates.orEmpty()
+            openFirstFormat(format, formatPolicy, rates) { candidate -> candidate.takeIf { probeQueue(driver, it, queueDevice) } } ?: format
+        }
+    }
+    val formatOf = chosen?.id
+    return AppleAudioOutput(
+        opened, bufferFrames, onEvent, driver,
+        queueDevice = queueDevice,
+        readDeviceFormat = { hardware.deviceFormat(formatOf) },
+    )
+}
+
 @Throws(Exception::class)
 public actual fun openAudioOutput(
-    preferredFormat: AudioFormat,
+    format: AudioFormat,
     bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
     onEvent: (AudioOutputEvent) -> Unit,
-): AudioOutput {
-    requireSupportedLayout(preferredFormat)
-    validateBufferFrames(preferredFormat, bufferFrames)
-    return AppleAudioOutput(preferredFormat, bufferFrames, onEvent)
-}
+): AudioOutput = openAppleOutput(format, bufferFrames, device, formatPolicy, onEvent, NativeAudioQueueDriver, platformOutputHardware())
+
+/**
+ * On macOS, every device with an output stream, by its UID. On iOS, one entry for the current
+ * route of the audio session, which the system chooses.
+ */
+public actual suspend fun audioOutputDevices(): List<AudioOutputDevice> = platformOutputHardware().devices()
 
 public actual fun audioOutputAvailable(): Boolean = true

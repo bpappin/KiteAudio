@@ -90,6 +90,13 @@ The artifacts and packages have new names:
 - The new event `AudioOutputEvent.DeviceUnderrun(count, total)` reports a device that ran out of sound although
   every render was full. `Underrun` still means a render that returned fewer frames. In the browser, silence after
   full renders and a page timer that fired late now send `DeviceUnderrun` instead of `Underrun`.
+- The `preferredFormat` parameter of `openAudioOutput` is now `format`. `openAudioOutput` has two new
+  parameters: `device`, an entry of the new `audioOutputDevices()`, and `formatPolicy`. With
+  `AudioFormatPolicy.Nearest` the output opens the closest format that the device accepts, and
+  `AudioOutput.format` holds it. The new `AudioOutput.deviceFormat` is the format of the hardware, or null.
+  On Android, `audioOutputDevices(context)` lists the devices of `AudioManager`.
+- On the JVM, `audioOutputAvailable()` is true when any mixer offers an output line for signed 16-bit PCM.
+  Before, it checked one fixed format.
 
 ### Added in the codec
 

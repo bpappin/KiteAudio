@@ -9,6 +9,7 @@ import kotlinx.cinterop.UIntVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.reinterpret
 import kotlinx.cinterop.sizeOf
 import kotlinx.cinterop.value
 import platform.AudioToolbox.AudioQueueAddPropertyListener
@@ -24,9 +25,14 @@ import platform.AudioToolbox.AudioQueuePropertyListenerProc
 import platform.AudioToolbox.AudioQueueRef
 import platform.AudioToolbox.AudioQueueRefVar
 import platform.AudioToolbox.AudioQueueRemovePropertyListener
+import platform.AudioToolbox.AudioQueueSetProperty
 import platform.AudioToolbox.AudioQueueStart
 import platform.AudioToolbox.AudioQueueStop
+import platform.AudioToolbox.kAudioQueueProperty_CurrentDevice
 import platform.AudioToolbox.kAudioQueueProperty_IsRunning
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFStringRefVar
+import platform.Foundation.CFBridgingRetain
 import platform.CoreAudioTypes.AudioStreamBasicDescription
 import platform.CoreAudioTypes.AudioTimeStamp
 import platform.darwin.dispatch_queue_t
@@ -50,7 +56,16 @@ internal interface AppleAudioQueueDriver {
 
     /** Writes the time of the queue into [stamp], as `AudioQueueGetCurrentTime` does, and returns its status. */
     fun currentTime(queue: AudioQueueRef, stamp: CPointer<AudioTimeStamp>): Int
+
+    /**
+     * Makes [queue] play on the device with the UID [uid], through `kAudioQueueProperty_CurrentDevice`,
+     * and returns its status. A driver that cannot choose a device returns an error status.
+     */
+    fun setCurrentDevice(queue: AudioQueueRef, uid: String): Int = K_AUDIO_UNIMPLEMENTED_ERROR
 }
+
+/** `kAudio_UnimplementedError` of CoreAudioTypes. */
+internal const val K_AUDIO_UNIMPLEMENTED_ERROR: Int = -4
 
 internal object NativeAudioQueueDriver : AppleAudioQueueDriver {
     override fun create(format: CPointer<AudioStreamBasicDescription>, output: CPointer<AudioQueueRefVar>, queue: dispatch_queue_t,
@@ -74,4 +89,15 @@ internal object NativeAudioQueueDriver : AppleAudioQueueDriver {
     }
     override fun currentTime(queue: AudioQueueRef, stamp: CPointer<AudioTimeStamp>): Int =
         AudioQueueGetCurrentTime(queue, null, stamp, null)
+    override fun setCurrentDevice(queue: AudioQueueRef, uid: String): Int = memScoped {
+        // The property holds a CFStringRef. The queue keeps its own copy, so release ours after the call.
+        val string = CFBridgingRetain(uid) ?: return@memScoped K_AUDIO_UNIMPLEMENTED_ERROR
+        try {
+            val value = alloc<CFStringRefVar>()
+            value.value = string.reinterpret()
+            AudioQueueSetProperty(queue, kAudioQueueProperty_CurrentDevice, value.ptr, sizeOf<CFStringRefVar>().toUInt())
+        } finally {
+            CFRelease(string)
+        }
+    }
 }

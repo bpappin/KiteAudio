@@ -4,7 +4,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * Counts the gaps between render calls that are long enough to empty a full device buffer.
+ * Counts the gaps between render calls that are long enough to drain the device buffer.
  *
  * A busy machine can delay the render thread for longer than the device holds, and that is a real
  * dropout. The live tests allow one dropout for each such gap. [renderMicros] holds the start time

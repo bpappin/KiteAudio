@@ -170,10 +170,10 @@ class JvmAudioOutputTest {
             output.close()
         }
         assertTrue(stopped.await(5, TimeUnit.SECONDS), "no Stopped after close")
-        // The line holds four blocks of 512 frames, 43 ms. A write that waits for room returns with its
-        // block in the line, so the line then holds at least three blocks, 32 ms. A shorter gap cannot
-        // empty it. The first four blocks fill the line and are not checked.
-        val gaps = longRenderGaps(renderMicros, renders.get(), 32_000L, stalls, firstChecked = 4)
+        // A block of 512 frames lasts 10.7 ms, and the line holds four of them. Several gaps of more
+        // than a block and a half can empty the line together, so each of them allows one dropout.
+        // The first four blocks fill the line and are not checked.
+        val gaps = longRenderGaps(renderMicros, renders.get(), 16_000L, stalls, firstChecked = 4)
         return LiveRun(synchronized(events) { events.toList() }, gaps)
     }
 
@@ -190,6 +190,47 @@ class JvmAudioOutputTest {
         // Each stall of 150 ms empties the line once.
         val run = playWithStalls(2_500, setOf(40, 100), 150)
         assertDeviceUnderruns(run.events, deliberate = 2, longGaps = run.longGaps)
+    }
+
+    @Test
+    fun theDeviceListIsNotEmptyAndHasExactlyOneDefault() {
+        assumeTrue(available, "no audio output device on this machine")
+        val devices = runSuspending { audioOutputDevices() }
+        println("JVM audio output devices: $devices")
+        assertTrue(devices.isNotEmpty())
+        assertEquals(1, devices.count { it.isDefault }, "$devices")
+        assertEquals(devices.size, devices.map { it.id }.distinct().size, "the ids repeat: $devices")
+    }
+
+    @Test
+    fun theDefaultDeviceOpensByItsListEntryAndPlays() {
+        assumeTrue(available, "no audio output device on this machine")
+        val device = runSuspending { audioOutputDevices() }.single { it.isDefault }
+        val blocks = AtomicInteger(0)
+        val enough = CountDownLatch(1)
+        val events = mutableListOf<AudioOutputEvent>()
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 512, device) { synchronized(events) { events += it } }
+        var phase = 0.0
+        try {
+            output.start { out, frames ->
+                for (i in 0 until frames) {
+                    val value = (sin(phase) * 0.03).toFloat()
+                    out[i * 2] = value
+                    out[i * 2 + 1] = value
+                    phase += 2.0 * PI * 440.0 / 48_000
+                }
+                if (blocks.incrementAndGet() >= 8) enough.countDown()
+                frames
+            }
+            // A busy machine may be slow to pull, so allow five seconds.
+            assertTrue(enough.await(5, TimeUnit.SECONDS), "the device asked for only ${blocks.get()} blocks in five seconds")
+        } finally {
+            output.close()
+        }
+        synchronized(events) {
+            assertTrue(events.any { it is AudioOutputEvent.Started }, "$events")
+            assertTrue(events.none { it is AudioOutputEvent.Failed }, "$events")
+        }
     }
 
     @Test

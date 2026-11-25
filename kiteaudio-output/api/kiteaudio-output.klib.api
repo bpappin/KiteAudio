@@ -6,6 +6,17 @@
 // - Show declarations: true
 
 // Library unique name: <io.github.yuroyami:kiteaudio-output>
+final enum class io.github.yuroyami.kiteaudio.output/AudioFormatPolicy : kotlin/Enum<io.github.yuroyami.kiteaudio.output/AudioFormatPolicy> { // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy|null[0]
+    enum entry Exact // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.Exact|null[0]
+    enum entry Nearest // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.Nearest|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.output/AudioFormatPolicy> // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.output/AudioFormatPolicy // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.output/AudioFormatPolicy> // io.github.yuroyami.kiteaudio.output/AudioFormatPolicy.values|values#static(){}[0]
+}
+
 final enum class io.github.yuroyami.kiteaudio.output/LatencyQuality : kotlin/Enum<io.github.yuroyami.kiteaudio.output/LatencyQuality> { // io.github.yuroyami.kiteaudio.output/LatencyQuality|null[0]
     enum entry Estimated // io.github.yuroyami.kiteaudio.output/LatencyQuality.Estimated|null[0]
     enum entry Measured // io.github.yuroyami.kiteaudio.output/LatencyQuality.Measured|null[0]
@@ -23,6 +34,8 @@ abstract fun interface io.github.yuroyami.kiteaudio.output/AudioRenderCallback {
 }
 
 abstract interface io.github.yuroyami.kiteaudio.output/AudioOutput { // io.github.yuroyami.kiteaudio.output/AudioOutput|null[0]
+    abstract val deviceFormat // io.github.yuroyami.kiteaudio.output/AudioOutput.deviceFormat|{}deviceFormat[0]
+        abstract fun <get-deviceFormat>(): io.github.yuroyami.kiteaudio.core/AudioFormat? // io.github.yuroyami.kiteaudio.output/AudioOutput.deviceFormat.<get-deviceFormat>|<get-deviceFormat>(){}[0]
     abstract val format // io.github.yuroyami.kiteaudio.output/AudioOutput.format|{}format[0]
         abstract fun <get-format>(): io.github.yuroyami.kiteaudio.core/AudioFormat // io.github.yuroyami.kiteaudio.output/AudioOutput.format.<get-format>|<get-format>(){}[0]
     abstract val isRunning // io.github.yuroyami.kiteaudio.output/AudioOutput.isRunning|{}isRunning[0]
@@ -133,6 +146,31 @@ sealed interface io.github.yuroyami.kiteaudio.output/AudioOutputEvent { // io.gi
     }
 }
 
+final class io.github.yuroyami.kiteaudio.output/AudioOutputDevice { // io.github.yuroyami.kiteaudio.output/AudioOutputDevice|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean, kotlin.collections/List<kotlin/Int>, kotlin.collections/List<kotlin/Int>) // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.collections.List<kotlin.Int>;kotlin.collections.List<kotlin.Int>){}[0]
+
+    final val channelCounts // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.channelCounts|{}channelCounts[0]
+        final fun <get-channelCounts>(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.channelCounts.<get-channelCounts>|<get-channelCounts>(){}[0]
+    final val id // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.id|{}id[0]
+        final fun <get-id>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.id.<get-id>|<get-id>(){}[0]
+    final val isDefault // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.isDefault|{}isDefault[0]
+        final fun <get-isDefault>(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.isDefault.<get-isDefault>|<get-isDefault>(){}[0]
+    final val name // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.name|{}name[0]
+        final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.name.<get-name>|<get-name>(){}[0]
+    final val sampleRates // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.sampleRates|{}sampleRates[0]
+        final fun <get-sampleRates>(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.sampleRates.<get-sampleRates>|<get-sampleRates>(){}[0]
+
+    final fun component1(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.component1|component1(){}[0]
+    final fun component2(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.component4|component4(){}[0]
+    final fun component5(): kotlin.collections/List<kotlin/Int> // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ..., kotlin.collections/List<kotlin/Int> = ..., kotlin.collections/List<kotlin/Int> = ...): io.github.yuroyami.kiteaudio.output/AudioOutputDevice // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.copy|copy(kotlin.String;kotlin.String;kotlin.Boolean;kotlin.collections.List<kotlin.Int>;kotlin.collections.List<kotlin.Int>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.output/AudioOutputDevice.toString|toString(){}[0]
+}
+
 final class io.github.yuroyami.kiteaudio.output/Latency { // io.github.yuroyami.kiteaudio.output/Latency|null[0]
     constructor <init>(kotlin/Int, io.github.yuroyami.kiteaudio.output/LatencyQuality) // io.github.yuroyami.kiteaudio.output/Latency.<init>|<init>(kotlin.Int;io.github.yuroyami.kiteaudio.output.LatencyQuality){}[0]
 
@@ -155,4 +193,5 @@ final class io.github.yuroyami.kiteaudio.output/Latency { // io.github.yuroyami.
 }
 
 final fun io.github.yuroyami.kiteaudio.output/audioOutputAvailable(): kotlin/Boolean // io.github.yuroyami.kiteaudio.output/audioOutputAvailable|audioOutputAvailable(){}[0]
-final fun io.github.yuroyami.kiteaudio.output/openAudioOutput(io.github.yuroyami.kiteaudio.core/AudioFormat = ..., kotlin/Int = ..., kotlin/Function1<io.github.yuroyami.kiteaudio.output/AudioOutputEvent, kotlin/Unit> = ...): io.github.yuroyami.kiteaudio.output/AudioOutput // io.github.yuroyami.kiteaudio.output/openAudioOutput|openAudioOutput(io.github.yuroyami.kiteaudio.core.AudioFormat;kotlin.Int;kotlin.Function1<io.github.yuroyami.kiteaudio.output.AudioOutputEvent,kotlin.Unit>){}[0]
+final fun io.github.yuroyami.kiteaudio.output/openAudioOutput(io.github.yuroyami.kiteaudio.core/AudioFormat = ..., kotlin/Int = ..., io.github.yuroyami.kiteaudio.output/AudioOutputDevice? = ..., io.github.yuroyami.kiteaudio.output/AudioFormatPolicy = ..., kotlin/Function1<io.github.yuroyami.kiteaudio.output/AudioOutputEvent, kotlin/Unit> = ...): io.github.yuroyami.kiteaudio.output/AudioOutput // io.github.yuroyami.kiteaudio.output/openAudioOutput|openAudioOutput(io.github.yuroyami.kiteaudio.core.AudioFormat;kotlin.Int;io.github.yuroyami.kiteaudio.output.AudioOutputDevice?;io.github.yuroyami.kiteaudio.output.AudioFormatPolicy;kotlin.Function1<io.github.yuroyami.kiteaudio.output.AudioOutputEvent,kotlin.Unit>){}[0]
+final suspend fun io.github.yuroyami.kiteaudio.output/audioOutputDevices(): kotlin.collections/List<io.github.yuroyami.kiteaudio.output/AudioOutputDevice> // io.github.yuroyami.kiteaudio.output/audioOutputDevices|audioOutputDevices(){}[0]

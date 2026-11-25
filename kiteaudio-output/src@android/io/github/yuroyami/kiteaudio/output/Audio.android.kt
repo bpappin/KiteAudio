@@ -1,7 +1,10 @@
 package io.github.yuroyami.kiteaudio.output
 
+import android.content.Context
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioFormat as AndroidAudioFormat
+import android.media.AudioManager
 import android.media.AudioTrack
 import android.os.Build
 import android.os.Process
@@ -21,6 +24,9 @@ internal interface AndroidPcmTrack {
 
     /** Runs once on the worker thread before the first block. */
     fun raiseWorkerPriority()
+
+    /** The format that the hardware runs at, or null when Android does not say. */
+    val deviceFormat: AudioFormat? get() = null
 }
 
 private class PlatformPcmTrack(private val track: AudioTrack) : AndroidPcmTrack {
@@ -33,6 +39,14 @@ private class PlatformPcmTrack(private val track: AudioTrack) : AndroidPcmTrack 
     override fun write(data: ShortArray, offset: Int, count: Int): Int = track.write(data, offset, count)
     override val underrunCount: Int get() = if (countsUnderruns) track.underrunCount else -1
     override fun raiseWorkerPriority() = Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO)
+
+    // The rate of the system's output for music. The channel count only when the routed device names one.
+    override val deviceFormat: AudioFormat?
+        get() {
+            val rate = AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC)
+            val channels = track.routedDevice?.channelCounts?.singleOrNull() ?: return null
+            return if (rate > 0 && channels > 0) AudioFormat(rate, channels) else null
+        }
 }
 
 /** Blocking platform output with one owned, independently cancellable render generation. */
@@ -45,6 +59,8 @@ internal class AndroidAudioOutput(
     // Capacity is an estimate of buffering, not current queued depth or acoustic latency.
     override val latency: Latency
         get() = Latency(track.bufferSizeInFrames, LatencyQuality.Estimated)
+
+    override val deviceFormat: AudioFormat? get() = track.deviceFormat
 
     private class Generation {
         @Volatile var active: Boolean = false
@@ -180,66 +196,204 @@ internal class AndroidAudioOutput(
     }
 }
 
+/**
+ * A failed track build. [reason] goes into [AudioOutputEvent.Failed]. A failure with [tryOthers]
+ * false is about the device, not the format, so [AudioFormatPolicy.Nearest] tries no other format.
+ */
+internal class AndroidOpenFailure(val reason: String, message: String, val tryOthers: Boolean = true) :
+    UnsupportedOperationException(message)
+
+/** Builds the platform track. Tests use a fake. */
+internal fun interface AndroidTrackFactory {
+    /**
+     * A track for [format] that plays on [route], or on the system route when [route] is null.
+     * [route] is an object that [rememberAndroidDevices] stored.
+     *
+     * @throws AndroidOpenFailure when the platform rejects the format or the route
+     */
+    fun create(format: AudioFormat, bufferFrames: Int, route: Any?): AndroidPcmTrack
+}
+
+/** The id of the entry that stands for the system route. An open with it plays where Android chooses. */
+internal const val ANDROID_SYSTEM_ROUTE_ID: String = "system-route"
+
+internal val androidSystemRoute: AudioOutputDevice =
+    AudioOutputDevice(ANDROID_SYSTEM_ROUTE_ID, "System route", isDefault = true, sampleRates = emptyList(), channelCounts = emptyList())
+
+/** The devices of the last full list, by id, each with its platform object for `setPreferredDevice`. */
+private val androidRoutesLock = Any()
+private var androidRoutes: Map<String, Pair<AudioOutputDevice, Any>> = emptyMap()
+
+/** Keeps [entries] as the devices that an open can choose, and returns the list with the system route first. */
+internal fun rememberAndroidDevices(entries: List<Pair<AudioOutputDevice, Any>>): List<AudioOutputDevice> {
+    synchronized(androidRoutesLock) { androidRoutes = entries.associateBy { it.first.id } }
+    return listOf(androidSystemRoute) + entries.map { it.first }
+}
+
+/** The device and platform object stored for [id], or null when the last full list did not hold it. */
+internal fun androidRoute(id: String): Pair<AudioOutputDevice, Any>? = synchronized(androidRoutesLock) { androidRoutes[id] }
+
+/** A device entry from the fields of an `AudioDeviceInfo`. */
+internal fun androidOutputDevice(id: Int, type: Int, productName: String, sampleRates: IntArray, channelCounts: IntArray): AudioOutputDevice {
+    val kind = androidDeviceKind(type)
+    val name = if (productName.isBlank() || productName == kind) kind else "$kind ($productName)"
+    return AudioOutputDevice(
+        id = id.toString(),
+        name = name,
+        isDefault = false,
+        sampleRates = sampleRates.filter { it > 0 }.distinct().sorted(),
+        channelCounts = channelCounts.filter { it > 0 }.distinct().sorted(),
+    )
+}
+
+private fun androidDeviceKind(type: Int): String = when (type) {
+    AudioDeviceInfo.TYPE_BUILTIN_SPEAKER, AudioDeviceInfo.TYPE_BUILTIN_SPEAKER_SAFE -> "Built-in speaker"
+    AudioDeviceInfo.TYPE_BUILTIN_EARPIECE -> "Earpiece"
+    AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "Wired headphones"
+    AudioDeviceInfo.TYPE_WIRED_HEADSET -> "Wired headset"
+    AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO -> "Bluetooth"
+    AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER, AudioDeviceInfo.TYPE_BLE_BROADCAST -> "Bluetooth LE"
+    AudioDeviceInfo.TYPE_HEARING_AID, AudioDeviceInfo.TYPE_BLE_HEARING_AID -> "Hearing aid"
+    AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_ACCESSORY, AudioDeviceInfo.TYPE_USB_HEADSET -> "USB"
+    AudioDeviceInfo.TYPE_HDMI, AudioDeviceInfo.TYPE_HDMI_ARC, AudioDeviceInfo.TYPE_HDMI_EARC -> "HDMI"
+    AudioDeviceInfo.TYPE_LINE_ANALOG, AudioDeviceInfo.TYPE_LINE_DIGITAL, AudioDeviceInfo.TYPE_AUX_LINE -> "Line out"
+    AudioDeviceInfo.TYPE_DOCK, AudioDeviceInfo.TYPE_DOCK_ANALOG -> "Dock"
+    AudioDeviceInfo.TYPE_TELEPHONY -> "Telephony"
+    else -> "Audio output"
+}
+
+/** The Android body of [openAudioOutput], over [factory]. */
+@Throws(Exception::class)
+internal fun openAndroidOutput(
+    format: AudioFormat,
+    bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
+    onEvent: (AudioOutputEvent) -> Unit,
+    factory: AndroidTrackFactory,
+): AudioOutput {
+    requireSupportedLayout(format)
+    validateBufferFrames(format, bufferFrames)
+    val chosen = if (device == null || device.id == ANDROID_SYSTEM_ROUTE_ID) null else {
+        androidRoute(device.id) ?: run {
+            val reason = "no audio output device has the id \"${device.id}\" (${device.name}); " +
+                "list the devices with audioOutputDevices(context) first"
+            deliverAudioEvent(onEvent, AudioOutputEvent.Failed(reason))
+            throw UnsupportedOperationException(reason)
+        }
+    }
+    var firstFailure: AndroidOpenFailure? = null
+    var stop = false
+    val opened = openFirstFormat(format, formatPolicy, chosen?.first?.sampleRates.orEmpty()) { candidate ->
+        if (stop) return@openFirstFormat null
+        try {
+            candidate to factory.create(candidate, bufferFrames, chosen?.second)
+        } catch (problem: AndroidOpenFailure) {
+            if (firstFailure == null) firstFailure = problem
+            if (!problem.tryOthers) stop = true
+            null
+        }
+    }
+    if (opened == null) {
+        val problem = firstFailure!!
+        deliverAudioEvent(onEvent, AudioOutputEvent.Failed(problem.reason))
+        throw problem
+    }
+    return AndroidAudioOutput(opened.first, opened.second, bufferFrames, onEvent)
+}
+
+private object PlatformTrackFactory : AndroidTrackFactory {
+    override fun create(format: AudioFormat, bufferFrames: Int, route: Any?): AndroidPcmTrack {
+        val channelMask = if (format.channels == 1) {
+            AndroidAudioFormat.CHANNEL_OUT_MONO
+        } else {
+            AndroidAudioFormat.CHANNEL_OUT_STEREO
+        }
+
+        val minimum = AudioTrack.getMinBufferSize(
+            format.sampleRate,
+            channelMask,
+            AndroidAudioFormat.ENCODING_PCM_16BIT,
+        )
+        if (minimum <= 0) {
+            throw AndroidOpenFailure("AudioTrack reports no usable buffer size ($minimum)", "AudioTrack reports no usable buffer size")
+        }
+
+        // Whichever is larger: what the device insists on, or four of our blocks. Asking for less
+        // than the minimum fails outright, and asking for one block is a click waiting to happen.
+        val bytes = maxOf(minimum, bufferFrames * format.channels * 2 * 4)
+
+        val track = AudioTrack.Builder()
+            .setAudioAttributes(
+                AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build(),
+            )
+            .setAudioFormat(
+                AndroidAudioFormat.Builder()
+                    .setEncoding(AndroidAudioFormat.ENCODING_PCM_16BIT)
+                    .setSampleRate(format.sampleRate)
+                    .setChannelMask(channelMask)
+                    .build(),
+            )
+            .setTransferMode(AudioTrack.MODE_STREAM)
+            .setBufferSizeInBytes(bytes)
+            .apply {
+                // The low-latency flag exists from Oreo. On older devices the default path is what
+                // there is.
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
+                }
+            }
+            .build()
+
+        if (track.state != AudioTrack.STATE_INITIALIZED) {
+            track.release()
+            throw AndroidOpenFailure("AudioTrack would not initialise", "AudioTrack would not initialise")
+        }
+        if (route != null && !track.setPreferredDevice(route as AudioDeviceInfo)) {
+            track.release()
+            val reason = "AudioTrack would not play on the audio output device ${route.id} (${route.productName})"
+            throw AndroidOpenFailure(reason, reason, tryOthers = false)
+        }
+        return PlatformPcmTrack(track)
+    }
+}
+
 @Throws(Exception::class)
 public actual fun openAudioOutput(
-    preferredFormat: AudioFormat,
+    format: AudioFormat,
     bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
     onEvent: (AudioOutputEvent) -> Unit,
-): AudioOutput {
-    requireSupportedLayout(preferredFormat)
-    validateBufferFrames(preferredFormat, bufferFrames)
-    val channelMask = if (preferredFormat.channels == 1) {
-        AndroidAudioFormat.CHANNEL_OUT_MONO
-    } else {
-        AndroidAudioFormat.CHANNEL_OUT_STEREO
-    }
+): AudioOutput = openAndroidOutput(format, bufferFrames, device, formatPolicy, onEvent, PlatformTrackFactory)
 
-    val minimum = AudioTrack.getMinBufferSize(
-        preferredFormat.sampleRate,
-        channelMask,
-        AndroidAudioFormat.ENCODING_PCM_16BIT,
+/**
+ * One entry, with the id `"system-route"`, that stands for the route that Android chooses. Its
+ * rates and channel counts are empty. Opening it is the same as an open with no device. The
+ * list of real devices needs a `Context`: call `audioOutputDevices(context)`.
+ */
+public actual suspend fun audioOutputDevices(): List<AudioOutputDevice> = listOf(androidSystemRoute)
+
+/**
+ * Every output device that `AudioManager.getDevices(GET_DEVICES_OUTPUTS)` reports, after the
+ * system route entry of the common [audioOutputDevices].
+ *
+ * The system route entry is the default. The other entries have the id of their `AudioDeviceInfo`,
+ * and [openAudioOutput] plays on one through `AudioTrack.setPreferredDevice`. An open can choose
+ * only a device of the last list that this function returned, so call it again after a device
+ * connects. Android does not say which device the system route uses now.
+ */
+public fun audioOutputDevices(context: Context): List<AudioOutputDevice> {
+    val manager = context.getSystemService(AudioManager::class.java) ?: return rememberAndroidDevices(emptyList())
+    val outputs = manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter { it.isSink }
+    return rememberAndroidDevices(
+        outputs.map { info ->
+            androidOutputDevice(info.id, info.type, info.productName?.toString().orEmpty(), info.sampleRates, info.channelCounts) to info
+        },
     )
-    if (minimum <= 0) {
-        deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioTrack reports no usable buffer size ($minimum)"))
-        throw UnsupportedOperationException("AudioTrack reports no usable buffer size")
-    }
-
-    // Whichever is larger: what the device insists on, or four of our blocks. Asking for less
-    // than the minimum fails outright, and asking for one block is a click waiting to happen.
-    val bytes = maxOf(minimum, bufferFrames * preferredFormat.channels * 2 * 4)
-
-    val track = AudioTrack.Builder()
-        .setAudioAttributes(
-            AudioAttributes.Builder()
-                .setUsage(AudioAttributes.USAGE_MEDIA)
-                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                .build(),
-        )
-        .setAudioFormat(
-            AndroidAudioFormat.Builder()
-                .setEncoding(AndroidAudioFormat.ENCODING_PCM_16BIT)
-                .setSampleRate(preferredFormat.sampleRate)
-                .setChannelMask(channelMask)
-                .build(),
-        )
-        .setTransferMode(AudioTrack.MODE_STREAM)
-        .setBufferSizeInBytes(bytes)
-        .apply {
-            // The low-latency flag exists from Oreo. On older devices the default path is what
-            // there is.
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY)
-            }
-        }
-        .build()
-
-    if (track.state != AudioTrack.STATE_INITIALIZED) {
-        track.release()
-        deliverAudioEvent(onEvent, AudioOutputEvent.Failed("AudioTrack would not initialise"))
-        throw UnsupportedOperationException("AudioTrack would not initialise")
-    }
-
-    return AndroidAudioOutput(preferredFormat, PlatformPcmTrack(track), bufferFrames, onEvent)
 }
 
 /**

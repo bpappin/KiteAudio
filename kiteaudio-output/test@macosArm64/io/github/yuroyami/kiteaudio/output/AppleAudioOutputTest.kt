@@ -116,6 +116,46 @@ class AppleAudioOutputTest {
     }
 
     @Test
+    fun theDeviceListIsNotEmptyAndHasExactlyOneDefault() {
+        val devices = runSuspending { audioOutputDevices() }
+        println("macOS audio output devices: $devices")
+        assertTrue(devices.isNotEmpty())
+        assertEquals(1, devices.count { it.isDefault }, "$devices")
+        assertEquals(devices.size, devices.map { it.id }.distinct().size, "the ids repeat: $devices")
+        assertTrue(devices.all { it.channelCounts.single() > 0 }, "$devices")
+    }
+
+    @Test
+    fun theDefaultDeviceOpensByItsListEntryAndPlays() {
+        val device = runSuspending { audioOutputDevices() }.single { it.isDefault }
+        val blocks = AtomicInt(0)
+        val events = AtomicReference<List<AudioOutputEvent>>(emptyList())
+        var phase = 0.0
+        val output = openAudioOutput(AudioFormat(48_000, ChannelLayout.STEREO), 512, device) { events.append(it) }
+        try {
+            println("deviceFormat of ${device.name}: ${output.deviceFormat}")
+            assertTrue(output.deviceFormat != null, "the hardware API did not answer for ${device.id}")
+            output.start { out, frames ->
+                for (i in 0 until frames) {
+                    val value = (sin(phase) * 0.03).toFloat()
+                    out[i * 2] = value
+                    out[i * 2 + 1] = value
+                    phase += 2.0 * PI * 440.0 / 48_000
+                }
+                blocks.fetchAndAdd(1)
+                frames
+            }
+            // A busy machine may be slow to pull, so allow three seconds.
+            awaitTrue("the queue asked for only ${blocks.load()} blocks") { blocks.load() >= 8 }
+        } finally {
+            output.close()
+        }
+        val seen = events.load()
+        assertTrue(seen.any { it is AudioOutputEvent.Started }, "no Started event: $seen")
+        assertTrue(seen.none { it is AudioOutputEvent.Failed }, "the output failed: $seen")
+    }
+
+    @Test
     fun appleAlwaysHasAnOutput() {
         assertTrue(audioOutputAvailable())
     }
@@ -197,9 +237,10 @@ class AppleAudioOutputTest {
             output.close()
         }
         awaitTrue("no Stopped after close") { events.load().contains(AudioOutputEvent.Stopped) }
-        // Three buffers of 512 frames hold 32 ms. A shorter gap cannot empty a full queue. The three
-        // priming renders and the first callback after the start are not checked.
-        return LiveRun(events.load(), longRenderGaps(renderMicros, renders.load(), 32_000L, stalls, firstChecked = 4))
+        // A buffer of 512 frames lasts 10.7 ms, and the queue holds three of them. Several gaps of more
+        // than a buffer and a half can empty the queue together, so each of them allows one dropout.
+        // The three priming renders and the first callback after the start are not checked.
+        return LiveRun(events.load(), longRenderGaps(renderMicros, renders.load(), 16_000L, stalls, firstChecked = 4))
     }
 
     @Test

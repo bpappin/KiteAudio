@@ -2,6 +2,7 @@ package io.github.yuroyami.kiteaudio.output
 
 import io.github.yuroyami.kiteaudio.core.AudioFormat
 import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import kotlin.math.abs
 import kotlin.time.TimeSource
 
 /**
@@ -110,7 +111,7 @@ public sealed interface AudioOutputEvent {
      * - macOS: an AudioQueue that stops running. A move to a new default device that keeps the
      *   queue running is not a loss.
      * - Browser: an audio context that closed, or that the browser suspended or interrupted after
-     *   the stream started.
+     *   the stream started. Also a chosen output that stops working, where the browser reports it.
      *
      * On iOS the host app owns the shared `AVAudioSession`: its category, its activation and its
      * background policy. The output never changes them.
@@ -130,8 +131,21 @@ public sealed interface AudioOutputEvent {
  */
 public interface AudioOutput {
 
-    /** The configured PCM stream format; hardware may resample it. */
+    /**
+     * The format that the render callback must produce. The hardware may resample it.
+     *
+     * After an open with [AudioFormatPolicy.Nearest], this is the format that the output opened,
+     * which can differ from the requested one. [AudioOutputEvent.Started] carries the same format.
+     */
     public val format: AudioFormat
+
+    /**
+     * The format that the hardware runs at, or null when the platform does not say.
+     *
+     * The platform converts [format] to this format. The value can change while the output is
+     * open, for example when the system moves the sound to another device.
+     */
+    public val deviceFormat: AudioFormat?
 
     /** An estimate based on platform buffer capacity, excluding hardware and route delay. */
     public val latency: Latency
@@ -257,16 +271,114 @@ internal class DeviceUnderrunCounter {
  * sound, which usually takes a click or a key press first. A start made before then waits, and
  * calling [AudioOutput.start] again from the click or key handler asks the browser once more.
  *
+ * A [device] that the platform no longer knows fails the open in the same way as a rejected
+ * format, with a reason that names the device. The output never falls back to the default device.
+ *
+ * @param format the format that the render callback produces. With [AudioFormatPolicy.Nearest]
+ *   the output can open another format. Read [AudioOutput.format] after the open.
+ * @param bufferFrames how much sound to keep buffered. Smaller is tighter timing and more risk of a click.
+ * @param device the device to play on, from [audioOutputDevices]. Null opens the default device.
+ * @param formatPolicy what to do when the platform rejects [format].
+ * @param onEvent receives every [AudioOutputEvent] of the output.
  * @throws IllegalArgumentException for an invalid buffer size or a layout of more than two channels.
- * @throws UnsupportedOperationException on the web, in a host with no Web Audio such as Node.js.
+ * @throws UnsupportedOperationException on the web, in a host with no Web Audio such as Node.js,
+ *   and for a [device] in a browser that cannot choose an output.
  */
 @Throws(Exception::class)
 public expect fun openAudioOutput(
-    preferredFormat: AudioFormat = AudioFormat(48_000, ChannelLayout.STEREO),
-    /** How much sound to keep buffered. Smaller is tighter timing and more risk of a click. */
+    format: AudioFormat = AudioFormat(48_000, ChannelLayout.STEREO),
     bufferFrames: Int = 1024,
+    device: AudioOutputDevice? = null,
+    formatPolicy: AudioFormatPolicy = AudioFormatPolicy.Exact,
     onEvent: (AudioOutputEvent) -> Unit = {},
 ): AudioOutput
 
-/** True when this platform has an output at all. On the web, true in a page with Web Audio and false in Node.js. */
+/**
+ * True when this platform has an output at all. On the JVM, true when a Java Sound mixer offers an
+ * output line for signed 16-bit PCM. On the web, true in a page with Web Audio and false in Node.js.
+ */
 public expect fun audioOutputAvailable(): Boolean
+
+/** One place the sound can go: speakers, headphones, a USB interface. */
+public data class AudioOutputDevice(
+    /** The identifier that the platform gives. Valid while the device stays connected. */
+    val id: String,
+    /** A name to show to people. */
+    val name: String,
+    /** True for the device that an open with no device plays on. */
+    val isDefault: Boolean,
+    /** Empty when the platform does not say. */
+    val sampleRates: List<Int>,
+    /** Empty when the platform does not say. */
+    val channelCounts: List<Int>,
+)
+
+/**
+ * The output devices that this platform reports now.
+ *
+ * What the list holds differs by platform. The README of `kiteaudio-output` has a table. On
+ * Android, this function returns one entry for the system route, and `audioOutputDevices(context)`
+ * returns the full list. In a browser, the call waits for `navigator.mediaDevices.enumerateDevices()`.
+ */
+public expect suspend fun audioOutputDevices(): List<AudioOutputDevice>
+
+/** What [openAudioOutput] does when the platform rejects the requested format. */
+public enum class AudioFormatPolicy {
+    /** The open fails. */
+    Exact,
+
+    /**
+     * The output opens the closest format that the platform accepts, and [AudioOutput.format]
+     * holds it. A render at the requested rate would play at the wrong pitch, so read the format.
+     *
+     * The output tries the requested format first. Then it keeps the channel count and tries the
+     * sample rates by their distance from the requested rate, the higher rate first on a tie.
+     * Then it tries the other channel count, mono or stereo, with the same rates. The rates are
+     * the ones that the device reports, or 48000, 44100, 96000, 88200, 32000, 22050, 16000 and
+     * 8000 Hz when it reports none. When no format opens, the open fails as with [Exact].
+     */
+    Nearest,
+}
+
+/** The rates that [AudioFormatPolicy.Nearest] tries when a device reports none. */
+internal val DEFAULT_CANDIDATE_RATES: List<Int> = listOf(48_000, 44_100, 96_000, 88_200, 32_000, 22_050, 16_000, 8_000)
+
+/**
+ * The formats that [AudioFormatPolicy.Nearest] tries, in order. The first is [requested] itself.
+ *
+ * [deviceRates] are the rates that the device reports. Rates of zero or less are ignored, and an
+ * empty list means [DEFAULT_CANDIDATE_RATES]. [requested] must have one or two channels.
+ */
+internal fun nearestFormatCandidates(requested: AudioFormat, deviceRates: List<Int>): List<AudioFormat> {
+    val reported = deviceRates.filter { it > 0 }
+    val target = requested.sampleRate.toLong()
+    val others = (reported.ifEmpty { DEFAULT_CANDIDATE_RATES })
+        .distinct()
+        .filter { it != requested.sampleRate }
+        .sortedWith(compareBy<Int>({ abs(it - target) }, { -it }))
+    val rates = listOf(requested.sampleRate) + others
+    val otherChannels = if (requested.channels == 1) 2 else 1
+    return rates.map { AudioFormat(it, requested.channelLayout) } + rates.map { AudioFormat(it, otherChannels) }
+}
+
+/**
+ * Tries [attempt] with each format that [policy] allows, in order, and returns the first result
+ * that is not null. Returns null when every format fails.
+ */
+internal inline fun <T : Any> openFirstFormat(
+    requested: AudioFormat,
+    policy: AudioFormatPolicy,
+    deviceRates: List<Int>,
+    attempt: (AudioFormat) -> T?,
+): T? {
+    val candidates = when (policy) {
+        AudioFormatPolicy.Exact -> listOf(requested)
+        AudioFormatPolicy.Nearest -> nearestFormatCandidates(requested, deviceRates)
+    }
+    for (candidate in candidates) attempt(candidate)?.let { return it }
+    return null
+}
+
+/** The reason for an open that names a device the platform does not know. */
+internal fun unknownDeviceReason(device: AudioOutputDevice): String =
+    "no audio output device has the id \"${device.id}\" (${device.name}); list the devices again with audioOutputDevices()"

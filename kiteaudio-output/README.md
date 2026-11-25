@@ -24,7 +24,10 @@ mono or stereo `FloatArray` samples; the native backends clamp them and convert 
 
 | Part | What it does |
 | --- | --- |
-| `AudioOutput` | Opens, starts, stops and releases a platform output stream. |
+| `openAudioOutput` | Opens an output on the default device or on a chosen device, with an `AudioFormatPolicy`. |
+| `AudioOutput` | Starts, stops and releases a platform output stream. `format` is the format that the render callback produces. `deviceFormat` is the format that the hardware runs at, or null when the platform does not say. |
+| `audioOutputDevices()` and `AudioOutputDevice` | List the places where the sound can go, with an id, a name, the default flag, and the rates and channel counts where the platform gives them. |
+| `AudioFormatPolicy` | `Exact` fails the open when the platform rejects the format. `Nearest` opens the closest format that the platform accepts. |
 | `AudioRenderCallback` | Fills the requested frames; a short render is padded with silence. |
 | `AudioFormat` and `ChannelLayout` | Describe the sample rate and the channel layout. Both come from `kiteaudio-core`. An output plays one or two channels. |
 | `Latency` and `LatencyQuality` | Report a delay value and distinguish estimates from measurements. All current backends report estimates. |
@@ -91,7 +94,7 @@ import kotlin.math.sin
 
 fun startTone(): AudioOutput {
     val output = openAudioOutput(
-        preferredFormat = AudioFormat(48_000, ChannelLayout.STEREO),
+        format = AudioFormat(48_000, ChannelLayout.STEREO),
         bufferFrames = 512,
     )
     val format = output.format
@@ -129,6 +132,64 @@ count of the layout and ignores the speaker positions. A layout of more than two
 `bufferFrames * output.format.channels` samples. Fill samples in channel order for each
 frame and return a count in `0..frames`; returning `0` asks for silence. The array is
 reused, so do not retain it or pass it to another thread.
+
+### Choose a device and a format
+
+`audioOutputDevices()` lists the devices. Pass one to `openAudioOutput` to play on it, or pass
+no device to play on the default one. The list function is a `suspend` function, because a
+browser answers it later.
+
+```kotlin
+import io.github.yuroyami.kiteaudio.core.AudioFormat
+import io.github.yuroyami.kiteaudio.core.ChannelLayout
+import io.github.yuroyami.kiteaudio.output.AudioFormatPolicy
+import io.github.yuroyami.kiteaudio.output.AudioOutput
+import io.github.yuroyami.kiteaudio.output.audioOutputDevices
+import io.github.yuroyami.kiteaudio.output.openAudioOutput
+
+suspend fun openOnUsb(): AudioOutput {
+    val device = audioOutputDevices().firstOrNull { "USB" in it.name }
+    val output = openAudioOutput(
+        format = AudioFormat(48_000, ChannelLayout.STEREO),
+        device = device,  // null plays on the default device
+        formatPolicy = AudioFormatPolicy.Nearest,
+    )
+    // With Nearest, the output can open another rate or channel count. Render in this format.
+    println("render at ${output.format}, the hardware runs at ${output.deviceFormat}")
+    return output
+}
+```
+
+`AudioFormatPolicy.Exact` is the default. The open fails when the platform rejects the format,
+as it does without a policy. `Nearest` tries the requested format first. Then it keeps the
+channel count and tries the sample rates by their distance from the requested rate, the higher
+rate first on a tie. Then it tries the other channel count, mono or stereo, with the same rates.
+The rates are the ones that the device reports, or 48000, 44100, 96000, 88200, 32000, 22050,
+16000 and 8000 Hz when it reports none. When no format opens, the open fails as with `Exact`.
+`AudioOutput.format` and the `Started` event hold the format that opened. A render at the
+requested rate on an output that opened another rate plays at the wrong pitch, so read the format.
+
+A layout of more than two channels still throws `IllegalArgumentException` before any device
+access, with either policy. A device that the platform no longer knows fails the open in the
+same way as a rejected format, with a reason that names the device. The output never falls back
+to the default device.
+
+| Platform | What the list holds | Can an open choose a device | `deviceFormat` |
+| --- | --- | --- | --- |
+| JVM | Every Java Sound mixer that offers a `SourceDataLine`. The id is the mixer name, with ` #2`, ` #3` and so on added when names repeat. The default is the first mixer that can mix, which `AudioSystem.getLine` picks when no system property names one. Rates and channel counts come from the signed 16-bit line formats where Java Sound gives a number. | Yes, through `Mixer.getLine`. An unknown id throws `LineUnavailableException`. | Null. Java Sound does not say. |
+| Android | `audioOutputDevices()` returns one entry with the id `"system-route"`, the route that Android chooses. `audioOutputDevices(context)` returns that entry first, then every device of `AudioManager.getDevices(GET_DEVICES_OUTPUTS)`, by the id of its `AudioDeviceInfo`. | Yes, through `AudioTrack.setPreferredDevice`. The device must be in the last list of `audioOutputDevices(context)`; any other id throws `UnsupportedOperationException`. | `AudioTrack.getNativeOutputSampleRate(STREAM_MUSIC)` with the channel count of the routed device, when that device reports exactly one count. Null otherwise. |
+| macOS | Every CoreAudio device with an output stream. The id is the device UID. | Yes, through `kAudioQueueProperty_CurrentDevice`. An unknown UID throws `UnsupportedOperationException`. | The nominal rate and the output channel count of the device, from the CoreAudio hardware API. |
+| iOS | One entry for the current route of `AVAudioSession`. The id joins the UIDs of the route's outputs. | The system chooses the route. An open with the entry checks that it is still the current route and throws `UnsupportedOperationException` when it is not. The output never changes the session. | `AVAudioSession.sampleRate` and `outputNumberOfChannels`. |
+| Browser | The `audiooutput` entries of `navigator.mediaDevices.enumerateDevices()`. The first one is the default. The names are empty until the page has a media permission, for example from `getUserMedia`, and a browser may list fewer outputs or none before then. Node.js and a page that is not a secure context have no `navigator.mediaDevices`, so the list is empty there. | The default entry opens in every browser. Another entry passes its id as `sinkId` to the `AudioContext`, which Chromium 110 and newer accept. Elsewhere the open throws `UnsupportedOperationException`. The device must be in the last list; any other id throws `IllegalArgumentException`. | Null. A context at a requested rate hides the rate of the device. |
+
+Java Sound, `AudioTrack`, AudioQueue and Web Audio can resample, so `Nearest` often opens the
+requested format unchanged. On Apple platforms AudioQueue checks
+a format only when it opens a queue. `Exact` keeps that check at `start()`, which sends `Failed`.
+`Nearest` opens a queue for each format that it tries, then closes it again.
+
+In a browser, an `AudioContext` with a `sinkId` that stops working fires an `error` event from
+Chromium 128. The output then ends a playing stream with `DeviceLost`, and a later `start()` sends `Failed`.
+Chromium 110 to 127 have no such event, so the output cannot tell.
 
 ### Inspect timing and events
 
@@ -191,7 +252,7 @@ counter, the count is a measurement. Elsewhere the output estimates it.
 | JS and wasmJs in a browser | An `AudioWorkletNode` fed from the page, or `AudioBuffer`s scheduled by a page timer | `openAudioOutput` uses the worklet where the page can, and falls back to scheduled buffers in a page that is not a secure context or whose content security policy blocks a `blob:` worklet module. `Started` arrives once the browser lets the page play sound, usually after a click or a key press; a `start()` made before then waits, and calling `start()` again from the click or key handler asks the browser once more. Node.js has no Web Audio: opening an output throws `UnsupportedOperationException` there. Checked by hand with [verification/web](verification/web/README.md) in Chrome 156, Safari 27.2 and Firefox 159 on macOS; not yet on iOS. |
 
 macOS x64, tvOS, watchOS, native Linux and Windows, and wasmWasi are not configured.
-`audioOutputAvailable()` checks Java Sound support for one default format on the JVM;
+`audioOutputAvailable()` checks on the JVM that a Java Sound mixer offers an output line for signed 16-bit PCM;
 on Android and Apple it always returns `true`; on the web it says whether the host has Web Audio. It does not prove that a stream can open,
 that a route is available, or that sound reaches a speaker.
 
@@ -246,8 +307,9 @@ need an explicit handoff.
 | --- | --- |
 | Real-time guarantees | JVM thread priority and Android's audio priority are scheduling requests. Kotlin/Native garbage collection and native callback execution also affect deadlines. No backend promises a hard deadline. |
 | Latency | JVM and Android report the platform buffer capacity; Apple reports its three-buffer capacity; the browser reports its four blocks plus the context's `baseLatency`, whichever technique it uses. All are `Estimated`: capacity is not current queue occupancy or measured acoustic delay and excludes other device/route delays. |
-| Formats | Mono and stereo only. A layout of more channels throws `IllegalArgumentException`. There is no float-device output, resampler or format-negotiation API. Unsupported sample rates can fail to open. |
-| Routes and recovery | No device-selection API, automatic recovery, audio-focus integration or audio-session management. After `DeviceLost`, the app calls `start()` again. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
+| Formats | Mono and stereo only. A layout of more channels throws `IllegalArgumentException`. There is no float-device output or resampler. `AudioFormatPolicy.Nearest` picks a format that the platform accepts, but the app must render in it. With `Exact`, unsupported sample rates can fail to open. |
+| Devices | Each platform lists and chooses devices differently; see [Choose a device and a format](#choose-a-device-and-a-format). iOS cannot choose a route. A browser without `sinkId` support can open only the default entry. Device names in a browser are empty until the page has a media permission. A list is a snapshot: the output does not report devices that come or go. |
+| Routes and recovery | No automatic recovery, audio-focus integration or audio-session management. After `DeviceLost`, the app calls `start()` again. Native creation, allocation, enqueue, start, stop and disposal statuses are checked. The host app still manages its platform lifecycle. |
 | Precision | Native backends clamp float samples to `[-1, 1]` and quantize them to 16-bit PCM without dithering. The browser passes Float32 through unchanged. |
 | Apple latency | AudioQueue uses three queued buffers. A render-callback AudioUnit backend is not implemented. |
 | Browser techniques | The worklet counts every frame of silence it plays; scheduled buffers estimate a `DeviceUnderrun` from the context clock, and allocate an `AudioBuffer` and a source node for every block. Nothing says which technique an output settled on. |

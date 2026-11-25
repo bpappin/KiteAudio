@@ -1,6 +1,9 @@
 package io.github.yuroyami.kiteaudio.output
 
 import io.github.yuroyami.kiteaudio.core.AudioFormat
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 import kotlin.math.roundToInt
 
 /**
@@ -76,7 +79,54 @@ internal interface WebAudioApi<H : Any> {
 
     /** Hands [block] to the processor, transferring its buffer rather than copying it. */
     fun post(node: H, slot: Int, block: H)
+
+    /** True when this host's `AudioContext` takes a `sinkId`, which is Chromium 110 and newer today. */
+    fun canChooseSink(): Boolean = false
+
+    /** A new `AudioContext` at [sampleRate] that plays on the output with the id [sinkId]. Throws when the host refuses. */
+    fun newContextOn(sampleRate: Int, sinkId: String): H = throw UnsupportedOperationException("this host cannot choose an audio output")
+
+    /** Calls [failed] when the context fires an `error` event, which reports an output that does not work. */
+    fun onError(context: H, failed: (String) -> Unit) {}
+
+    /**
+     * Lists the `audiooutput` entries of `navigator.mediaDevices.enumerateDevices()`, each as its
+     * `deviceId` and `label`. Calls exactly one of [done] and [failed]. A host with no
+     * `navigator.mediaDevices`, such as Node.js, lists nothing.
+     */
+    fun listOutputs(done: (List<Pair<String, String>>) -> Unit, failed: (String) -> Unit) { done(emptyList()) }
 }
+
+/**
+ * The browser's outputs, and the ones that the last listing returned. An open checks a chosen
+ * device against that listing, because a page cannot list the outputs without waiting.
+ */
+internal class BrowserOutputDevices<H : Any>(private val api: WebAudioApi<H>) {
+    private var known: Map<String, AudioOutputDevice> = emptyMap()
+
+    suspend fun list(): List<AudioOutputDevice> = suspendCoroutine { continuation ->
+        api.listOutputs(
+            done = { outputs ->
+                val devices = browserOutputDevices(outputs)
+                known = devices.associateBy { it.id }
+                continuation.resume(devices)
+            },
+            failed = { reason -> continuation.resumeWithException(IllegalStateException("the browser would not list its audio outputs: $reason")) },
+        )
+    }
+
+    /** The device with [id] in the last listing, or null. */
+    fun find(id: String): AudioOutputDevice? = known[id]
+}
+
+/**
+ * Devices for the `deviceId` and `label` pairs of `enumerateDevices()`. The Media Capture
+ * specification puts the default output first among the outputs. Browsers give no rates.
+ */
+internal fun browserOutputDevices(outputs: List<Pair<String, String>>): List<AudioOutputDevice> =
+    outputs.distinctBy { it.first }.mapIndexed { index, (id, label) ->
+        AudioOutputDevice(id, label, isDefault = index == 0, sampleRates = emptyList(), channelCounts = emptyList())
+    }
 
 /**
  * How a browser output gets its blocks to the speakers. Either way rendering runs on the page's main
@@ -177,13 +227,8 @@ registerProcessor("kiteaudio-output", KiteAudioOutput);
 """
 
 /**
- * Opens a browser output over [api]: the body of `openAudioOutput` on both web platforms, which asks
- * for [BrowserTechnique.Auto].
- *
- * @throws UnsupportedOperationException when the host has no Web Audio at all, such as Node.js,
- *   or when [technique] is [BrowserTechnique.Worklet] and the host has no audio worklets.
- * @throws IllegalArgumentException for an invalid buffer size, a layout of more than two channels,
- *   or when the browser will not open a context at the format's rate.
+ * Opens a browser output over [api] on the default output with [AudioFormatPolicy.Exact]: the
+ * body of `openAudioOutput` on both web platforms, which asks for [BrowserTechnique.Auto].
  */
 @Throws(UnsupportedOperationException::class, IllegalArgumentException::class)
 internal fun <H : Any> openBrowserOutput(
@@ -191,6 +236,32 @@ internal fun <H : Any> openBrowserOutput(
     format: AudioFormat,
     bufferFrames: Int,
     technique: BrowserTechnique,
+    onEvent: (AudioOutputEvent) -> Unit,
+): AudioOutput = openBrowserOutput(api, format, bufferFrames, technique, null, AudioFormatPolicy.Exact, null, onEvent)
+
+/**
+ * Opens a browser output over [api].
+ *
+ * A [device] must be in the last listing of [devices]. The default entry opens a context with no
+ * `sinkId`, so it works in every browser. Any other entry needs a host whose `AudioContext` takes a
+ * `sinkId`.
+ *
+ * @throws UnsupportedOperationException when the host has no Web Audio at all, such as Node.js,
+ *   when [technique] is [BrowserTechnique.Worklet] and the host has no audio worklets, or when
+ *   the host cannot choose the output of [device].
+ * @throws IllegalArgumentException for an invalid buffer size, a layout of more than two channels,
+ *   a [device] that the last listing did not hold, or when the browser will not open a context
+ *   at the format's rate.
+ */
+@Throws(UnsupportedOperationException::class, IllegalArgumentException::class)
+internal fun <H : Any> openBrowserOutput(
+    api: WebAudioApi<H>,
+    format: AudioFormat,
+    bufferFrames: Int,
+    technique: BrowserTechnique,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
+    devices: BrowserOutputDevices<H>?,
     onEvent: (AudioOutputEvent) -> Unit,
 ): AudioOutput {
     requireSupportedLayout(format)
@@ -206,14 +277,48 @@ internal fun <H : Any> openBrowserOutput(
         deliverAudioEvent(onEvent, AudioOutputEvent.Failed("no audio output is available", problem))
         throw problem
     }
-    val context = try {
-        api.newContext(format.sampleRate)
-    } catch (problem: Throwable) {
+    var sinkId: String? = null
+    if (device != null) {
+        val known = devices?.find(device.id)
+        if (known == null) {
+            val reason = unknownDeviceReason(device)
+            val problem = IllegalArgumentException(reason)
+            deliverAudioEvent(onEvent, AudioOutputEvent.Failed(reason, problem))
+            throw problem
+        }
+        if (!known.isDefault) {
+            if (!api.canChooseSink()) {
+                val reason = "this browser cannot choose an audio output: its AudioContext takes no sinkId, so \"${device.name}\" cannot open"
+                val problem = UnsupportedOperationException(reason)
+                deliverAudioEvent(onEvent, AudioOutputEvent.Failed(reason, problem))
+                throw problem
+            }
+            sinkId = known.id
+        }
+    }
+    val sink = sinkId
+    var firstFailure: Throwable? = null
+    // The context does not depend on the channel count, so a rate that failed once fails again.
+    val refused = HashSet<Int>()
+    val opened = openFirstFormat(format, formatPolicy, emptyList()) { candidate ->
+        if (candidate.sampleRate in refused) return@openFirstFormat null
+        try {
+            val context = if (sink == null) api.newContext(candidate.sampleRate) else api.newContextOn(candidate.sampleRate, sink)
+            candidate to context
+        } catch (problem: Throwable) {
+            if (firstFailure == null) firstFailure = problem
+            refused += candidate.sampleRate
+            null
+        }
+    }
+    if (opened == null) {
+        val problem = firstFailure
         deliverAudioEvent(onEvent, AudioOutputEvent.Failed("no audio output is available", problem))
         throw IllegalArgumentException("Web Audio would not open a context at ${format.sampleRate} Hz", problem)
     }
+    val (openedFormat, context) = opened
     val buffers = technique == BrowserTechnique.Buffers || (technique == BrowserTechnique.Auto && !api.hasWorklet())
-    return WebAudioOutput(format, api, context, bufferFrames, fallBack = technique == BrowserTechnique.Auto, buffers, onEvent)
+    return WebAudioOutput(openedFormat, api, context, bufferFrames, fallBack = technique == BrowserTechnique.Auto, buffers, onEvent, watchSink = sink != null)
 }
 
 /**
@@ -237,6 +342,8 @@ internal class WebAudioOutput<H : Any>(
     private val fallBack: Boolean,
     buffers: Boolean,
     private val onEvent: (AudioOutputEvent) -> Unit,
+    /** True when the context plays on a chosen output, whose failure the context reports with an `error` event. */
+    watchSink: Boolean = false,
 ) : AudioOutput {
 
     private enum class Load { Pending, Ready, Failed }
@@ -265,6 +372,9 @@ internal class WebAudioOutput<H : Any>(
     private var buffers = buffers
     private var load = if (buffers) Load.Ready else Load.Pending
     private var loadFailure = ""
+
+    /** Why the chosen output does not work, once the context said so. */
+    private var sinkFailure: String? = null
     private var closed = false
     private var generation: Generation? = null
     private val deviceUnderruns = DeviceUnderrunCounter()
@@ -281,6 +391,9 @@ internal class WebAudioOutput<H : Any>(
 
     override val isRunning: Boolean get() = generation?.active == true
 
+    // A context at a requested rate hides the rate of the device, so the browser does not say.
+    override val deviceFormat: AudioFormat? get() = null
+
     init {
         // Only this output's own end() suspends the context, and only once its generation is over, so a
         // suspension that reaches a started generation came from the browser, for a call or another
@@ -292,6 +405,20 @@ internal class WebAudioOutput<H : Any>(
                     "closed" -> end(current, AudioOutputEvent.DeviceLost("the audio context closed"))
                     "suspended", "interrupted" ->
                         if (current.started) end(current, AudioOutputEvent.DeviceLost("the browser $state the audio context"))
+                }
+            }
+        }
+        if (watchSink) {
+            api.onError(context) { reason ->
+                if (sinkFailure == null) {
+                    sinkFailure = reason
+                    // A stream that already plays has lost its device. Before that, the output never worked.
+                    generation?.let { current ->
+                        if (!closed) {
+                            val text = "the audio output device failed: $reason"
+                            end(current, if (current.started) AudioOutputEvent.DeviceLost(text) else AudioOutputEvent.Failed(text))
+                        }
+                    }
                 }
             }
         }
@@ -330,6 +457,10 @@ internal class WebAudioOutput<H : Any>(
         check(previous == null) { "the previous audio callback is still stopping" }
         val next = Generation(callback)
         generation = next
+        sinkFailure?.let { reason ->
+            end(next, AudioOutputEvent.Failed("the audio output device failed: $reason"))
+            return
+        }
         when (load) {
             Load.Ready -> connect(next)
             Load.Failed -> end(next, AudioOutputEvent.Failed("the audio worklet would not load: $loadFailure"))

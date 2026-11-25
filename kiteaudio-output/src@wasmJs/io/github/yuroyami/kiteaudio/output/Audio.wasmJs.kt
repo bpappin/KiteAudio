@@ -104,6 +104,25 @@ private external fun webAudioFill(block: JsAny, packed: String)
 @JsFun("(node, slot, block) => { node.port.postMessage({ slot: slot, data: block }, [block.buffer]); }")
 private external fun webAudioPost(node: JsAny, slot: Int, block: JsAny)
 
+@JsFun("() => typeof AudioContext !== 'undefined' && 'setSinkId' in AudioContext.prototype")
+private external fun webAudioCanChooseSink(): Boolean
+
+@JsFun("(rate, sinkId) => new AudioContext({ sampleRate: rate, latencyHint: 'interactive', sinkId: sinkId })")
+private external fun webAudioContextOn(rate: Int, sinkId: String): JsAny
+
+@JsFun("(context, failed) => { context.onerror = () => failed('the audio context reported an error'); }")
+private external fun webAudioOnError(context: JsAny, failed: (String) -> Unit)
+
+@JsFun(
+    "(add, done, failed) => { " +
+        "const media = (typeof navigator !== 'undefined') ? navigator.mediaDevices : undefined; " +
+        "if (!media || !media.enumerateDevices) { done(); return; } " +
+        "try { media.enumerateDevices().then((list) => { " +
+        "for (const entry of list) if (entry.kind === 'audiooutput') add(entry.deviceId, entry.label); done(); }, " +
+        "(problem) => failed(String(problem))); } catch (problem) { failed(String(problem)); } }",
+)
+private external fun webAudioListOutputs(add: (String, String) -> Unit, done: () -> Unit, failed: (String) -> Unit)
+
 /** Web Audio through `@JsFun` imports. A handle is a [JsAny]. */
 internal object WasmWebAudio : WebAudioApi<JsAny> {
     override fun hasAudioContext(): Boolean = webAudioHasContext()
@@ -139,7 +158,17 @@ internal object WasmWebAudio : WebAudioApi<JsAny> {
     }
 
     override fun post(node: JsAny, slot: Int, block: JsAny) = webAudioPost(node, slot, block)
+
+    override fun canChooseSink(): Boolean = webAudioCanChooseSink()
+    override fun newContextOn(sampleRate: Int, sinkId: String): JsAny = webAudioContextOn(sampleRate, sinkId)
+    override fun onError(context: JsAny, failed: (String) -> Unit) = webAudioOnError(context, failed)
+    override fun listOutputs(done: (List<Pair<String, String>>) -> Unit, failed: (String) -> Unit) {
+        val outputs = mutableListOf<Pair<String, String>>()
+        webAudioListOutputs({ id, label -> outputs += id to label }, { done(outputs) }, failed)
+    }
 }
+
+private val wasmOutputDevices = BrowserOutputDevices(WasmWebAudio)
 
 /**
  * Opens an output for this platform.
@@ -151,15 +180,30 @@ internal object WasmWebAudio : WebAudioApi<JsAny> {
  * takes a click or a key press first. A start made before then waits, and calling
  * [AudioOutput.start] again from the click or key handler asks the browser once more.
  *
- * @throws UnsupportedOperationException in a host with no Web Audio, such as Node.js.
+ * A [device] must come from the last call of [audioOutputDevices]. The default entry plays in every
+ * browser. Another entry needs an `AudioContext` that takes a `sinkId`, which is Chromium 110 and
+ * newer today. Chromium 128 and newer report an output that fails while it plays with `DeviceLost`.
+ *
+ * @throws UnsupportedOperationException in a host with no Web Audio, such as Node.js, and for a
+ *   [device] that is not the default in a browser that cannot choose an output.
  * @throws IllegalArgumentException for an invalid buffer size, a layout of more than two channels,
- *   or a sample rate the browser refuses.
+ *   a [device] that the last list did not hold, or a sample rate the browser refuses.
  */
 public actual fun openAudioOutput(
-    preferredFormat: AudioFormat,
+    format: AudioFormat,
     bufferFrames: Int,
+    device: AudioOutputDevice?,
+    formatPolicy: AudioFormatPolicy,
     onEvent: (AudioOutputEvent) -> Unit,
-): AudioOutput = openBrowserOutput(WasmWebAudio, preferredFormat, bufferFrames, BrowserTechnique.Auto, onEvent)
+): AudioOutput = openBrowserOutput(WasmWebAudio, format, bufferFrames, BrowserTechnique.Auto, device, formatPolicy, wasmOutputDevices, onEvent)
+
+/**
+ * The outputs of `navigator.mediaDevices.enumerateDevices()`. The first one is the default. The
+ * names are empty until the page has a media permission, for example from `getUserMedia`, and a
+ * browser may list fewer outputs or none before then. Node.js and a page that is not a secure
+ * context have no `navigator.mediaDevices`, so the list is empty there.
+ */
+public actual suspend fun audioOutputDevices(): List<AudioOutputDevice> = wasmOutputDevices.list()
 
 /** True where the host has Web Audio: a browser page, but not Node.js. */
 public actual fun audioOutputAvailable(): Boolean = WasmWebAudio.hasAudioContext()

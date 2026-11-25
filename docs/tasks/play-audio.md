@@ -33,6 +33,14 @@ a key press, so start the output from such an event there. The
 [README of kiteaudio-output](https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-output/README.md)
 describes the events and the latency.
 
+To play on another device, pass an entry of `audioOutputDevices()` as the `device` of
+`openAudioOutput`. The open uses `AudioFormatPolicy.Exact` by default, so it fails when the
+device rejects the decoded format. With `AudioFormatPolicy.Nearest` the output can open
+another rate or channel count. `output.format` then differs from `audio.format`, and the
+samples need a conversion first: see [Change the sample rate](../resample.md). The
+[README of kiteaudio-output](https://github.com/yuroyami/KiteAudio/blob/main/kiteaudio-output/README.md#choose-a-device-and-a-format)
+lists what each platform reports.
+
 ## JVM: Java Sound
 
 A `SourceDataLine` takes 16-bit little-endian bytes:
