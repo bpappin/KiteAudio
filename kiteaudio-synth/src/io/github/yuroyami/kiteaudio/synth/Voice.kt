@@ -14,6 +14,38 @@ public enum class EnvelopeStage { Delay, Attack, Hold, Decay, Sustain, Release, 
 public enum class Interpolation { Linear, Cubic }
 
 /**
+ * How a voice reads the frames next to a loop boundary.
+ *
+ * The interpolation needs frames on both sides of the position. At a loop boundary, some of those
+ * frames lie outside the loop. This library calls them guard frames. SoundFont 2.04 (section 6.3)
+ * asks font authors to make the frames around the loop start match the frames around the loop end.
+ * A font whose guard frames do not match can click at every loop, or sound different from what
+ * its author heard.
+ */
+public enum class LoopBoundary {
+    /**
+     * Reads the guard frames that the font stores outside the loop, as SoundFont 2.04 describes.
+     * This is the default. A font with matching guard frames sounds the same in both modes.
+     */
+    GuardFrames,
+
+    /**
+     * After the first wrap, reads the frames around the loop as a circle: the frame before the
+     * loop start is the last frame of the loop, and the frame after the loop end is the first.
+     * Guard frames that do not match the loop then cannot change the sound.
+     *
+     * The first pass through the loop reads as [GuardFrames], so the attack does not change.
+     * The tail after a loop stops (a released [LoopMode.UntilRelease] note) does not change either.
+     * The loop is the one the zone plays: the sample's loop points plus the zone's loop offsets.
+     *
+     * Choose it for a font whose loops click or sound different from what its author heard. It
+     * costs one or two compares per output frame. It also ignores what the author put in the guard
+     * frames, so a font that relies on them sounds different.
+     */
+    Wrapped,
+}
+
+/**
  * One sounding note.
  *
  * Reads straight out of its sample's own frames, so starting a voice copies nothing. Everything
@@ -77,6 +109,8 @@ public class Voice {
     private var loopStart = 0
     private var loopEnd = 0
     private var loopMode = LoopMode.NoLoop
+    /** True once the position has wrapped from the loop end back to the loop start. */
+    private var wrappedOnce = false
 
     private var position = 0.0
     private var step = 1.0
@@ -212,6 +246,7 @@ public class Voice {
         loopMode = if (loopEnd - loopStart < 2) LoopMode.NoLoop else plan.loopMode
 
         position = startFrame.toDouble()
+        wrappedOnce = false
 
         // Modulators first: the envelope times take theirs here, once, and never again.
         evaluate(controllers, pitchWheel, channelPressure, polyPressure, bendRange)
@@ -332,6 +367,8 @@ public class Voice {
         frames: Int,
         channelGain: Double = 1.0,
         cubic: Boolean = true,
+        /** True for [LoopBoundary.Wrapped]. */
+        wrapped: Boolean = false,
     ) {
         if (!active) return
         val left = gainLeft * channelGain
@@ -361,7 +398,7 @@ public class Voice {
             var bus = busOffset + done * 2
             var i = 0
             while (i < run) {
-                val sample = if (stage == EnvelopeStage.Delay) 0f else filter.process(readSample(cubic))
+                val sample = if (stage == EnvelopeStage.Delay) 0f else filter.process(readSample(cubic, wrapped))
                 if (!active) return
                 level += levelStep
                 val value = sample * level
@@ -386,8 +423,11 @@ public class Voice {
         }
     }
 
-    /** The sample at the current position: four-point Hermite between frames, or a straight line when [cubic] is off. */
-    private fun readSample(cubic: Boolean): Float {
+    /**
+     * The sample at the current position: four-point Hermite between frames, or a straight line when [cubic] is off.
+     * With [wrapped], the taps next to the loop boundary read the loop as a circle once the voice has wrapped.
+     */
+    private fun readSample(cubic: Boolean, wrapped: Boolean): Float {
         // A sample that is not looping right now has an end, whatever its loop mode says. A
         // released UntilRelease loop stops looping, so without this it walks past its own last
         // frame and never ends.
@@ -400,9 +440,16 @@ public class Voice {
 
         val index = position.toInt()
         val fraction = (position - index).toFloat()
+        // Before the first wrap the frame before the loop start is the attack, so it stays raw.
+        // After it, the voice came to the loop start from the loop end.
+        val circular = wrapped && wrappedOnce
 
         val value = if (cubic) {
-            val before = frameAt(index - 1, looping)
+            val before = if (circular && index - 1 < loopStart) {
+                frameAt(index - 1 + (loopEnd - loopStart), looping)
+            } else {
+                frameAt(index - 1, looping)
+            }
             val here = frameAt(index, looping)
             val next = frameAt(index + 1, looping)
             val after = frameAt(index + 2, looping)
@@ -412,7 +459,9 @@ public class Voice {
             (((c3 * fraction + c2) * fraction + c1) * fraction + here) / 32768.0f
         } else {
             val a = pool.getOrElse(index) { 0 }.toFloat()
-            val b = pool.getOrElse(index + 1) { 0 }.toFloat()
+            // After the first wrap, the frame after the loop end is the loop start. A released loop reads on into the tail.
+            val nextIndex = if (circular && looping && index + 1 >= loopEnd) index + 1 - (loopEnd - loopStart) else index + 1
+            val b = pool.getOrElse(nextIndex) { 0 }.toFloat()
             (a + (b - a) * fraction) / 32768.0f
         }
 
@@ -423,6 +472,7 @@ public class Voice {
             // one frame does not lose its place inside the loop.
             val length = (loopEnd - loopStart).toDouble()
             position = loopStart + (position - loopEnd) % length
+            wrappedOnce = true
         }
         return value
     }

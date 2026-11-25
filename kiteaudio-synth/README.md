@@ -26,7 +26,7 @@ and [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) h
 | --- | --- |
 | Read | SF2 presets, instruments, zones, generators, modulators, INFO text, 16-bit sample frames and the `sm24` low bytes of 24-bit samples. SF3 compressed samples can be retained for an external decoder. |
 | Play | Layered sample voices, velocity and key ranges, loop modes, exclusive classes, a fixed voice pool and voice stealing. |
-| Shape | Volume and modulation envelopes, two LFOs, a resonant low-pass filter, linear or cubic interpolation, stereo reverb and chorus. |
+| Shape | Volume and modulation envelopes, two LFOs, a resonant low-pass filter, linear or cubic interpolation, a choice of how loops read their guard frames, stereo reverb and chorus. |
 | Control | 16 channels, programs, bank selection, percussion channels, sustain and sostenuto, volume, expression, pan, pressure and pitch bend. |
 | Tune | RPN pitch-bend range, fine and coarse channel tuning, an A4 reference and a per-key temperament table. |
 | Keep and combine | `SoundFontWriter.write`, `merged` and `pruned`, preserving sample data (24-bit samples included) and renumbering references. |
@@ -183,14 +183,25 @@ channel's voices; the effects are shared, so it does not remove only that channe
 
 ```kotlin
 import io.github.yuroyami.kiteaudio.synth.Interpolation
+import io.github.yuroyami.kiteaudio.synth.LoopBoundary
 
 synth.interpolation = Interpolation.Linear
+synth.loopBoundary = LoopBoundary.Wrapped
 synth.reverb.wet = 0.0
 synth.reverb.dry = 1.0
 synth.chorus.level = 0.0
 ```
 
-Cubic interpolation is the default. Setting the reverb's wet level to zero does not reset its dry
+Cubic interpolation is the default. At a loop boundary, the interpolation reads the frames just
+outside the loop, the guard frames. SoundFont 2.04 asks font authors to make the frames around the
+loop start match the frames around the loop end. `LoopBoundary.GuardFrames` is the default and reads
+the guard frames as the font stores them. `LoopBoundary.Wrapped` reads the loop as a circle after
+the first wrap, so guard frames that do not match the loop cannot change its sound. Choose it for a
+font whose loops click or sound different from what its author heard. The attack before the first
+wrap and the tail after a released loop do not change. Each render reads `interpolation` and
+`loopBoundary`, so a change also reaches the notes that sound.
+
+Setting the reverb's wet level to zero does not reset its dry
 level: use `dry = 1.0` too when you want the unattenuated dry mix. Voices are mixed into Float32 PCM;
 many loud voices can exceed the nominal `-1f..1f` range. The host owns any limiter, master gain or
 conversion to an integer device format.

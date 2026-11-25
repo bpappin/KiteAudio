@@ -101,6 +101,7 @@ The artifacts and packages have new names:
 ### Added in the synth module
 
 - 24-bit SoundFonts keep every bit. `SampleHeader.lowBytes` holds the low byte of each frame from the `sm24` chunk, `SampleHeader.frame24` gives the full signed value, and `SoundFontWriter` writes the chunk back. Playback still uses the 16-bit frames. The new constructor parameter changes the JVM signature of the `SampleHeader` constructor.
+- `Synth.loopBoundary` sets how voices read the frames next to a loop boundary. `LoopBoundary.GuardFrames` is the default and reads the guard frames that the font stores, as before. `LoopBoundary.Wrapped` reads the loop as a circle after the first wrap, so guard frames that do not match the loop cannot change its sound.
 
 ### Added in the codec
 

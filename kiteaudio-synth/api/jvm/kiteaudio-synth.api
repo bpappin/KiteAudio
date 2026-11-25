@@ -161,6 +161,14 @@ public final class io/github/yuroyami/kiteaudio/synth/Lfo$Companion {
 	public final fun hertzOf (I)D
 }
 
+public final class io/github/yuroyami/kiteaudio/synth/LoopBoundary : java/lang/Enum {
+	public static final field GuardFrames Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;
+	public static final field Wrapped Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;
+	public static fun values ()[Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;
+}
+
 public final class io/github/yuroyami/kiteaudio/synth/LoopMode : java/lang/Enum {
 	public static final field Companion Lio/github/yuroyami/kiteaudio/synth/LoopMode$Companion;
 	public static final field Continuous Lio/github/yuroyami/kiteaudio/synth/LoopMode;
@@ -336,6 +344,7 @@ public final class io/github/yuroyami/kiteaudio/synth/Synth {
 	public final fun getChorus ()Lio/github/yuroyami/kiteaudio/synth/Chorus;
 	public final fun getFont ()Lio/github/yuroyami/kiteaudio/synth/SoundFont;
 	public final fun getInterpolation ()Lio/github/yuroyami/kiteaudio/synth/Interpolation;
+	public final fun getLoopBoundary ()Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;
 	public final fun getMaxPreparedModulators ()I
 	public final fun getMaxPreparedPairs ()J
 	public final fun getMaxPreparedRegions ()I
@@ -363,6 +372,7 @@ public final class io/github/yuroyami/kiteaudio/synth/Synth {
 	public final fun reset (I)V
 	public final fun setFont (Lio/github/yuroyami/kiteaudio/synth/SoundFont;)V
 	public final fun setInterpolation (Lio/github/yuroyami/kiteaudio/synth/Interpolation;)V
+	public final fun setLoopBoundary (Lio/github/yuroyami/kiteaudio/synth/LoopBoundary;)V
 	public final fun setPercussion (IZ)V
 	public final fun setReferenceA4 (D)V
 	public final fun tryEnqueue (IIII)Z

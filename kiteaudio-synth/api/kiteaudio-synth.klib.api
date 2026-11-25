@@ -103,6 +103,17 @@ final enum class io.github.yuroyami.kiteaudio.synth/Interpolation : kotlin/Enum<
     final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/Interpolation> // io.github.yuroyami.kiteaudio.synth/Interpolation.values|values#static(){}[0]
 }
 
+final enum class io.github.yuroyami.kiteaudio.synth/LoopBoundary : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/LoopBoundary> { // io.github.yuroyami.kiteaudio.synth/LoopBoundary|null[0]
+    enum entry GuardFrames // io.github.yuroyami.kiteaudio.synth/LoopBoundary.GuardFrames|null[0]
+    enum entry Wrapped // io.github.yuroyami.kiteaudio.synth/LoopBoundary.Wrapped|null[0]
+
+    final val entries // io.github.yuroyami.kiteaudio.synth/LoopBoundary.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.yuroyami.kiteaudio.synth/LoopBoundary> // io.github.yuroyami.kiteaudio.synth/LoopBoundary.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.yuroyami.kiteaudio.synth/LoopBoundary // io.github.yuroyami.kiteaudio.synth/LoopBoundary.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.yuroyami.kiteaudio.synth/LoopBoundary> // io.github.yuroyami.kiteaudio.synth/LoopBoundary.values|values#static(){}[0]
+}
+
 final enum class io.github.yuroyami.kiteaudio.synth/LoopMode : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/LoopMode> { // io.github.yuroyami.kiteaudio.synth/LoopMode|null[0]
     enum entry Continuous // io.github.yuroyami.kiteaudio.synth/LoopMode.Continuous|null[0]
     enum entry NoLoop // io.github.yuroyami.kiteaudio.synth/LoopMode.NoLoop|null[0]
@@ -415,6 +426,9 @@ final class io.github.yuroyami.kiteaudio.synth/Synth { // io.github.yuroyami.kit
     final var interpolation // io.github.yuroyami.kiteaudio.synth/Synth.interpolation|{}interpolation[0]
         final fun <get-interpolation>(): io.github.yuroyami.kiteaudio.synth/Interpolation // io.github.yuroyami.kiteaudio.synth/Synth.interpolation.<get-interpolation>|<get-interpolation>(){}[0]
         final fun <set-interpolation>(io.github.yuroyami.kiteaudio.synth/Interpolation) // io.github.yuroyami.kiteaudio.synth/Synth.interpolation.<set-interpolation>|<set-interpolation>(io.github.yuroyami.kiteaudio.synth.Interpolation){}[0]
+    final var loopBoundary // io.github.yuroyami.kiteaudio.synth/Synth.loopBoundary|{}loopBoundary[0]
+        final fun <get-loopBoundary>(): io.github.yuroyami.kiteaudio.synth/LoopBoundary // io.github.yuroyami.kiteaudio.synth/Synth.loopBoundary.<get-loopBoundary>|<get-loopBoundary>(){}[0]
+        final fun <set-loopBoundary>(io.github.yuroyami.kiteaudio.synth/LoopBoundary) // io.github.yuroyami.kiteaudio.synth/Synth.loopBoundary.<set-loopBoundary>|<set-loopBoundary>(io.github.yuroyami.kiteaudio.synth.LoopBoundary){}[0]
     final var referenceA4 // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4|{}referenceA4[0]
         final fun <get-referenceA4>(): kotlin/Double // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4.<get-referenceA4>|<get-referenceA4>(){}[0]
         final fun <set-referenceA4>(kotlin/Double) // io.github.yuroyami.kiteaudio.synth/Synth.referenceA4.<set-referenceA4>|<set-referenceA4>(kotlin.Double){}[0]

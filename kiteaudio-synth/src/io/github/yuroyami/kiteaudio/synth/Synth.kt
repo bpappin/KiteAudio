@@ -93,6 +93,14 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
     /** How voices read between frames. Linear is there for a test, or a device too slow for cubic. */
     public var interpolation: Interpolation = Interpolation.Cubic
 
+    /**
+     * How voices read the frames next to a loop boundary. [LoopBoundary.GuardFrames] reads the
+     * font's guard frames, as SoundFont 2.04 describes. [LoopBoundary.Wrapped] reads the loop as a
+     * circle after the first wrap, for a font whose loops click or sound different from what its
+     * author heard. Like [interpolation], each render reads it, so a change also reaches the notes that sound.
+     */
+    public var loopBoundary: LoopBoundary = LoopBoundary.GuardFrames
+
     // What the voices send to the room and the chorus, one block at a time. Allocated once.
     private val reverbBus = FloatArray(BUS_FRAMES * 2)
     private val chorusBus = FloatArray(BUS_FRAMES * 2)
@@ -292,7 +300,10 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
                 val chunk = next - done
                 // Volume, expression and pan reach each voice through its modulators.
                 val cubic = interpolation == Interpolation.Cubic
-                for (voice in voices) voice.renderInto(out, reverbBus, chorusBus, done * 2, (done - blockStart) * 2, chunk, cubic = cubic)
+                val wrapped = loopBoundary == LoopBoundary.Wrapped
+                for (voice in voices) {
+                    voice.renderInto(out, reverbBus, chorusBus, done * 2, (done - blockStart) * 2, chunk, cubic = cubic, wrapped = wrapped)
+                }
                 done = next
             }
             // The room and the chorus go on after the voices, so they hear everything played in this block.
