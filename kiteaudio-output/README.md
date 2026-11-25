@@ -359,6 +359,12 @@ python3 .github/scripts/web-tests/run.py --module kiteaudio-output
 
 Playback in a real browser is a manual check; [verification/web](verification/web/README.md) says how.
 
+Two small apps check on a real phone what the host tests cannot. [verification/android](verification/android/README.md)
+forces dropouts and compares the `DeviceUnderrun` events with the counter of `AudioTrack`.
+[verification/ios](verification/ios/README.md) checks that an interruption and a lost route end the stream with
+`DeviceLost` and `Stopped`, what a suspension of the app does, and that `start()` plays again. Each README lists the
+steps for the person who holds the phone.
+
 JVM audio tests report themselves as skipped when no Java Sound mixer offers an output line for
 signed 16-bit PCM; a skip is not proof of successful playback. macOS audio tests require a working
 output. Neither suite establishes Android or physical iOS behavior. Fake-driver results establish

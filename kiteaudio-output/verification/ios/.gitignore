@@ -1,0 +1,3 @@
+# Files that Xcode writes for each user when the project is open.
+xcuserdata/
+*.xcuserstate

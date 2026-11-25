@@ -410,6 +410,9 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
 - `reference/REFERENCES.md` covers the core, MIDI, synth and output modules. Each section lists the
   specifications that the code names, the numbers it takes from Freeverb and the implementations that
   must stay unopened (#176).
+- `kiteaudio-output/verification/android` and `kiteaudio-output/verification/ios` hold two small apps that
+  check the output on a real phone: the `DeviceUnderrun` count on Android (#162), and interruptions and
+  lost routes on iOS (#161).
 
 ## KiteSynth before the merge
 

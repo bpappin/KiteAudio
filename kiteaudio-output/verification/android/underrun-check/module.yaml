@@ -1,0 +1,31 @@
+# An app that plays a quiet tone, makes dropouts on purpose and checks the DeviceUnderrun events.
+# The debug build is signed with the debug key of the Android SDK.
+product: android/app
+
+# build.sh builds these two AARs in the KiteAudio project and stages them in a Maven folder. The
+# toolchain reads that folder as the Maven Local repository, through maven.repo.local.
+repositories:
+  - url: mavenLocal
+    resolve: true
+
+dependencies:
+  - local.kiteaudio.verification:kiteaudio-output-android:local
+  - local.kiteaudio.verification:kiteaudio-core-android:local
+
+settings:
+  kotlin:
+    version: 2.4.21
+  jvm:
+    jdk:
+      version: 21
+  android:
+    namespace: io.github.yuroyami.kiteaudio.verification
+    applicationId: io.github.yuroyami.kiteaudio.verification.underrun
+    versionName: "1"
+    versionCode: 1
+    # AudioTrack.getUnderrunCount() needs API level 24.
+    minSdk: 24
+    targetSdk: 37
+    compileSdk:
+      apiLevel: 37
+      minorApiLevel: 2

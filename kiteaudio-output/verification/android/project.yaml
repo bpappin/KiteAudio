@@ -1,0 +1,4 @@
+# A project of its own, not a module of the KiteAudio project. Its app uses the Android
+# artifacts of kiteaudio-core and kiteaudio-output, which build.sh stages. See README.md.
+modules:
+  - underrun-check
