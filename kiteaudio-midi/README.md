@@ -12,7 +12,7 @@
 
 <p align="center">
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.4.21-7F52FF?logo=kotlin&amp;logoColor=white" alt="Kotlin 2.4.21"></a>
-  <a href="#platforms"><img src="https://img.shields.io/badge/targets-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM%20%7C%20JS%20%7C%20Wasm-1f6feb" alt="Targets: Android, iOS, macOS, JVM, JS and Wasm"></a>
+  <a href="#platforms"><img src="https://img.shields.io/badge/targets-Android%20%7C%20iOS%20%7C%20macOS%20%7C%20JVM%20%7C%20JS%20%7C%20Wasm%20%7C%20Linux%20%7C%20Windows-1f6feb" alt="Targets: Android, iOS, macOS, JVM, JS, Wasm, Linux and Windows"></a>
   <a href="../LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0-blue" alt="License: Apache-2.0"></a>
 </p>
 
@@ -304,7 +304,7 @@ instrument testing.
 
 | Module / backend | Platforms | Requirements and behavior |
 | --- | --- | --- |
-| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64` | Android minSdk 23. Core file operations are synchronous computation over byte arrays. |
+| `kiteaudio-midi` | Android, JVM, `js`, `wasmJs`, `iosArm64`, `iosSimulatorArm64`, `iosX64`, `macosArm64`, `linuxX64`, `linuxArm64`, `mingwX64` | Android minSdk 23. Core file operations are synchronous computation over byte arrays. |
 | `kiteaudio-midi-devices` Android | Android | minSdk 23; uses the byte-stream MIDI transport. Devices without MIDI support produce no ports. |
 | `kiteaudio-midi-devices` JVM | JVM on macOS, Linux or Windows with an available Java MIDI provider | Uses `javax.sound.midi`; scans once per second. Physical transport is reported as `UNKNOWN`. Provider availability varies by runtime and OS. |
 | `kiteaudio-midi-devices` Apple | iOS device and simulator targets above, native macOS arm64 | CoreMIDI platform bindings; callbacks arrive on CoreMIDI threads. |
@@ -324,10 +324,10 @@ no features. To declare MIDI support, add
 `<uses-feature android:name="android.software.midi" android:required="false" />` to the
 app manifest. On Apple, system-connected Bluetooth devices appear through CoreMIDI.
 
-Only `kiteaudio-midi` builds for JS and wasmJs; the device modules have no web backend.
-The current build does not declare wasmWasi, Linux Native, Windows Native, native Intel
-macOS, tvOS or watchOS targets. JVM support on those desktop operating systems is
-distinct from Kotlin/Native support.
+Only `kiteaudio-midi` builds for JS, wasmJs, Linux Native and Windows Native. The device
+modules have no backend on those targets. The build leaves out tvOS, watchOS, wasmWasi and
+Android Native. It also leaves out `macosX64`, because Kotlin deprecates Intel macOS. A
+desktop app on Linux, Windows or an Intel Mac can also use the JVM artifact.
 
 ## Good to know
 
@@ -370,6 +370,8 @@ compilation and tests need macOS and the applicable Xcode toolchain.
 ```
 
 The klib check reads the built klibs, so run `./kotlin build` for every platform first.
+A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run
+only on Linux, and the `mingwX64` tests run only on Windows.
 The Kotlin Toolchain does not link Apple frameworks.
 `.github/scripts/apple_frameworks.py` links `KiteMIDI.framework` and `KiteMIDIIO.framework`
 from the klibs.

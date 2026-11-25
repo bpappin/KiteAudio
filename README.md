@@ -19,10 +19,10 @@ Every artifact has the group `io.github.yuroyami` and the version 0.3.0.
 | `kiteaudio-core` | The audio format types that the codec and the output module share: `AudioFormat`, `ChannelLayout`, `AudioChannel` and `PcmSource`. Depends on kotlin-stdlib only. | 22: JVM, Android, JS, wasmJs, wasmWasi, Apple, Linux, Windows, Android Native |
 | `kiteaudio-codec` | Audio containers, codecs and tags. Depends on kotlin-stdlib and `kiteaudio-core` only. | The same 22 |
 | `kiteaudio-codec-io` | The kotlinx-io bridge of the codec: reads a `Path` or `RawSource` and writes to a `Sink` or a `Path`. | The same 22 |
-| [`kiteaudio-midi`](kiteaudio-midi/README.md) | Standard MIDI Files, typed MIDI messages, a tempo map and note pairing. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS, JS, Wasm |
+| [`kiteaudio-midi`](kiteaudio-midi/README.md) | Standard MIDI Files, typed MIDI messages, a tempo map and note pairing. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS, JS, Wasm, Linux, Windows |
 | `kiteaudio-midi-devices` | MIDI ports through MidiManager on Android, CoreMIDI on Apple and `javax.sound.midi` on the JVM. | JVM, Android, iOS, macOS |
 | `kiteaudio-midi-coremidi` | CoreMIDI ports for a macOS desktop JVM, through the foreign function API. Needs JDK 22 or later at runtime. | JVM |
-| [`kiteaudio-synth`](kiteaudio-synth/README.md) | SoundFont reading and writing, and a sample-based synthesiser that renders Float32 PCM. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS, JS, Wasm |
+| [`kiteaudio-synth`](kiteaudio-synth/README.md) | SoundFont reading and writing, and a sample-based synthesiser that renders Float32 PCM. Depends on kotlin-stdlib only. | JVM, Android, iOS, macOS, JS, Wasm, Linux, Windows |
 | [`kiteaudio-output`](kiteaudio-output/README.md) | Callback-based mono and stereo audio output through Java Sound, AudioTrack, AudioQueue and Web Audio. | JVM, Android, iOS, macOS, JS, Wasm |
 
 The README of each MIDI, synth and output module describes that module. The rest of this page

@@ -221,7 +221,7 @@ bend, an LFO or the modulation envelope moves it without a click. The kernel is 
 | Passband | Within 0.01 dB up to 0.8 times the cutoff. A tone at 0.9 times the cutoff loses about 0.5 dB. |
 | Largest step | 4, two octaves above the pitch of a sample at the output's rate. Above a step of 4, the cutoff stays at a quarter of the sample's Nyquist limit, and aliases return. |
 | Latency | Zero. The whole sample is in memory, so the kernel reads ahead of the position. |
-| CPU time | About 2.2 times the time of `Cubic` for the General MIDI load of the JVM benchmark, where most notes play below the pitch of their sample. A read takes 32 taps for a step of 1 or less, then 32 times the step, up to 128 at a step of 4. On the JVM, one read takes about 30 ns at a step of 1 and about 130 ns at a step of 4. |
+| CPU time | The JVM benchmark renders a General MIDI load, where most notes play below the pitch of their sample. For that load, the mode takes about 2.2 times the time of `Cubic` on an Apple M2 and about 3.4 times on an x64 Linux machine. A read takes 32 taps for a step of 1 or less, then 32 times the step, up to 128 at a step of 4. On the M2, one read takes about 30 ns at a step of 1 and about 130 ns at a step of 4. |
 | Memory | One table of 64 KiB that every voice shares. The first time a synth selects the mode, it builds the table, so select it on the control thread. |
 
 At a loop boundary, every tap of the kernel follows the rule that `loopBoundary` sets for the cubic
@@ -277,12 +277,17 @@ All production code is common Kotlin in `kiteaudio-synth/src`. These are the tar
 | Target | Details |
 | --- | --- |
 | Android | Android KMP library, minSdk 23 and compileSdk 36. The host provides audio and MIDI access. |
-| JVM | Java 21 toolchain; desktop applications on macOS, Linux and Windows use the JVM artifact. |
+| JVM | Java 21 toolchain. |
 | iOS devices | `iosArm64`; a dynamic framework named `KiteSynth` is configured. |
 | iOS simulators | `iosSimulatorArm64` and `iosX64`; both configure the same framework name. |
 | macOS Native | `macosArm64`. |
 | Web | `js` and `wasmJs`. Rendering is the same common code; sending the samples to Web Audio is the app's job. |
-| Other Native | Linux Native, Windows Native, macOS x64, tvOS, watchOS and Android Native are not declared. |
+| Linux Native | `linuxX64` and `linuxArm64`. |
+| Windows Native | `mingwX64`. |
+
+The build leaves out tvOS, watchOS, wasmWasi and Android Native. It also leaves out `macosX64`,
+because Kotlin deprecates Intel macOS. A desktop app on Linux, Windows or an Intel Mac can also use
+the JVM artifact.
 
 A declared target establishes build intent. It does not establish device latency, callback safety,
 audio fidelity or runtime parity. `readFont`, `Synth` construction and `replaceFont` export their
@@ -348,7 +353,7 @@ keep Kotlin's ordinary exception-handling rules.
 
 Use the `./kotlin` script in the repository root (`kotlin.bat` on Windows). It downloads the JDK
 and Kotlin/Native that it needs. Android builds need an Android SDK with API level 37.2. Apple builds
-and native tests need macOS and a compatible Xcode installation.
+and Apple native tests need macOS and a compatible Xcode installation.
 
 ```sh
 ./kotlin test -p jvm
@@ -361,6 +366,8 @@ python3 .github/scripts/apple_frameworks.py --platforms iosSimulatorArm64 --buil
 The Kotlin Toolchain does not link Apple frameworks. The script links `KiteSynth.framework` from the
 klibs that `./kotlin build` writes. `./kotlin check abi klibAbi` compares the public API with the
 dumps in `kiteaudio-synth/api`. Build every platform first, because the klib check reads the built klibs.
+A Mac can build the `linuxX64`, `linuxArm64` and `mingwX64` klibs. The `linuxX64` tests run only on
+Linux, and the `mingwX64` tests run only on Windows.
 
 Common tests construct SoundFont bytes deliberately, then check parsing, round trips, channels,
 voice selection, envelopes, filtering and effects. JVM tests also write a short demonstration WAV

@@ -11,6 +11,9 @@ product:
     - iosSimulatorArm64
     - iosX64
     - macosArm64
+    - linuxX64
+    - linuxArm64
+    - mingwX64
 
 apply:
   - ../library.module-template.yaml
@@ -55,6 +58,18 @@ settings@macosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-synth, -Xshort-module-name=kiteaudio-synth ]
 
+settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-synth, -Xshort-module-name=kiteaudio-synth ]
+
+settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-synth, -Xshort-module-name=kiteaudio-synth ]
+
+settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=io.github.yuroyami:kiteaudio-synth, -Xshort-module-name=kiteaudio-synth ]
+
 # Tests compile into their own klib, which needs a different name. The test blocks name the
 # same platforms as the blocks above, so the toolchain applies them last.
 test-settings@js:
@@ -81,11 +96,23 @@ test-settings@macosArm64:
   kotlin:
     freeCompilerArgs: [ -module-name=kiteaudio-synth_test, -Xshort-module-name=kiteaudio-synth_test ]
 
+test-settings@linuxX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-synth_test, -Xshort-module-name=kiteaudio-synth_test ]
+
+test-settings@linuxArm64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-synth_test, -Xshort-module-name=kiteaudio-synth_test ]
+
+test-settings@mingwX64:
+  kotlin:
+    freeCompilerArgs: [ -module-name=kiteaudio-synth_test, -Xshort-module-name=kiteaudio-synth_test ]
+
 plugins:
   abi-check:
     enabled: true
     # The klibAbi check reads the klibs of these platforms, so run `./kotlin build` first.
-    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, js, macosArm64, wasmJs ]
+    klibPlatforms: [ iosArm64, iosSimulatorArm64, iosX64, js, linuxArm64, linuxX64, macosArm64, mingwX64, wasmJs ]
   dokka:
     enabled: true
     moduleName: kiteaudio-synth
