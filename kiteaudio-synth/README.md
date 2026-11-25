@@ -24,12 +24,12 @@ and [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) h
 
 | Task | What KiteSynth provides |
 | --- | --- |
-| Read | SF2 presets, instruments, zones, generators, modulators, INFO text and 16-bit sample frames. SF3 compressed samples can be retained for an external decoder. |
+| Read | SF2 presets, instruments, zones, generators, modulators, INFO text, 16-bit sample frames and the `sm24` low bytes of 24-bit samples. SF3 compressed samples can be retained for an external decoder. |
 | Play | Layered sample voices, velocity and key ranges, loop modes, exclusive classes, a fixed voice pool and voice stealing. |
 | Shape | Volume and modulation envelopes, two LFOs, a resonant low-pass filter, linear or cubic interpolation, stereo reverb and chorus. |
 | Control | 16 channels, programs, bank selection, percussion channels, sustain and sostenuto, volume, expression, pan, pressure and pitch bend. |
 | Tune | RPN pitch-bend range, fine and coarse channel tuning, an A4 reference and a per-key temperament table. |
-| Keep and combine | `SoundFontWriter.write`, `merged` and `pruned`, preserving sample data and renumbering references. |
+| Keep and combine | `SoundFontWriter.write`, `merged` and `pruned`, preserving sample data (24-bit samples included) and renumbering references. |
 
 Here is the whole path from a font to an audio block:
 
@@ -275,13 +275,13 @@ a supported concurrent queue. Kotlin/Native's memory manager does not add synchr
 
 | Topic | Current behaviour |
 | --- | --- |
-| SoundFont precision | The reader uses 16-bit `smpl` frames and ignores `sm24`; writing loses those extra eight bits. |
+| SoundFont precision | Playback uses the 16-bit `smpl` frames only. The reader keeps a valid `sm24` chunk in `SampleHeader.lowBytes`, and the writer writes it back, so a read and write keeps every bit of a 24-bit font. `frame24` gives the full signed value of one frame. The low bytes cost one more byte for each frame of a 24-bit font, and nothing for a 16-bit font. |
 | Modulators | Ordinary generator destinations are evaluated. Linked modulator destinations are preserved for writing but are not evaluated. |
 | Stereo sample links | Merge and prune preserve links. Playback prepares zones independently and does not enforce the right sample's pitch as a shared stereo-pair clock. |
 | Interpolation | Linear and cubic only; there is no band-limited resampler. |
 | Envelope timing | Envelopes and LFOs update every 16 output frames. Envelope times are capped near 100 seconds. |
 | MIDI scope | Channel voice messages only. Bank selection uses CC 0, and there is no portamento/legato mode, NRPN synthesis control, MPE manager or MIDI 2.0 interface. |
-| Resource bounds | Reading defaults to 64 MiB of cumulative retained sample payload, counting overlapping ranges separately. Preparation defaults to 4,194,304 examined zone pairs, 16,384 regions and 1,048,576 retained modulator entries. Explicit overloads allow larger trusted fonts; limits are checked before expansion. SF3 decoding still needs a separate host-owned bound. |
+| Resource bounds | Reading defaults to 64 MiB of cumulative retained sample payload, counting overlapping ranges separately and the low bytes of 24-bit samples. Preparation defaults to 4,194,304 examined zone pairs, 16,384 regions and 1,048,576 retained modulator entries. Explicit overloads allow larger trusted fonts; limits are checked before expansion. SF3 decoding still needs a separate host-owned bound. |
 | Output and integration | No bundled sound bank, audio output backend, file I/O, Compose UI or timeline player. |
 | Verification | Tests use synthetic fonts. The repository has no CI workflow and no differential suite against a reference synthesiser or physical-device audio tests. |
 

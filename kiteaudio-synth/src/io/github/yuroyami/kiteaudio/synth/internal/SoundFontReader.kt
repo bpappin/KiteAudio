@@ -22,6 +22,7 @@ import io.github.yuroyami.kiteaudio.synth.Span
  * RIFF sfbk
  *   LIST INFO      ifil (version), INAM (name), and other text
  *   LIST sdta      smpl (16-bit sample frames, or Ogg Vorbis streams in an SF3)
+ *                  sm24 (optional: the low byte of each frame of a 24-bit font)
  *   LIST pdta      phdr pbag pmod pgen inst ibag imod igen shdr
  * ```
  *
@@ -53,8 +54,8 @@ internal fun readSoundFont(bytes: ByteArray, keepCompressed: Boolean, maxSampleB
     // RIFF's own size field counts everything after it, so the real end is eight bytes later.
     val fileEnd = minOf(riff.end, bytes.size)
 
-    var info: Map<String, String> = emptyMap()
-    var smpl: Chunk? = null
+    var info = InfoList(emptyMap(), null)
+    var sampleChunks = SampleChunks(null, null)
     var pdta: Chunk? = null
 
     while (reader.position + 8 <= fileEnd) {
@@ -65,7 +66,7 @@ internal fun readSoundFont(bytes: ByteArray, keepCompressed: Boolean, maxSampleB
         }
         when (val kind = reader.fourCC()) {
             "INFO" -> info = readInfo(reader, list)
-            "sdta" -> smpl = findSampleChunk(reader, list) ?: smpl
+            "sdta" -> findSampleChunk(reader, list).let { if (it.smpl != null) sampleChunks = it }
             "pdta" -> pdta = Chunk(kind, reader.position, list.end - reader.position)
             else -> Unit
         }
@@ -74,37 +75,49 @@ internal fun readSoundFont(bytes: ByteArray, keepCompressed: Boolean, maxSampleB
     }
 
     val hunks = pdta ?: throw SoundFontFormatException("the font has no pdta list, so it has no sounds")
-    val name = info["INAM"]?.takeIf { it.isNotBlank() } ?: "Untitled"
-    return readPdta(reader, hunks, name, smpl, info, keepCompressed, maxSampleBytes)
+    val name = info.text["INAM"]?.takeIf { it.isNotBlank() } ?: "Untitled"
+    val smpl = sampleChunks.smpl
+    val sm24 = usableLowBytes(smpl, sampleChunks.sm24, info.version, bytes.size)
+    return readPdta(reader, hunks, name, smpl, sm24, info.text, keepCompressed, maxSampleBytes)
 }
 
+/** The INFO text chunks, and the ifil version as major times 65536 plus minor, or null when the font does not state it. */
+private class InfoList(val text: Map<String, String>, val version: Int?)
+
 /** The version check, and every text chunk kept by its id so a writer can put it back. */
-private fun readInfo(reader: RiffReader, list: Chunk): Map<String, String> {
+private fun readInfo(reader: RiffReader, list: Chunk): InfoList {
     val found = LinkedHashMap<String, String>()
+    var version: Int? = null
     while (reader.position + 8 <= list.end) {
         val chunk = reader.readChunkHeader()
         if (chunk.id == "ifil" && chunk.size >= 2) {
-            val major = RiffReader(reader.slice(chunk.start, 2)).u16()
+            val cursor = RiffReader(reader.slice(chunk.start, minOf(chunk.size, 4)))
+            val major = cursor.u16()
             if (major > 3) {
                 throw SoundFontFormatException("this font says it is version $major, which is newer than 3")
             }
+            // The minor version decides if sm24 counts, so a two-byte ifil states no usable version.
+            version = if (chunk.size >= 4) (major shl 16) or cursor.u16() else null
         } else if (chunk.id != "iver" && chunk.size > 0) {
             // iver is the ROM's version, a pair of numbers. Everything else in INFO is text.
             found[chunk.id] = RiffReader(reader.slice(chunk.start, chunk.size)).name(chunk.size)
         }
         reader.skipChunkBody(chunk)
     }
-    return found
+    return InfoList(found, version)
 }
 
+/** The first smpl chunk of one sdta list, and the first sm24 chunk of the same list. */
+private class SampleChunks(val smpl: Chunk?, val sm24: Chunk?)
+
 /**
- * Where the 16-bit frames are. Nothing is decoded here; each sample reads its own frames later.
- *
- * `sm24` holds the extra low byte for 24-bit fonts, and is ignored: the last eight bits of a
- * piano sample are below the noise floor of anything this will play through.
+ * Where the 16-bit frames are, and the `sm24` chunk with the low byte of each frame of a 24-bit
+ * font. Nothing is decoded here; each sample reads its own frames later. [usableLowBytes] decides
+ * if the `sm24` chunk counts.
  */
-private fun findSampleChunk(reader: RiffReader, list: Chunk): Chunk? {
+private fun findSampleChunk(reader: RiffReader, list: Chunk): SampleChunks {
     var found: Chunk? = null
+    var low: Chunk? = null
     while (reader.position + 8 <= list.end) {
         val chunk = reader.readChunkHeader()
         if (chunk.id == "smpl" && found == null) {
@@ -114,10 +127,34 @@ private fun findSampleChunk(reader: RiffReader, list: Chunk): Chunk? {
                 throw SoundFontFormatException("a chunk claims ${chunk.size} bytes at ${chunk.start}, past the end", chunk.start)
             }
             found = chunk
+        } else if (chunk.id == "sm24" && low == null) {
+            low = chunk
         }
         reader.skipChunkBody(chunk)
     }
-    return found
+    return SampleChunks(found, low)
+}
+
+/**
+ * The [sm24] chunk when the SoundFont 2.04 rules let it count, or null when they say to ignore it.
+ *
+ * Section 6.2 of the specification ignores `sm24` when there is no `smpl` chunk, when the ifil
+ * version is below 2.04, and when its size is not half the size of `smpl`. Half the size gets one
+ * more byte when it is odd, for the even length of a RIFF chunk (section 6). A chunk that states
+ * the odd half itself and leaves the pad byte out of its size counts too, because RIFF writers
+ * often do not count the pad byte. An odd `smpl` size has no exact half, so its `sm24` never counts.
+ */
+private fun usableLowBytes(smpl: Chunk?, sm24: Chunk?, version: Int?, fileSize: Int): Chunk? {
+    if (smpl == null || sm24 == null) return null
+    if (version == null || version < ((2 shl 16) or 4)) return null
+    if (smpl.size % 2 != 0) return null
+    val half = smpl.size / 2
+    if (sm24.size != half && sm24.size != half + half % 2) return null
+    // A chunk that counts must be whole: a font is never returned half-read.
+    if (sm24.size > fileSize - sm24.start) {
+        throw SoundFontFormatException("a chunk claims ${sm24.size} bytes at ${sm24.start}, past the end", sm24.start)
+    }
+    return sm24
 }
 
 private class RawZone(val generatorIndex: Int, val modulatorIndex: Int)
@@ -127,6 +164,7 @@ private fun readPdta(
     pdta: Chunk,
     name: String,
     smpl: Chunk?,
+    sm24: Chunk?,
     info: Map<String, String>,
     keepCompressed: Boolean,
     maxSampleBytes: Long,
@@ -152,7 +190,7 @@ private fun readPdta(
     val instrumentModulators = readModulators(reader, chunks["imod"])
     validateHeaderIndexes(instrumentHeaders.map { it.second }, instrumentZones.size, "inst", need("inst").start)
     validateHeaderIndexes(presetHeaders.map { it.zoneIndex }, presetZones.size, "phdr", need("phdr").start)
-    val samples = readSampleHeaders(reader, need("shdr"), smpl, keepCompressed, maxSampleBytes)
+    val samples = readSampleHeaders(reader, need("shdr"), smpl, sm24, keepCompressed, maxSampleBytes)
 
     val instruments = instrumentHeaders.dropLast(1).mapIndexed { index, header ->
         val from = header.second
@@ -245,7 +283,14 @@ private fun readModulators(reader: RiffReader, chunk: Chunk?): List<Modulator> {
     }
 }
 
-private fun readSampleHeaders(reader: RiffReader, chunk: Chunk, smpl: Chunk?, keepCompressed: Boolean, maxSampleBytes: Long): List<SampleHeader> {
+private fun readSampleHeaders(
+    reader: RiffReader,
+    chunk: Chunk,
+    smpl: Chunk?,
+    sm24: Chunk?,
+    keepCompressed: Boolean,
+    maxSampleBytes: Long,
+): List<SampleHeader> {
     val recordSize = 46
     val cursor = RiffReader(reader.slice(chunk.start, chunk.size))
     val count = chunk.size / recordSize
@@ -272,7 +317,8 @@ private fun readSampleHeaders(reader: RiffReader, chunk: Chunk, smpl: Chunk?, ke
         val limit = if (compressed) (smpl?.size ?: 0).toLong() else available
         val start = rawStart.coerceAtMost(limit)
         val end = rawEnd.coerceIn(start, limit)
-        val bytes = (end - start) * if (compressed) 1L else 2L
+        // A 24-bit frame keeps one more byte, from sm24.
+        val bytes = (end - start) * if (compressed) 1L else if (sm24 != null) 3L else 2L
         if (bytes > maxSampleBytes - retainedBytes) {
             throw SoundFontFormatException("sample payload exceeds the $maxSampleBytes byte load budget", chunk.start)
         }
@@ -326,6 +372,8 @@ private fun readSampleHeaders(reader: RiffReader, chunk: Chunk, smpl: Chunk?, ke
             correctionCents = correction,
             link = link,
             type = type,
+            // Byte n of sm24 is the low byte of frame n of smpl.
+            lowBytes = sm24?.let { reader.slice(it.start + start.toInt(), frames.toInt()) },
         )
     }
 }

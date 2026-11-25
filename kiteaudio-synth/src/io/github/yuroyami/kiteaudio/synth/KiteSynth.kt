@@ -21,7 +21,8 @@ public object KiteSynth {
 
     /**
      * Reads a font with an explicit cumulative sample payload budget. Every sample header's
-     * retained PCM or compressed bytes count, including overlapping ranges and unused samples.
+     * retained PCM or compressed bytes count, including overlapping ranges, unused samples and
+     * the low bytes of 24-bit samples.
      * The budget is checked before any sample payload is copied. The ordinary overload allows
      * 64 MiB; callers loading larger trusted fonts can choose a larger limit here.
      *

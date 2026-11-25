@@ -162,10 +162,14 @@ public enum class LoopMode {
     }
 }
 
-/** One sample in the font: its own frames, and the pitch it was recorded at. */
+/**
+ * One sample in the font: its own frames, and the pitch it was recorded at.
+ *
+ * @throws IllegalArgumentException when [lowBytes] is not null and its size differs from the size of [data].
+ */
 public class SampleHeader(
     public val name: String,
-    /** This sample's frames, 16-bit signed, mono. Nothing else shares them. */
+    /** This sample's frames, 16-bit signed, mono. In a 24-bit sample these are the high 16 bits. Nothing else shares them. */
     public val data: ShortArray,
     /** Loop points in frames, counted from the first frame of [data]. */
     public val loopStart: Int,
@@ -179,8 +183,34 @@ public class SampleHeader(
     public val type: Int,
     /** An SF3 sample's Ogg Vorbis stream while it is still compressed. [data] stays empty until [SoundFont.decoded] fills it. */
     public val compressed: ByteArray? = null,
+    /**
+     * The low eight bits of each frame of a 24-bit sample, from the font's `sm24` chunk: one byte
+     * for each frame of [data], unsigned. Null for a 16-bit sample and for a compressed sample.
+     *
+     * A voice plays only [data], so these bytes change nothing in playback. They let a font with
+     * 24-bit samples be written back without loss. They cost one byte for each frame.
+     */
+    public val lowBytes: ByteArray? = null,
 ) {
+    init {
+        require(lowBytes == null || lowBytes.size == data.size) {
+            "lowBytes must have one byte for each frame: data has ${data.size} frames, lowBytes has ${lowBytes?.size} bytes"
+        }
+    }
+
     public val frameCount: Int get() = data.size
+
+    /**
+     * The signed 24-bit value of the frame at [index]: the frame of [data] as the high 16 bits,
+     * and the byte of [lowBytes] as the low 8 bits. A sample without [lowBytes] has a low byte of zero.
+     *
+     * @throws IndexOutOfBoundsException when [index] is not a frame of [data].
+     */
+    public fun frame24(index: Int): Int {
+        val high = data[index].toInt() shl 8
+        val low = lowBytes?.let { it[index].toInt() and 0xFF } ?: 0
+        return high or low
+    }
 
     /** True when the loop points are usable. A font with a broken loop is common. */
     public val hasUsableLoop: Boolean
@@ -279,6 +309,7 @@ public class SoundFont(
     /**
      * This font with every compressed sample decoded by [decoder], which turns one sample's Ogg
      * Vorbis bytes into its 16-bit mono frames. A font with nothing compressed comes back as it is.
+     * A decoded sample has no [SampleHeader.lowBytes]. A sample that was not compressed keeps its own.
      */
     public fun decoded(decoder: (ByteArray) -> ShortArray): SoundFont {
         if (samples.none { it.compressed != null }) return this
@@ -332,7 +363,10 @@ public fun SoundFont.merged(other: SoundFont, name: String = this.name): SoundFo
     ).pruned()
 }
 
-/** Drops every instrument no preset uses and every sample no instrument uses, renumbering the rest. */
+/**
+ * Drops every instrument no preset uses and every sample no instrument uses, renumbering the rest.
+ * A kept sample keeps its frames and its [SampleHeader.lowBytes].
+ */
 public fun SoundFont.pruned(): SoundFont {
     val usedInstruments = BooleanArray(instruments.size)
     for (preset in presets) for (zone in preset.zones) {
@@ -387,11 +421,11 @@ private fun renumbering(kept: BooleanArray): IntArray {
 private val SampleHeader.isLinked: Boolean get() = (type and 0x0E) != 0
 
 private fun SampleHeader.withLink(link: Int): SampleHeader =
-    SampleHeader(name, data, loopStart, loopEnd, sampleRate, originalKey, correctionCents, link, type, compressed)
+    SampleHeader(name, data, loopStart, loopEnd, sampleRate, originalKey, correctionCents, link, type, compressed, lowBytes)
 
 /** A sample whose partner is gone plays on its own. The ROM flag stays. */
 private fun SampleHeader.asMono(): SampleHeader =
-    SampleHeader(name, data, loopStart, loopEnd, sampleRate, originalKey, correctionCents, 0, (type and 0x8000) or 1, compressed)
+    SampleHeader(name, data, loopStart, loopEnd, sampleRate, originalKey, correctionCents, 0, (type and 0x8000) or 1, compressed, lowBytes)
 
 private fun InstrumentZone.pointingAt(sampleId: Int?): InstrumentZone =
     InstrumentZone(generators.withPointer(Generator.SampleId, sampleId), keys, velocities, sampleId, modulators)

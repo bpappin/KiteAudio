@@ -4,6 +4,10 @@ package io.github.yuroyami.kiteaudio.synth
  * Writes a [SoundFont] as SoundFont 2 bytes that [KiteSynth.readFont] reads back unchanged, or as an
  * SF3 file when some of its samples are still compressed.
  *
+ * When a sample has [SampleHeader.lowBytes], the file gets an `sm24` chunk and states version
+ * 2.04, or 3.0 when it is an SF3 file. A sample without them gets zero low bytes there, so it
+ * reads back with [SampleHeader.lowBytes] full of zeros.
+ *
  * Generators every zone of a preset or instrument shares, and the modulators every zone starts
  * with, are written once in a global zone, the way fonts are written by hand. Zones that point at
  * nothing are left out, as the synthesiser ignores them.
@@ -32,9 +36,12 @@ public object SoundFontWriter {
             indexable("modulators in one list", lists.sumOf { records -> records.sumOf { it.modulators.size } })
         }
 
-        val sampleBytes = font.samples.sumOf { sample -> sample.compressed?.let { it.size + 1L } ?: ((sample.frameCount + SAMPLE_PAD) * 2L) }
+        val poolBytes = font.samples.sumOf { sample -> sample.compressed?.let { it.size + 1L } ?: ((sample.frameCount + SAMPLE_PAD) * 2L) }
         // A font that still holds compressed samples is an SF3 file, which says so with version 3.
         val sf3 = font.samples.any { it.compressed != null }
+        val wide = font.samples.any { it.compressed == null && it.lowBytes != null }
+        // sm24 has one byte for each 16-bit word of smpl, plus one to keep its length even.
+        val sampleBytes = if (wide) poolBytes + poolBytes / 2 + 1 else poolBytes
         val recordBytes = (presetZones + instrumentZones).sumOf { records ->
             records.sumOf { 4 + 4 * it.generators.size + 10 * it.modulators.size }
         }
@@ -46,7 +53,8 @@ public object SoundFontWriter {
         sink.chunk("RIFF") {
             fourCC("sfbk")
             list("INFO") {
-                chunk("ifil") { if (sf3) { u16(3); u16(0) } else { u16(2); u16(1) } }
+                // Section 6.2 of the 2.04 specification ignores sm24 in a file that states a version below 2.04.
+                chunk("ifil") { if (sf3) { u16(3); u16(0) } else if (wide) { u16(2); u16(4) } else { u16(2); u16(1) } }
                 text("isng", font.info["isng"] ?: "EMU8000")
                 text("INAM", font.name)
                 for ((id, value) in font.info) {
@@ -55,8 +63,8 @@ public object SoundFontWriter {
             }
             val starts = IntArray(font.samples.size)
             list("sdta") {
+                var byteAt = 0
                 chunk("smpl") {
-                    var byteAt = 0
                     font.samples.forEachIndexed { index, sample ->
                         val stream = sample.compressed
                         if (stream != null) {
@@ -76,6 +84,20 @@ public object SoundFontWriter {
                             byteAt += (sample.frameCount + SAMPLE_PAD) * 2
                         }
                     }
+                }
+                if (wide) chunk("sm24") {
+                    // Byte n is the low byte of word n of smpl, so this follows the smpl layout above.
+                    for (sample in font.samples) {
+                        val stream = sample.compressed
+                        if (stream != null) {
+                            zeros((stream.size + 1) / 2)
+                        } else {
+                            sample.lowBytes?.let { bytes(it) } ?: zeros(sample.frameCount)
+                            zeros(SAMPLE_PAD)
+                        }
+                    }
+                    // Sections 6 and 6.2: an odd half of the smpl size gets one more byte, counted in the size.
+                    if ((byteAt / 2) % 2 == 1) zeros(1)
                 }
             }
             list("pdta") {

@@ -65,6 +65,7 @@ internal class Sf2Builder {
      * @param sampleFrames the whole sample pool, as the file stores it
      * @param instrumentZones one per zone: sampleId, key and velocity range, extra generators
      * @param presetGlobal generators for a preset-level global zone, or null for none
+     * @param sm24 the body of an sm24 chunk, written as given, or null for a 16-bit font
      */
     fun build(
         fontName: String = "Test Font",
@@ -80,6 +81,9 @@ internal class Sf2Builder {
         engineer: String? = null,
         comment: String? = null,
         presets: List<PresetSpec>? = null,
+        sm24: ByteArray? = null,
+        minorVersion: Int = 4,
+        writeSmpl: Boolean = true,
     ): ByteArray {
         val info = buildMap {
             if (engineer != null) put("IENG", engineer)
@@ -102,6 +106,9 @@ internal class Sf2Builder {
                 },
                 version = version,
                 info = info,
+                sm24 = sm24,
+                minorVersion = minorVersion,
+                writeSmpl = writeSmpl,
             )
         }
         return buildFont(
@@ -119,10 +126,18 @@ internal class Sf2Builder {
             ),
             version = version,
             info = info,
+            sm24 = sm24,
+            minorVersion = minorVersion,
+            writeSmpl = writeSmpl,
         )
     }
 
-    /** Any number of presets and instruments. Every list gets its terminal record. */
+    /**
+     * Any number of presets and instruments. Every list gets its terminal record.
+     *
+     * [sm24] is the body of an sm24 chunk after smpl. Its size field is its length, so a test can
+     * build a size the format rejects. [writeSmpl] false leaves the smpl chunk out.
+     */
     fun buildFont(
         fontName: String = "Test Font",
         sampleFrames: ShortArray,
@@ -131,6 +146,9 @@ internal class Sf2Builder {
         presets: List<PresetDef>,
         version: Int = 2,
         info: Map<String, String> = emptyMap(),
+        sm24: ByteArray? = null,
+        minorVersion: Int = 4,
+        writeSmpl: Boolean = true,
     ): ByteArray {
         ascii("RIFF")
         val riffSize = placeholderSize()
@@ -141,7 +159,7 @@ internal class Sf2Builder {
         val infoSize = placeholderSize()
         val infoStart = out.size
         ascii("INFO")
-        ascii("ifil"); u32(4); u16(version); u16(4)
+        ascii("ifil"); u32(4); u16(version); u16(minorVersion)
         val paddedName = if (fontName.length % 2 == 0) fontName else "$fontName "
         ascii("INAM"); u32(paddedName.length + 2); ascii(paddedName); u16(0)
         info.forEach { (id, value) -> text(id, value) }
@@ -152,8 +170,15 @@ internal class Sf2Builder {
         val sdtaSize = placeholderSize()
         val sdtaStart = out.size
         ascii("sdta")
-        ascii("smpl"); u32(sampleFrames.size * 2)
-        sampleFrames.forEach { u16(it.toInt()) }
+        if (writeSmpl) {
+            ascii("smpl"); u32(sampleFrames.size * 2)
+            sampleFrames.forEach { u16(it.toInt()) }
+        }
+        if (sm24 != null) {
+            ascii("sm24"); u32(sm24.size)
+            sm24.forEach { u8(it.toInt()) }
+            if (sm24.size % 2 == 1) u8(0)                 // RIFF's pad byte, not counted in the size
+        }
         patchSize(sdtaSize, out.size - sdtaStart)
 
         // ---- LIST pdta ----

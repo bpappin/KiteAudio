@@ -98,6 +98,10 @@ The artifacts and packages have new names:
 - On the JVM, `audioOutputAvailable()` is true when any mixer offers an output line for signed 16-bit PCM.
   Before, it checked one fixed format.
 
+### Added in the synth module
+
+- 24-bit SoundFonts keep every bit. `SampleHeader.lowBytes` holds the low byte of each frame from the `sm24` chunk, `SampleHeader.frame24` gives the full signed value, and `SoundFontWriter` writes the chunk back. Playback still uses the 16-bit frames. The new constructor parameter changes the JVM signature of the `SampleHeader` constructor.
+
 ### Added in the codec
 
 The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.

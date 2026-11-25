@@ -299,7 +299,7 @@ final class io.github.yuroyami.kiteaudio.synth/Reverb { // io.github.yuroyami.ki
 }
 
 final class io.github.yuroyami.kiteaudio.synth/SampleHeader { // io.github.yuroyami.kiteaudio.synth/SampleHeader|null[0]
-    constructor <init>(kotlin/String, kotlin/ShortArray, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/ByteArray? = ...) // io.github.yuroyami.kiteaudio.synth/SampleHeader.<init>|<init>(kotlin.String;kotlin.ShortArray;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.ByteArray?){}[0]
+    constructor <init>(kotlin/String, kotlin/ShortArray, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/ByteArray? = ..., kotlin/ByteArray? = ...) // io.github.yuroyami.kiteaudio.synth/SampleHeader.<init>|<init>(kotlin.String;kotlin.ShortArray;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.ByteArray?;kotlin.ByteArray?){}[0]
 
     final val compressed // io.github.yuroyami.kiteaudio.synth/SampleHeader.compressed|{}compressed[0]
         final fun <get-compressed>(): kotlin/ByteArray? // io.github.yuroyami.kiteaudio.synth/SampleHeader.compressed.<get-compressed>|<get-compressed>(){}[0]
@@ -317,6 +317,8 @@ final class io.github.yuroyami.kiteaudio.synth/SampleHeader { // io.github.yuroy
         final fun <get-loopEnd>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopEnd.<get-loopEnd>|<get-loopEnd>(){}[0]
     final val loopStart // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopStart|{}loopStart[0]
         final fun <get-loopStart>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.loopStart.<get-loopStart>|<get-loopStart>(){}[0]
+    final val lowBytes // io.github.yuroyami.kiteaudio.synth/SampleHeader.lowBytes|{}lowBytes[0]
+        final fun <get-lowBytes>(): kotlin/ByteArray? // io.github.yuroyami.kiteaudio.synth/SampleHeader.lowBytes.<get-lowBytes>|<get-lowBytes>(){}[0]
     final val name // io.github.yuroyami.kiteaudio.synth/SampleHeader.name|{}name[0]
         final fun <get-name>(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SampleHeader.name.<get-name>|<get-name>(){}[0]
     final val originalKey // io.github.yuroyami.kiteaudio.synth/SampleHeader.originalKey|{}originalKey[0]
@@ -326,6 +328,7 @@ final class io.github.yuroyami.kiteaudio.synth/SampleHeader { // io.github.yuroy
     final val type // io.github.yuroyami.kiteaudio.synth/SampleHeader.type|{}type[0]
         final fun <get-type>(): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.type.<get-type>|<get-type>(){}[0]
 
+    final fun frame24(kotlin/Int): kotlin/Int // io.github.yuroyami.kiteaudio.synth/SampleHeader.frame24|frame24(kotlin.Int){}[0]
     final fun toString(): kotlin/String // io.github.yuroyami.kiteaudio.synth/SampleHeader.toString|toString(){}[0]
 }
 

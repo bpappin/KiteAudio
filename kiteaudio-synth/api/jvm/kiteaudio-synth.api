@@ -246,8 +246,9 @@ public final class io/github/yuroyami/kiteaudio/synth/Reverb$Companion {
 }
 
 public final class io/github/yuroyami/kiteaudio/synth/SampleHeader {
-	public fun <init> (Ljava/lang/String;[SIIIIIII[B)V
-	public synthetic fun <init> (Ljava/lang/String;[SIIIIIII[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;[SIIIIIII[B[B)V
+	public synthetic fun <init> (Ljava/lang/String;[SIIIIIII[B[BILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun frame24 (I)I
 	public final fun getCompressed ()[B
 	public final fun getCorrectionCents ()I
 	public final fun getData ()[S
@@ -256,6 +257,7 @@ public final class io/github/yuroyami/kiteaudio/synth/SampleHeader {
 	public final fun getLink ()I
 	public final fun getLoopEnd ()I
 	public final fun getLoopStart ()I
+	public final fun getLowBytes ()[B
 	public final fun getName ()Ljava/lang/String;
 	public final fun getOriginalKey ()I
 	public final fun getSampleRate ()I
