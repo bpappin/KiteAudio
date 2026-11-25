@@ -26,7 +26,7 @@ and [KiteMIDI](https://github.com/yuroyami/KiteAudio/tree/main/kiteaudio-midi) h
 | --- | --- |
 | Read | SF2 presets, instruments, zones, generators, modulators, INFO text, 16-bit sample frames and the `sm24` low bytes of 24-bit samples. SF3 compressed samples can be retained for an external decoder. |
 | Play | Layered sample voices, velocity and key ranges, loop modes, exclusive classes, a fixed voice pool and voice stealing. |
-| Shape | Volume and modulation envelopes, two LFOs, a resonant low-pass filter, linear or cubic interpolation, a choice of how loops read their guard frames, stereo reverb and chorus. |
+| Shape | Volume and modulation envelopes, two LFOs, a resonant low-pass filter, linear, cubic or band-limited interpolation, a choice of how loops read their guard frames, stereo reverb and chorus. |
 | Control | 16 channels, programs, bank selection, percussion channels, sustain and sostenuto, volume, expression, pan, pressure and pitch bend. |
 | Tune | RPN pitch-bend range, fine and coarse channel tuning, an A4 reference and a per-key temperament table. |
 | Keep and combine | `SoundFontWriter.write`, `merged` and `pruned`, preserving sample data (24-bit samples included) and renumbering references. |
@@ -201,6 +201,35 @@ font whose loops click or sound different from what its author heard. The attack
 wrap and the tail after a released loop do not change. Each render reads `interpolation` and
 `loopBoundary`, so a change also reaches the notes that sound.
 
+#### Band-limited interpolation
+
+A voice reads its sample by a step: the number of sample frames for each output frame. A note above
+the pitch of its sample has a step above 1. Linear and cubic interpolation then fold the content
+above the output's Nyquist limit back into the audible band as aliases. The low-pass filter of a
+zone runs after the read, so it cannot remove them.
+
+`Interpolation.BandLimited` reads through a windowed sinc low-pass. The cutoff is the Nyquist limit
+of the sample for a step of 1 or less. For a larger step, the cutoff is that limit divided by the
+step, which is the output's Nyquist limit. The cutoff follows the step while the note sounds, so a
+bend, an LFO or the modulation envelope moves it without a click. The kernel is a Kaiser window
+(beta 10) with 16 zero crossings on each side, from a table of 512 entries for each zero crossing.
+
+| Property | `Interpolation.BandLimited` |
+| --- | --- |
+| Aliases | At least 96 dB below the tone for every alias that lands below 0.8 of the output's Nyquist limit, which is 19.2 kHz at 48 kHz. The worst measured case is -100 dB. `Cubic` leaves the same aliases at 0 to -6 dB. |
+| Transition band | 0.8 to 1.2 times the cutoff. Content in this band is partly removed, and the part above the cutoff folds back above 0.8 of the output's Nyquist limit. |
+| Passband | Within 0.01 dB up to 0.8 times the cutoff. A tone at 0.9 times the cutoff loses about 0.5 dB. |
+| Largest step | 4, two octaves above the pitch of a sample at the output's rate. Above a step of 4, the cutoff stays at a quarter of the sample's Nyquist limit, and aliases return. |
+| Latency | Zero. The whole sample is in memory, so the kernel reads ahead of the position. |
+| CPU time | About 2.2 times the time of `Cubic` for the General MIDI load of the JVM benchmark, where most notes play below the pitch of their sample. A read takes 32 taps for a step of 1 or less, then 32 times the step, up to 128 at a step of 4. On the JVM, one read takes about 30 ns at a step of 1 and about 130 ns at a step of 4. |
+| Memory | One table of 64 KiB that every voice shares. The first time a synth selects the mode, it builds the table, so select it on the control thread. |
+
+At a loop boundary, every tap of the kernel follows the rule that `loopBoundary` sets for the cubic
+taps. A loop shorter than the kernel wraps as many times as the kernel needs. A released
+`UntilRelease` loop reads on into its tail, and the tail reads the stored frames in both
+`LoopBoundary` modes. `Voice.render` always reads with cubic interpolation, so only
+`Synth.interpolation` selects `BandLimited`.
+
 Setting the reverb's wet level to zero does not reset its dry
 level: use `dry = 1.0` too when you want the unattenuated dry mix. Voices are mixed into Float32 PCM;
 many loud voices can exceed the nominal `-1f..1f` range. The host owns any limiter, master gain or
@@ -289,7 +318,7 @@ a supported concurrent queue. Kotlin/Native's memory manager does not add synchr
 | SoundFont precision | Playback uses the 16-bit `smpl` frames only. The reader keeps a valid `sm24` chunk in `SampleHeader.lowBytes`, and the writer writes it back, so a read and write keeps every bit of a 24-bit font. `frame24` gives the full signed value of one frame. The low bytes cost one more byte for each frame of a 24-bit font, and nothing for a 16-bit font. |
 | Modulators | Generator destinations and linked modulators are evaluated (SoundFont 2.04, section 9.5.4). A linked modulator feeds its output to the modulator that its link names, and a chain of links can have any length. The target must have the link source as its primary source. The output reaches the target unchanged: the curve, polarity and direction bits of a link source are not applied. A modulator in a cycle, a link to itself or past the end of its list, a link into a modulator that reads a controller, and every modulator that feeds one of these add nothing. The reader and the writer keep every modulator. The reader stores a link past the end of its list as `0x7FFF`. A preset-level link counts places in the preset zone's own list and does not change the amount of an instrument-level link. |
 | Stereo sample links | Merge and prune preserve links. `Synth` plays a valid stereo pair as one pair, as SoundFont 2.04 section 7.10 says. A pair is valid when a left and a right sample link to each other, and one instrument zone for each matches the key and velocity of the note. Both sides start on the same frame and take every pitch value from the right sample's zone: tune, root key, scale tuning, the sample's rate and pitch correction, the vibrato LFO, and the modulation envelope and LFO as they move the pitch. Each side keeps its own volume, filter, envelopes, sends and pan. A pair with unequal lengths still plays as a pair, and each side ends at its own end. Any other link plays each zone as its own voice, with its own pitch, as a mono sample does. If one side of a pair is stolen, the other side plays on at the pitch of the pair. `voicesFor` returns each zone's own plan and does not pair them. Linked chains of more than two samples play as separate voices. |
-| Interpolation | Linear and cubic only; there is no band-limited resampler. |
+| Interpolation | `BandLimited` stops lowering its cutoff at a step of 4, so aliases return above it. `Voice.render` reads with cubic interpolation, and only `Synth.interpolation` selects `BandLimited`. |
 | Envelope timing | Envelopes and LFOs update every 16 output frames. Envelope times are capped near 100 seconds. |
 | MIDI scope | Channel voice messages only. Bank selection uses CC 0, and there is no portamento/legato mode, NRPN synthesis control, MPE manager or MIDI 2.0 interface. |
 | Resource bounds | Reading defaults to 64 MiB of cumulative retained sample payload, counting overlapping ranges separately and the low bytes of 24-bit samples. Preparation defaults to 4,194,304 examined zone pairs, 16,384 regions and 1,048,576 retained modulator entries. Explicit overloads allow larger trusted fonts; limits are checked before expansion. SF3 decoding still needs a separate host-owned bound. |

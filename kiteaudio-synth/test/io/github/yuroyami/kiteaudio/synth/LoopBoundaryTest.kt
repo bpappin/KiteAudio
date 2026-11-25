@@ -234,8 +234,10 @@ class LoopBoundaryTest {
                     assertTrue(abs(out[(blockFrames - 1) * 2]) > 0f, "$start to $end, $interpolation, $boundary: the loop stopped")
                 }
                 // Wrapped reads only frames of the loop once it wraps, and every one of them is at the flat level.
+                // The weights of the band-limited kernel sum to 1 only to within a few parts in a million.
                 val wrapped = render(font, interpolation, LoopBoundary.Wrapped)
-                for (frame in steady) assertEquals(flatLevel, wrapped[frame * 2], "$start to $end, $interpolation, frame $frame")
+                val tolerance = if (interpolation == Interpolation.BandLimited) flatLevel * 1e-5f else 0f
+                for (frame in steady) assertEquals(flatLevel, wrapped[frame * 2], tolerance, "$start to $end, $interpolation, frame $frame")
             }
         }
     }

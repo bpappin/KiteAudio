@@ -93,6 +93,7 @@ final enum class io.github.yuroyami.kiteaudio.synth/Generator : kotlin/Enum<io.g
 }
 
 final enum class io.github.yuroyami.kiteaudio.synth/Interpolation : kotlin/Enum<io.github.yuroyami.kiteaudio.synth/Interpolation> { // io.github.yuroyami.kiteaudio.synth/Interpolation|null[0]
+    enum entry BandLimited // io.github.yuroyami.kiteaudio.synth/Interpolation.BandLimited|null[0]
     enum entry Cubic // io.github.yuroyami.kiteaudio.synth/Interpolation.Cubic|null[0]
     enum entry Linear // io.github.yuroyami.kiteaudio.synth/Interpolation.Linear|null[0]
 

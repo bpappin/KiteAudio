@@ -3,6 +3,7 @@ package io.github.yuroyami.kiteaudio.synth
 import kotlin.math.abs
 import kotlin.math.ceil
 import kotlin.math.log10
+import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.math.roundToInt
@@ -11,7 +12,16 @@ import kotlin.math.roundToInt
 public enum class EnvelopeStage { Delay, Attack, Hold, Decay, Sustain, Release, Finished }
 
 /** How a voice reads between two frames of its sample. Cubic is cleaner; linear is cheaper. */
-public enum class Interpolation { Linear, Cubic }
+public enum class Interpolation {
+    Linear,
+    Cubic,
+
+    /**
+     * A windowed sinc that also removes the content a note above its sample's pitch would fold back.
+     * It costs more CPU time than [Cubic] and adds no latency. The synth README gives the numbers.
+     */
+    BandLimited,
+}
 
 /**
  * How a voice reads the frames next to a loop boundary.
@@ -129,6 +139,14 @@ public class Voice {
     private var loopMode = LoopMode.NoLoop
     /** True once the position has wrapped from the loop end back to the loop start. */
     private var wrappedOnce = false
+
+    /** The frames a band-limited read takes from a loop boundary or a sample edge, gathered in order. */
+    private val taps = ShortArray(MAX_TAPS)
+    // The band-limited cutoff and reach for the step they were worked out for.
+    private var kernelStep = Double.NaN
+    private var kernelRatio = 1.0
+    private var kernelReach = 0.0
+    private var kernelSpan = 0
 
     private var position = 0.0
     private var step = 1.0
@@ -408,6 +426,8 @@ public class Voice {
         cubic: Boolean = true,
         /** True for [LoopBoundary.Wrapped]. */
         wrapped: Boolean = false,
+        /** The kernel for [Interpolation.BandLimited], or null for the mode that [cubic] picks. */
+        kernel: SincKernel? = null,
     ) {
         if (!active) return
         val left = gainLeft * channelGain
@@ -441,7 +461,11 @@ public class Voice {
             var bus = busOffset + done * 2
             var i = 0
             while (i < run) {
-                val sample = if (stage == EnvelopeStage.Delay) 0f else filter.process(readSample(cubic, wrapped))
+                val sample = when {
+                    stage == EnvelopeStage.Delay -> 0f
+                    kernel == null -> filter.process(readSample(cubic, wrapped))
+                    else -> filter.process(readBandLimited(kernel, wrapped))
+                }
                 if (!active) return
                 level += levelStep
                 val value = sample * level
@@ -527,6 +551,89 @@ public class Voice {
         if (at < 0) at = 0
         if (at >= pool.size) at = pool.size - 1
         return if (pool.isEmpty()) 0f else pool[at].toFloat()
+    }
+
+    /**
+     * The sample at the current position through [kernel], low-passed at the Nyquist limit of the
+     * output. The loop rules of the cubic taps apply to every tap.
+     */
+    private fun readBandLimited(kernel: SincKernel, wrapped: Boolean): Float {
+        val looping = loopMode == LoopMode.Continuous ||
+            (loopMode == LoopMode.UntilRelease && !releasing)
+        if (position >= endFrame && !looping) {
+            kill()
+            return 0f
+        }
+
+        if (step != kernelStep) {
+            // The cutoff falls with the step, down to the bound, so the kernel widens as the note goes up.
+            kernelStep = step
+            kernelRatio = if (step <= 1.0) 1.0 else max(1.0 / step, 1.0 / SincKernel.MAX_STEP)
+            kernelReach = kernel.reach(kernelRatio)
+            kernelSpan = ceil(kernelReach).toInt()
+        }
+        val index = position.toInt()
+        val fraction = position - index
+        val first = index - kernelSpan + 1
+        val last = index + kernelSpan
+        // A released loop is no circle: its last pass and its tail read the stored frames in both modes.
+        val circular = wrapped && wrappedOnce && looping
+        val pool = pool
+        val value = if (first >= 0 && last < pool.size && !(looping && last >= loopEnd) && !(circular && first < loopStart)) {
+            kernel.read(pool, index, fraction, kernelRatio, kernelReach)
+        } else {
+            gatherTaps(first, last, looping, circular)
+            kernel.read(taps, kernelSpan - 1, fraction, kernelRatio, kernelReach)
+        }
+
+        position += step
+
+        if (looping && position >= loopEnd) {
+            val length = (loopEnd - loopStart).toDouble()
+            position = loopStart + (position - loopEnd) % length
+            wrappedOnce = true
+        }
+        return value
+    }
+
+    /**
+     * Copies the frames [first] to [last] into [taps]. Past the loop end they wrap into the loop, as
+     * many times as a short loop needs. Before the loop start they are the stored frames, or the loop
+     * as a circle when [circular]. Outside the sample they are its edge.
+     */
+    private fun gatherTaps(first: Int, last: Int, looping: Boolean, circular: Boolean) {
+        val pool = pool
+        val taps = taps
+        val edge = pool.size - 1
+        if (edge < 0) {
+            taps.fill(0, 0, last - first + 1)
+            return
+        }
+        var at = 0
+        var k = first
+        if (looping) {
+            if (!circular) {
+                while (k <= last && k < loopStart) {
+                    taps[at++] = pool[k.coerceIn(0, edge)]
+                    k++
+                }
+            }
+            if (k <= last) {
+                // The loop lies inside the sample, so a frame on the circle needs no edge check.
+                var frame = loopStart + (k - loopStart).mod(loopEnd - loopStart)
+                while (k <= last) {
+                    taps[at++] = pool[frame]
+                    frame++
+                    if (frame == loopEnd) frame = loopStart
+                    k++
+                }
+            }
+        } else {
+            while (k <= last) {
+                taps[at++] = pool[k.coerceIn(0, edge)]
+                k++
+            }
+        }
     }
 
     // ------------------------------------------------------------------ modulation
@@ -804,6 +911,8 @@ public class Voice {
         const val SILENT = 960.0
 
         const val MAX_TIMECENTS = 8000
+        /** The most frames a band-limited read takes: both sides of the kernel at its widest. */
+        val MAX_TAPS = 2 * ceil(SincKernel.ZERO_CROSSINGS * SincKernel.MAX_STEP).toInt()
         const val ABSOLUTE = 2
         val EMPTY_POOL = ShortArray(0)
         val NO_LINKS = DoubleArray(0)

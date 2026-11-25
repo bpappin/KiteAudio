@@ -99,8 +99,18 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
     /** The chorus a voice's send and CC 93 feed. */
     public val chorus: Chorus = Chorus(sampleRate)
 
-    /** How voices read between frames. Linear is there for a test, or a device too slow for cubic. */
+    /**
+     * How voices read between frames. Linear is there for a test, or a device too slow for cubic.
+     * The first choice of [Interpolation.BandLimited] builds its kernel table, so make it on the control thread.
+     */
     public var interpolation: Interpolation = Interpolation.Cubic
+        set(value) {
+            if (value == Interpolation.BandLimited) bandLimitedKernel = SincKernel.shared
+            field = value
+        }
+
+    /** The table that [Interpolation.BandLimited] reads through, once a caller has chosen it. */
+    private var bandLimitedKernel: SincKernel? = null
 
     /**
      * How voices read the frames next to a loop boundary. [LoopBoundary.GuardFrames] reads the
@@ -310,8 +320,12 @@ public class Synth @Throws(SoundFontFormatException::class, IllegalArgumentExcep
                 // Volume, expression and pan reach each voice through its modulators.
                 val cubic = interpolation == Interpolation.Cubic
                 val wrapped = loopBoundary == LoopBoundary.Wrapped
+                val kernel = if (interpolation == Interpolation.BandLimited) bandLimitedKernel else null
                 for (voice in voices) {
-                    voice.renderInto(out, reverbBus, chorusBus, done * 2, (done - blockStart) * 2, chunk, cubic = cubic, wrapped = wrapped)
+                    voice.renderInto(
+                        out, reverbBus, chorusBus, done * 2, (done - blockStart) * 2, chunk,
+                        cubic = cubic, wrapped = wrapped, kernel = kernel,
+                    )
                 }
                 done = next
             }

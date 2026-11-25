@@ -134,6 +134,7 @@ public final class io/github/yuroyami/kiteaudio/synth/InstrumentZone {
 }
 
 public final class io/github/yuroyami/kiteaudio/synth/Interpolation : java/lang/Enum {
+	public static final field BandLimited Lio/github/yuroyami/kiteaudio/synth/Interpolation;
 	public static final field Cubic Lio/github/yuroyami/kiteaudio/synth/Interpolation;
 	public static final field Linear Lio/github/yuroyami/kiteaudio/synth/Interpolation;
 	public static fun getEntries ()Lkotlin/enums/EnumEntries;
