@@ -1,0 +1,4 @@
+# A project of its own, not a module of the KiteAudio project. It uses the published artifacts
+# of every module, the way a user's project does. See "Releasing" in CONTRIBUTING.md.
+modules:
+  - consumer

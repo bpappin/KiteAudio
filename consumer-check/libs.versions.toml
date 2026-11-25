@@ -1,0 +1,13 @@
+[versions]
+# The version under test. The publish workflow sets it to the version of library.module-template.yaml.
+kiteaudio = "0.3.0"
+
+[libraries]
+kiteaudio-core = { module = "io.github.yuroyami:kiteaudio-core", version.ref = "kiteaudio" }
+kiteaudio-codec = { module = "io.github.yuroyami:kiteaudio-codec", version.ref = "kiteaudio" }
+kiteaudio-codec-io = { module = "io.github.yuroyami:kiteaudio-codec-io", version.ref = "kiteaudio" }
+kiteaudio-midi = { module = "io.github.yuroyami:kiteaudio-midi", version.ref = "kiteaudio" }
+kiteaudio-midi-devices = { module = "io.github.yuroyami:kiteaudio-midi-devices", version.ref = "kiteaudio" }
+kiteaudio-midi-coremidi = { module = "io.github.yuroyami:kiteaudio-midi-coremidi", version.ref = "kiteaudio" }
+kiteaudio-synth = { module = "io.github.yuroyami:kiteaudio-synth", version.ref = "kiteaudio" }
+kiteaudio-output = { module = "io.github.yuroyami:kiteaudio-output", version.ref = "kiteaudio" }

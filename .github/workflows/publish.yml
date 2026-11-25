@@ -1,0 +1,244 @@
+name: Publish
+
+# A release of KiteAudio: every published module and every platform, compiled on one Mac, checked,
+# signed and merged into one Maven Central zip. A consumer project then tests that zip before
+# anything is uploaded. It runs when the owner publishes a GitHub release. Started by hand, it is a
+# dry run that does all of this and uploads nothing to Maven Central. It never runs on a pull request.
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  KOTLIN_CLI_NO_WELCOME_BANNER: 1
+
+defaults:
+  run:
+    shell: bash
+
+# The secrets live on the steps that sign and upload, not on a job, so the steps that download and
+# run the toolchain never see them. The toolchain gets the signing key only, and the upload step,
+# in a job of its own, gets the Central Portal token only.
+jobs:
+  # Apple targets can only be built on a Mac, and a KMP release has to publish every target from
+  # one build, so the zip is built on macOS.
+  bundle:
+    name: Build the Maven Central zip
+    runs-on: macos-latest
+    timeout-minutes: 240
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Cache the Kotlin Toolchain downloads
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/Library/Caches/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      # The zip holds an Android library of every module except kiteaudio-midi-coremidi.
+      # sdkmanager is not on PATH on the runner, so call it by its full path.
+      - name: Install the required Android SDK
+        run: '"$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.2" "build-tools;37.0.0"'
+
+      # settings.publishing.version of library.module-template.yaml, the version of every module.
+      - name: Read the version
+        id: version
+        run: |
+          version=$(awk '/^  publishing:/ { found = 1 } found && /^    version:/ { print $2; exit }' library.module-template.yaml)
+          test -n "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "KiteAudio $version"
+
+      # A release whose tag does not name the version would publish another version than the tag says.
+      - name: Check that the tag names the version
+        if: ${{ github.event_name == 'release' }}
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if [ "$TAG" != "$VERSION" ] && [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::the release tag $TAG does not name version $VERSION of library.module-template.yaml"
+            exit 1
+          fi
+
+      # Only the code a release ships compiles here, in the release variant that the Maven Central zip
+      # reuses. The toolchain starts one Kotlin/Native compiler JVM of up to 3 GB per task with no
+      # limit, and the runner has 7 GB. So each native platform compiles in calls of its own: the
+      # codec modules first, then the MIDI, synth and output modules, the groups of ci.yml and
+      # instruments.yml. The task list comes from the toolchain, so a platform that a module.yaml
+      # adds compiles here too.
+      - name: Compile the native platforms, one platform at a time
+        run: |
+          tasks=$(./kotlin show tasks | sed -nE 's/^task (:kiteaudio[a-z-]*:compile[A-Za-z0-9]+Release)( .*)?$/\1/p' | grep -vE 'Test|:compileAndroidRelease$')
+          test -n "$tasks"
+          platforms=$(sed -nE 's/^:[a-z-]+:compile([A-Za-z0-9]+)Release$/\1/p' <<<"$tasks" | sort -u)
+          for platform in $platforms; do
+            echo "::group::$platform"
+            for group in 'kiteaudio-(core|codec|codec-io)' 'kiteaudio-(midi|midi-devices|synth|output)'; do
+              batch=$(grep -E "^:$group:compile${platform}Release$" <<<"$tasks" || true)
+              if [ -n "$batch" ]; then
+                # shellcheck disable=SC2086
+                ./kotlin task $batch
+              fi
+            done
+            echo "::endgroup::"
+          done
+
+      - name: Compile the web platforms
+        run: |
+          tasks=$(./kotlin show tasks | sed -nE 's/^task (:kiteaudio[a-z-]*:compile(Js|WasmJs|WasmWasi))( .*)?$/\1/p')
+          test -n "$tasks"
+          # shellcheck disable=SC2086
+          ./kotlin task $tasks
+
+      # The zip also holds the klib of each source set that several native platforms share, such as
+      # src@apple. The Kotlin/Native compiler builds those too, so each module compiles them in a
+      # call of its own. Otherwise the zip step below would start them for every module at once.
+      - name: Compile the shared native code, one module at a time
+        run: |
+          tasks=$(./kotlin show tasks | sed -nE 's/^task (:kiteaudio[a-z-]*:assembleMetadata)( .*)?$/\1/p')
+          test -n "$tasks"
+          for task in $tasks; do
+            echo "::group::$task"
+            ./kotlin task "$task"
+            echo "::endgroup::"
+          done
+
+      # A release whose public API differs from the committed references does not go out.
+      - name: Check the public JVM API
+        run: >-
+          ./kotlin check abi -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -m kiteaudio-midi
+          -m kiteaudio-midi-devices -m kiteaudio-midi-coremidi -m kiteaudio-synth -m kiteaudio-output
+
+      # kiteaudio-midi-coremidi is a JVM library, so it has no klib.
+      - name: Check the public klib API
+        run: >-
+          ./kotlin check klibAbi -m kiteaudio-core -m kiteaudio-codec -m kiteaudio-codec-io -m kiteaudio-midi
+          -m kiteaudio-midi-devices -m kiteaudio-synth -m kiteaudio-output
+
+      # The toolchain compiles, signs and zips each module, and the script merges the eight zips into
+      # one. Uploaded as one deployment, the release passes Central's checks as a whole and goes out
+      # complete or not at all. A dry run builds the same zip, so it tests all but the upload.
+      - name: Build the Maven Central zip
+        env:
+          KOTLIN_TOOLCHAIN_SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+          KOTLIN_TOOLCHAIN_SIGNING_KEY_PASSPHRASE: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: >-
+          scripts/central-zip.sh build/central-bundle.zip kiteaudio-core kiteaudio-codec kiteaudio-codec-io
+          kiteaudio-midi kiteaudio-midi-devices kiteaudio-midi-coremidi kiteaudio-synth kiteaudio-output
+
+      - name: List the files in the Maven Central zip
+        run: zipinfo -1 build/central-bundle.zip
+
+      # The consumer and upload jobs below take the zip from here.
+      - name: Keep the Maven Central zip
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: central-bundle
+          path: build/central-bundle.zip
+          if-no-files-found: error
+          retention-days: 7
+          compression-level: 0
+
+  # A project outside this build resolves every module from the zip and calls a little of each
+  # API, on the JVM and on linuxX64. A test binary of linuxX64 runs only on Linux.
+  consumer:
+    name: Test the zip in a consumer project
+    needs: bundle
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Restore only: this job must not save a cache that could hold a copy of the artifacts under test.
+      - name: Restore the Kotlin Toolchain downloads
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/JetBrains/Kotlin
+          key: kotlin-toolchain-${{ runner.os }}-${{ hashFiles('kotlin', 'project.yaml', '**/module.yaml', '*.module-template.yaml', 'libs.versions.toml', 'build-plugins/**/plugin.yaml') }}
+          restore-keys: kotlin-toolchain-${{ runner.os }}-
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: central-bundle
+          path: ${{ runner.temp }}/central-bundle
+
+      # The zip has the layout of a Maven repository, so unpacking it makes one.
+      - name: Unpack the zip as a Maven repository
+        env:
+          VERSION: ${{ needs.bundle.outputs.version }}
+        run: |
+          repo="$RUNNER_TEMP/maven-repo"
+          unzip -q "$RUNNER_TEMP/central-bundle/central-bundle.zip" -d "$repo"
+          for module in kiteaudio-core kiteaudio-codec kiteaudio-codec-io kiteaudio-midi \
+            kiteaudio-midi-devices kiteaudio-midi-coremidi kiteaudio-synth kiteaudio-output; do
+            pom="$repo/io/github/yuroyami/$module/$VERSION/$module-$VERSION.pom"
+            test -f "$pom" || { echo "::error::the zip has no $module $VERSION"; exit 1; }
+          done
+
+      - name: Set the version under test
+        env:
+          VERSION: ${{ needs.bundle.outputs.version }}
+        run: |
+          sed -i -E "s/^kiteaudio = \".*\"$/kiteaudio = \"$VERSION\"/" consumer-check/libs.versions.toml
+          grep -qx "kiteaudio = \"$VERSION\"" consumer-check/libs.versions.toml
+
+      # The toolchain reads Maven repositories over https only. So the unpacked zip becomes its Maven
+      # Local repository: the maven.repo.local property of the toolchain JVM names that folder.
+      - name: Consumer tests (JVM)
+        env:
+          KOTLIN_CLI_JAVA_OPTIONS: -Dmaven.repo.local=${{ runner.temp }}/maven-repo
+        run: ./kotlin test --project-dir=consumer-check -p jvm
+
+      - name: Consumer tests (linuxX64)
+        if: ${{ !cancelled() }}
+        env:
+          KOTLIN_CLI_JAVA_OPTIONS: -Dmaven.repo.local=${{ runner.temp }}/maven-repo
+        run: ./kotlin test --project-dir=consumer-check -p linuxX64
+
+  # A dry run skips this job. The job runs no toolchain. It uploads the zip that the consumer job tested.
+  upload:
+    name: Upload to Maven Central
+    needs: [bundle, consumer]
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: central-bundle
+          path: ${{ runner.temp }}/central-bundle
+
+      # publishingMode of library.module-template.yaml sets what Central does after its checks:
+      # auto publishes the deployment, manual waits until the owner clicks Publish on the Central Portal.
+      - name: Upload to Maven Central
+        if: ${{ github.event_name == 'release' }}
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          VERSION: ${{ needs.bundle.outputs.version }}
+        run: |
+          mode=$(awk '/^    mavenCentral:/ { found = 1 } found && /^      publishingMode:/ { print $2; exit }' library.module-template.yaml)
+          case $mode in
+            auto) type=AUTOMATIC ;;
+            manual) type=USER_MANAGED ;;
+            *)
+              echo "::error::publishingMode of library.module-template.yaml is '$mode', not auto or manual"
+              exit 1
+              ;;
+          esac
+          scripts/central-upload.sh "$RUNNER_TEMP/central-bundle/central-bundle.zip" "KiteAudio $VERSION" "$type"

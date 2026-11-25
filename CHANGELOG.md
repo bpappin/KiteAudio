@@ -394,6 +394,9 @@ The uncompressed family end to end, plus FLAC, Vorbis, MPEG audio and Ogg.
   `mingwX64`. Their common tests run on `linuxX64` and `mingwX64` in CI (#164).
 - `kiteaudio-output` builds for `js` and `wasmJs` and plays in the browser through a Web Audio worklet, or through scheduled `AudioBuffer`s where a page cannot run one, through `openAudioOutput` and no other new API. A context the browser suspends or interrupts while playing ends the stream with `DeviceLost`. Its tests run in Node the same way, and `kiteaudio-output/verification/web` checks playback in a browser.
 - The tests of the Android output run on the host JVM through `./kotlin test -m kiteaudio-output -p android`, and CI runs them.
+- `.github/workflows/publish.yml` publishes the eight artifacts to Maven Central as one deployment, so a
+  release goes out complete or not at all. Before the upload, the project in `consumer-check/` tests the
+  signed artifacts on the JVM and on `linuxX64` (#174).
 
 ## KiteSynth before the merge
 

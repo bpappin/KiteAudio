@@ -1,0 +1,33 @@
+# Tests that call a little of the public API of every published module, built against the
+# published artifacts. linuxX64 is the native platform: the MIDI and synth modules are new there.
+# The modules that do not build for linuxX64 are tested on the JVM only.
+product:
+  type: kmp/lib
+  platforms: [ jvm, linuxX64 ]
+
+# The toolchain reads Maven repositories over https only. It skips a file: URL. So the folder of
+# artifacts under test is the Maven Local repository: the publish workflow points the
+# maven.repo.local property of the toolchain at that folder.
+repositories:
+  - url: mavenLocal
+    resolve: true
+
+test-dependencies:
+  - $libs.kiteaudio.core
+  - $libs.kiteaudio.codec
+  - $libs.kiteaudio.codec.io
+  - $libs.kiteaudio.midi
+  - $libs.kiteaudio.synth
+
+test-dependencies@jvm:
+  - $libs.kiteaudio.midi.devices
+  - $libs.kiteaudio.midi.coremidi
+  - $libs.kiteaudio.output
+
+settings:
+  kotlin:
+    version: 2.4.21
+  jvm:
+    jdk:
+      # kiteaudio-midi-coremidi needs JDK 22 or later at runtime.
+      version: 25

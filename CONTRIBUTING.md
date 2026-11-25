@@ -225,3 +225,36 @@ length APIs through Python. Install `libmpg123-dev` on Ubuntu or
 library path; a configured library that cannot load fails the test. The fixture
 generator records its binary SHA-256, and reproduction checks require that
 identity to match. Its implementation source stays unopened.
+
+## Releasing
+
+`.github/workflows/publish.yml` publishes all eight modules to Maven Central. It starts when a
+GitHub release is published. The release tag must name the version in
+`library.module-template.yaml`, for example `0.3.0` or `v0.3.0`. Started by hand from the
+Actions tab, it is a dry run: it does every step except the upload.
+
+The workflow has three jobs:
+
+1. `bundle` runs on macOS. It compiles the release klibs of every platform and checks the
+   public JVM and klib API against the committed dumps. Then `scripts/central-zip.sh` signs
+   each module and merges the eight Maven Central zips into one.
+2. `consumer` runs on Linux. It unpacks the zip as a Maven repository and runs the tests of
+   `consumer-check/` on the JVM and on `linuxX64`. `consumer-check/` is a separate project that
+   uses the published artifacts, as a user's project does.
+3. `upload` runs for a release only. `scripts/central-upload.sh` uploads the zip as one
+   deployment, so the release goes out complete or not at all. `publishingMode` in
+   `library.module-template.yaml` sets what Central does after its checks: `auto` publishes
+   the deployment, `manual` waits for a click on the Central Portal.
+
+The workflow reads four repository secrets: `SIGNING_KEY` (the armored secret key),
+`SIGNING_KEY_PASSWORD`, `MAVEN_CENTRAL_USERNAME` and `MAVEN_CENTRAL_PASSWORD` (the two parts
+of a Central Portal user token). Only the signing step and the upload step see them.
+
+To run the consumer tests against a folder of artifacts, such as an unpacked zip:
+
+```sh
+KOTLIN_CLI_JAVA_OPTIONS=-Dmaven.repo.local=/path/to/folder ./kotlin test --project-dir=consumer-check -p jvm
+```
+
+The toolchain reads Maven repositories over https only. So the folder takes the place of the
+Maven Local repository, and `~/.m2` is not read.
