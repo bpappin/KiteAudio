@@ -1,4 +1,5 @@
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class)
+// UnsafeNumber: the size_t and ssize_t of pread64 are 32 bits wide on two Android ABIs and 64 on the other two.
+@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.UnsafeNumber::class)
 
 package io.github.yuroyami.kiteaudio.codec.io
 
@@ -31,6 +32,6 @@ internal actual fun closeNativeFile(descriptor: Int): Int = close(descriptor)
 internal actual fun readNativeFile(descriptor: Int, position: Long, into: ByteArray, offset: Int, count: Int): Int =
     into.usePinned { pinned ->
         var got: Long
-        do { got = pread64(descriptor, pinned.addressOf(offset), count.convert(), position).toLong() } while (got < 0 && errno == EINTR)
+        do { got = pread64(descriptor, pinned.addressOf(offset), count.convert(), position).convert() } while (got < 0 && errno == EINTR)
         got.toInt()
     }
